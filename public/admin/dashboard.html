@@ -125,6 +125,11 @@
       background: rgba(239, 68, 68, 0.1);
     }
 
+    .btn-sm {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.75rem;
+    }
+
     /* Layout */
     .admin-layout {
       display: grid;
@@ -132,8 +137,8 @@
       min-height: calc(100vh - 65px);
     }
 
-    /* Sidebar - Post List */
-    .posts-sidebar {
+    /* Sidebar */
+    .sidebar {
       background: var(--color-surface);
       border-right: 1px solid var(--color-border);
       display: flex;
@@ -141,11 +146,46 @@
     }
 
     .sidebar-header {
-      padding: 1.5rem;
+      padding: 1rem 1.5rem;
       border-bottom: 1px solid var(--color-border);
+    }
+
+    .content-type-tabs {
       display: flex;
-      align-items: center;
+      gap: 0.25rem;
+      background: var(--color-bg);
+      padding: 0.25rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .content-type-tab {
+      flex: 1;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      font-family: var(--font-sans);
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .content-type-tab:hover {
+      color: var(--color-text);
+    }
+
+    .content-type-tab.active {
+      background: var(--color-accent);
+      color: white;
+    }
+
+    .sidebar-actions {
+      display: flex;
       justify-content: space-between;
+      align-items: center;
     }
 
     .sidebar-title {
@@ -156,28 +196,28 @@
       color: var(--color-text-muted);
     }
 
-    .posts-list {
+    .items-list {
       flex: 1;
       overflow-y: auto;
     }
 
-    .post-item {
+    .list-item {
       padding: 1rem 1.5rem;
       border-bottom: 1px solid var(--color-border);
       cursor: pointer;
       transition: background-color 0.2s;
     }
 
-    .post-item:hover {
+    .list-item:hover {
       background: var(--color-surface-elevated);
     }
 
-    .post-item.active {
+    .list-item.active {
       background: var(--color-surface-elevated);
       border-left: 2px solid var(--color-accent);
     }
 
-    .post-item-title {
+    .list-item-title {
       font-size: 0.9375rem;
       font-weight: 500;
       margin-bottom: 0.25rem;
@@ -186,7 +226,7 @@
       text-overflow: ellipsis;
     }
 
-    .post-item-meta {
+    .list-item-meta {
       font-size: 0.75rem;
       color: var(--color-text-muted);
       display: flex;
@@ -194,13 +234,13 @@
       gap: 0.75rem;
     }
 
-    .post-status {
+    .item-status {
       display: inline-flex;
       align-items: center;
       gap: 0.25rem;
     }
 
-    .post-status::before {
+    .item-status::before {
       content: '';
       width: 6px;
       height: 6px;
@@ -208,7 +248,7 @@
       background: var(--color-warning);
     }
 
-    .post-status.published::before {
+    .item-status.published::before {
       background: var(--color-success);
     }
 
@@ -291,15 +331,25 @@
     }
 
     .form-textarea.content {
-      min-height: 400px;
+      min-height: 300px;
       font-family: var(--font-mono);
       font-size: 0.875rem;
       line-height: 1.6;
     }
 
+    .form-textarea.small {
+      min-height: 80px;
+    }
+
     .form-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .form-row-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
       gap: 1.5rem;
     }
 
@@ -386,6 +436,59 @@
       font-weight: 500;
     }
 
+    /* Tags input */
+    .tags-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      padding: 0.5rem;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      min-height: 48px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.25rem 0.5rem;
+      background: var(--color-accent);
+      color: white;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .tag-remove {
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+      padding: 0;
+      font-size: 1rem;
+      line-height: 1;
+      opacity: 0.7;
+    }
+
+    .tag-remove:hover {
+      opacity: 1;
+    }
+
+    .tag-input {
+      flex: 1;
+      min-width: 100px;
+      border: none;
+      background: transparent;
+      color: var(--color-text);
+      font-size: 0.875rem;
+      outline: none;
+    }
+
+    .tag-input::placeholder {
+      color: var(--color-text-muted);
+    }
+
     /* Welcome state */
     .welcome-state {
       display: flex;
@@ -436,19 +539,13 @@
       border-color: rgba(239, 68, 68, 0.3);
     }
 
-    /* Loading state */
-    .loading {
-      opacity: 0.5;
-      pointer-events: none;
-    }
-
     /* Responsive */
     @media (max-width: 768px) {
       .admin-layout {
         grid-template-columns: 1fr;
       }
 
-      .posts-sidebar {
+      .sidebar {
         display: none;
       }
 
@@ -456,7 +553,7 @@
         padding: 1rem;
       }
 
-      .form-row {
+      .form-row, .form-row-3 {
         grid-template-columns: 1fr;
       }
     }
@@ -465,7 +562,7 @@
 <body>
   <header class="admin-header">
     <a href="/" class="admin-brand">
-      <img src="/assets/observer-logo.png" alt="Observer" class="admin-logo">
+      <img src="/assets/observer-logo-white.png" alt="Observer" class="admin-logo">
       <span class="admin-title">Observer Admin</span>
     </a>
     <nav class="admin-nav">
@@ -476,60 +573,153 @@
   </header>
 
   <main class="admin-layout">
-    <aside class="posts-sidebar">
+    <aside class="sidebar">
       <div class="sidebar-header">
-        <span class="sidebar-title">Posts</span>
-        <button class="btn btn-primary" id="newPostBtn">+ New</button>
+        <div class="content-type-tabs">
+          <button class="content-type-tab active" data-type="posts">Posts</button>
+          <button class="content-type-tab" data-type="work">Work</button>
+          <button class="content-type-tab" data-type="capabilities">Products</button>
       </div>
-      <div class="posts-list" id="postsList">
-        <div class="empty-state">Loading posts...</div>
+        <div class="sidebar-actions">
+          <span class="sidebar-title" id="sidebarTitle">Posts</span>
+          <button class="btn btn-primary btn-sm" id="newItemBtn">+ New</button>
+        </div>
+      </div>
+      <div class="items-list" id="itemsList">
+        <div class="empty-state">Loading...</div>
       </div>
     </aside>
 
     <section class="editor-panel" id="editorPanel">
       <div class="welcome-state" id="welcomeState">
         <h2>Welcome to Observer Admin</h2>
-        <p>Select a post to edit or create a new one</p>
+        <p>Select an item to edit or create a new one</p>
       </div>
 
-      <div id="editorForm" style="display: none;">
+      <!-- Posts Editor -->
+      <div id="postsEditor" class="editor-form" style="display: none;">
         <div class="editor-header">
-          <h2 id="editorTitle">New Post</h2>
+          <h2 id="postsEditorTitle">New Post</h2>
           <div class="editor-actions">
-            <button class="btn btn-danger" id="deleteBtn" style="display: none;">Delete</button>
-            <button class="btn btn-primary" id="saveBtn">Save Post</button>
+            <button class="btn btn-danger" id="deletePostBtn" style="display: none;">Delete</button>
+            <button class="btn btn-primary" id="savePostBtn">Save Post</button>
           </div>
         </div>
-
         <div class="editor-content">
           <div class="form-group">
             <label class="form-label" for="postTitle">Title</label>
             <input type="text" id="postTitle" class="form-input" placeholder="Enter post title">
             <p class="form-hint">Slug: <span id="slugPreview">-</span></p>
           </div>
-
           <div class="form-row">
-            <div class="form-group">
-              <label class="form-label" for="postExcerpt">Excerpt</label>
-              <textarea id="postExcerpt" class="form-input form-textarea" placeholder="Brief description for post listing"></textarea>
-            </div>
+          <div class="form-group">
+            <label class="form-label" for="postExcerpt">Excerpt</label>
+              <textarea id="postExcerpt" class="form-input form-textarea small" placeholder="Brief description"></textarea>
+          </div>
             <div class="form-group">
               <label class="form-label" for="postCategory">Category</label>
-              <select id="postCategory" class="form-select">
-                <option value="">Loading categories...</option>
-              </select>
+              <select id="postCategory" class="form-select"></select>
             </div>
           </div>
-
           <div class="form-group">
             <label class="form-label" for="postContent">Content (Markdown)</label>
-            <textarea id="postContent" class="form-input form-textarea content" placeholder="Write your post content using Markdown..."></textarea>
+            <textarea id="postContent" class="form-input form-textarea content" placeholder="Write your post content..."></textarea>
           </div>
-
           <div class="form-group">
             <label class="form-toggle">
               <div class="toggle-switch">
                 <input type="checkbox" id="postPublished">
+                <span class="toggle-slider"></span>
+              </div>
+              <span class="toggle-label">Published</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Work Editor -->
+      <div id="workEditor" class="editor-form" style="display: none;">
+        <div class="editor-header">
+          <h2 id="workEditorTitle">New Work Item</h2>
+          <div class="editor-actions">
+            <button class="btn btn-danger" id="deleteWorkBtn" style="display: none;">Delete</button>
+            <button class="btn btn-primary" id="saveWorkBtn">Save Work</button>
+          </div>
+        </div>
+        <div class="editor-content">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="workIndustry">Industry</label>
+              <input type="text" id="workIndustry" class="form-input" placeholder="e.g., Healthcare, Logistics">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="workClient">Client Name (optional)</label>
+              <input type="text" id="workClient" class="form-input" placeholder="Client or company name">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="workProblem">Problem</label>
+            <textarea id="workProblem" class="form-input form-textarea small" placeholder="What problem did the client face?"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="workSolution">Solution</label>
+            <textarea id="workSolution" class="form-input form-textarea" placeholder="How did Observer solve it?"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tags</label>
+            <div class="tags-container" id="workTagsContainer">
+              <input type="text" class="tag-input" id="workTagInput" placeholder="Type and press Enter">
+            </div>
+            <p class="form-hint">Press Enter to add tags</p>
+          </div>
+          <div class="form-row-3">
+            <div class="form-group">
+              <label class="form-label" for="workDate">Date</label>
+              <input type="month" id="workDate" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="workImage">Image URL (optional)</label>
+              <input type="text" id="workImage" class="form-input" placeholder="/assets/work/project.jpg">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="workCaseStudy">Case Study URL (optional)</label>
+              <input type="text" id="workCaseStudy" class="form-input" placeholder="/case-studies/project">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-toggle">
+              <div class="toggle-switch">
+                <input type="checkbox" id="workPublished">
+                <span class="toggle-slider"></span>
+              </div>
+              <span class="toggle-label">Published</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Capabilities Editor -->
+      <div id="capabilitiesEditor" class="editor-form" style="display: none;">
+        <div class="editor-header">
+          <h2 id="capabilitiesEditorTitle">New Capability</h2>
+          <div class="editor-actions">
+            <button class="btn btn-danger" id="deleteCapabilityBtn" style="display: none;">Delete</button>
+            <button class="btn btn-primary" id="saveCapabilityBtn">Save Capability</button>
+          </div>
+        </div>
+        <div class="editor-content">
+          <div class="form-group">
+            <label class="form-label" for="capabilityTitle">Title</label>
+            <input type="text" id="capabilityTitle" class="form-input" placeholder="e.g., DataDragon, TableFlow">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="capabilityDescription">Description</label>
+            <textarea id="capabilityDescription" class="form-input form-textarea" placeholder="Describe what this capability/product does..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-toggle">
+              <div class="toggle-switch">
+                <input type="checkbox" id="capabilityPublished">
                 <span class="toggle-slider"></span>
               </div>
               <span class="toggle-label">Published</span>
@@ -544,24 +734,17 @@
 
   <script>
     // State
-    let posts = [];
+    let currentType = 'posts';
+    let items = { posts: [], work: [], capabilities: [] };
     let categories = [];
-    let currentPost = null;
-    let isNewPost = false;
+    let currentItem = null;
+    let isNewItem = false;
+    let workTags = [];
 
     // Elements
-    const postsList = document.getElementById('postsList');
-    const editorForm = document.getElementById('editorForm');
+    const itemsList = document.getElementById('itemsList');
+    const sidebarTitle = document.getElementById('sidebarTitle');
     const welcomeState = document.getElementById('welcomeState');
-    const editorTitle = document.getElementById('editorTitle');
-    const postTitle = document.getElementById('postTitle');
-    const postExcerpt = document.getElementById('postExcerpt');
-    const postCategory = document.getElementById('postCategory');
-    const postContent = document.getElementById('postContent');
-    const postPublished = document.getElementById('postPublished');
-    const slugPreview = document.getElementById('slugPreview');
-    const deleteBtn = document.getElementById('deleteBtn');
-    const saveBtn = document.getElementById('saveBtn');
     const toast = document.getElementById('toast');
     const adminUser = document.getElementById('adminUser');
 
@@ -586,17 +769,20 @@
     function showToast(message, type = 'success') {
       toast.textContent = message;
       toast.className = `toast ${type} visible`;
-      setTimeout(() => {
-        toast.classList.remove('visible');
-      }, 3000);
+      setTimeout(() => toast.classList.remove('visible'), 3000);
     }
 
     // Slugify
     function slugify(text) {
-      return text
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '');
+      return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    }
+
+    // Escape HTML to prevent XSS
+    function escapeHtml(str) {
+      if (str == null) return '';
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
     }
 
     // Load categories
@@ -604,204 +790,408 @@
       try {
         const res = await fetch('/api/categories');
         categories = await res.json();
-        renderCategoriesDropdown();
-      } catch (error) {
-        console.error('Failed to load categories:', error);
+        const select = document.getElementById('postCategory');
+        select.innerHTML = '';
+        categories.forEach(c => {
+          const option = document.createElement('option');
+          option.value = c.slug || '';
+          option.textContent = c.name || '';
+          select.appendChild(option);
+        });
+      } catch (e) {
+        console.error('Failed to load categories:', e);
       }
     }
 
-    // Render categories dropdown
-    function renderCategoriesDropdown() {
-      postCategory.innerHTML = categories.map(cat => 
-        `<option value="${cat.slug}">${cat.name}</option>`
-      ).join('');
-    }
-
-    // Load posts
-    async function loadPosts() {
+    // Load items
+    async function loadItems(type) {
       try {
-        const res = await fetch('/api/admin/posts');
-        posts = await res.json();
-        renderPostsList();
-      } catch (error) {
-        showToast('Failed to load posts', 'error');
+        const endpoint = type === 'posts' ? '/api/admin/posts' : `/api/admin/${type}`;
+        const res = await fetch(endpoint);
+        items[type] = await res.json();
+        renderItemsList();
+      } catch (e) {
+        showToast(`Failed to load ${type}`, 'error');
       }
     }
 
-    // Render posts list
-    function renderPostsList() {
-      if (posts.length === 0) {
-        postsList.innerHTML = '<div class="empty-state">No posts yet. Create your first post!</div>';
+    // Render items list
+    function renderItemsList() {
+      const data = items[currentType];
+      if (data.length === 0) {
+        itemsList.innerHTML = `<div class="empty-state">No ${escapeHtml(currentType)} yet. Create your first!</div>`;
         return;
       }
 
-      postsList.innerHTML = posts.map(post => `
-        <div class="post-item ${currentPost?.slug === post.slug ? 'active' : ''}" data-slug="${post.slug}">
-          <div class="post-item-title">${post.title}</div>
-          <div class="post-item-meta">
-            <span class="post-status ${post.published ? 'published' : ''}">${post.published ? 'Published' : 'Draft'}</span>
-            <span>${post.categoryName || 'Uncategorized'}</span>
-            <span>${new Date(post.updatedAt).toLocaleDateString()}</span>
-          </div>
-        </div>
-      `).join('');
+      // Clear existing items
+      itemsList.innerHTML = '';
 
-      // Add click handlers
-      postsList.querySelectorAll('.post-item').forEach(item => {
-        item.addEventListener('click', () => {
-          const slug = item.dataset.slug;
-          const post = posts.find(p => p.slug === slug);
-          if (post) selectPost(post);
+      data.forEach(item => {
+        const id = currentType === 'posts' ? item.slug : item.id;
+        const title = currentType === 'posts' ? item.title : 
+                      currentType === 'work' ? item.industry : item.title;
+        // Fix Bug 2: Check if problem exists before substring
+        const subtitle = currentType === 'posts' ? (item.categoryName || 'Uncategorized') :
+                         currentType === 'work' && item.problem ? item.problem.substring(0, 40) + '...' : '';
+        const isActive = currentType === 'posts' ? currentItem?.slug === item.slug : currentItem?.id === item.id;
+
+        const div = document.createElement('div');
+        div.className = `list-item ${isActive ? 'active' : ''}`;
+        div.dataset.id = id;
+
+        const titleDiv = document.createElement('div');
+        titleDiv.className = 'list-item-title';
+        titleDiv.textContent = title || '';
+
+        const metaDiv = document.createElement('div');
+        metaDiv.className = 'list-item-meta';
+
+        const statusSpan = document.createElement('span');
+        statusSpan.className = `item-status ${item.published ? 'published' : ''}`;
+        statusSpan.textContent = item.published ? 'Published' : 'Draft';
+        metaDiv.appendChild(statusSpan);
+
+        if (subtitle) {
+          const subtitleSpan = document.createElement('span');
+          subtitleSpan.textContent = subtitle;
+          metaDiv.appendChild(subtitleSpan);
+        }
+
+        div.appendChild(titleDiv);
+        div.appendChild(metaDiv);
+
+        div.addEventListener('click', () => {
+          const foundItem = currentType === 'posts' 
+            ? items[currentType].find(i => i.slug === id)
+            : items[currentType].find(i => i.id === id);
+          if (foundItem) selectItem(foundItem);
+        });
+
+        itemsList.appendChild(div);
+      });
+    }
+
+    // Switch content type
+    function switchType(type) {
+      currentType = type;
+      currentItem = null;
+      isNewItem = false;
+
+      // Update tabs
+      document.querySelectorAll('.content-type-tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.type === type);
+      });
+
+      // Update sidebar title
+      const titles = { posts: 'Posts', work: 'Work', capabilities: 'Products' };
+      sidebarTitle.textContent = titles[type];
+
+      // Hide all editors, show welcome
+      document.querySelectorAll('.editor-form').forEach(f => f.style.display = 'none');
+      welcomeState.style.display = 'flex';
+
+      // Load and render
+      loadItems(type);
+    }
+
+    // Select item for editing
+    function selectItem(item) {
+      currentItem = item;
+      isNewItem = false;
+      welcomeState.style.display = 'none';
+
+      // Hide all editors
+      document.querySelectorAll('.editor-form').forEach(f => f.style.display = 'none');
+
+      if (currentType === 'posts') {
+        document.getElementById('postsEditor').style.display = 'block';
+        document.getElementById('postsEditorTitle').textContent = 'Edit Post';
+        document.getElementById('postTitle').value = item.title;
+        document.getElementById('postExcerpt').value = item.excerpt || '';
+        document.getElementById('postCategory').value = item.category || 'insights';
+        document.getElementById('postContent').value = item.content;
+        document.getElementById('postPublished').checked = item.published;
+        document.getElementById('slugPreview').textContent = item.slug;
+        document.getElementById('deletePostBtn').style.display = 'inline-flex';
+      } else if (currentType === 'work') {
+        document.getElementById('workEditor').style.display = 'block';
+        document.getElementById('workEditorTitle').textContent = 'Edit Work Item';
+        document.getElementById('workIndustry').value = item.industry || '';
+        document.getElementById('workClient').value = item.client || '';
+        document.getElementById('workProblem').value = item.problem || '';
+        document.getElementById('workSolution').value = item.solution || '';
+        document.getElementById('workDate').value = item.date || '';
+        document.getElementById('workImage').value = item.image || '';
+        document.getElementById('workCaseStudy').value = item.caseStudyUrl || '';
+        document.getElementById('workPublished').checked = item.published;
+        document.getElementById('deleteWorkBtn').style.display = 'inline-flex';
+        workTags = item.tags || [];
+        renderWorkTags();
+      } else if (currentType === 'capabilities') {
+        document.getElementById('capabilitiesEditor').style.display = 'block';
+        document.getElementById('capabilitiesEditorTitle').textContent = 'Edit Capability';
+        document.getElementById('capabilityTitle').value = item.title || '';
+        document.getElementById('capabilityDescription').value = item.description || '';
+        document.getElementById('capabilityPublished').checked = item.published;
+        document.getElementById('deleteCapabilityBtn').style.display = 'inline-flex';
+      }
+
+      renderItemsList();
+    }
+
+    // New item
+    function newItem() {
+      currentItem = null;
+      isNewItem = true;
+      welcomeState.style.display = 'none';
+
+      document.querySelectorAll('.editor-form').forEach(f => f.style.display = 'none');
+
+      if (currentType === 'posts') {
+        document.getElementById('postsEditor').style.display = 'block';
+        document.getElementById('postsEditorTitle').textContent = 'New Post';
+        document.getElementById('postTitle').value = '';
+        document.getElementById('postExcerpt').value = '';
+        document.getElementById('postCategory').value = categories[0]?.slug || 'insights';
+        document.getElementById('postContent').value = '';
+        document.getElementById('postPublished').checked = false;
+        document.getElementById('slugPreview').textContent = '-';
+        document.getElementById('deletePostBtn').style.display = 'none';
+      } else if (currentType === 'work') {
+        document.getElementById('workEditor').style.display = 'block';
+        document.getElementById('workEditorTitle').textContent = 'New Work Item';
+        document.getElementById('workIndustry').value = '';
+        document.getElementById('workClient').value = '';
+        document.getElementById('workProblem').value = '';
+        document.getElementById('workSolution').value = '';
+        document.getElementById('workDate').value = '';
+        document.getElementById('workImage').value = '';
+        document.getElementById('workCaseStudy').value = '';
+        document.getElementById('workPublished').checked = false;
+        document.getElementById('deleteWorkBtn').style.display = 'none';
+        workTags = [];
+        renderWorkTags();
+      } else if (currentType === 'capabilities') {
+        document.getElementById('capabilitiesEditor').style.display = 'block';
+        document.getElementById('capabilitiesEditorTitle').textContent = 'New Capability';
+        document.getElementById('capabilityTitle').value = '';
+        document.getElementById('capabilityDescription').value = '';
+        document.getElementById('capabilityPublished').checked = false;
+        document.getElementById('deleteCapabilityBtn').style.display = 'none';
+      }
+
+      renderItemsList();
+    }
+
+    // Work tags
+    function renderWorkTags() {
+      const container = document.getElementById('workTagsContainer');
+      const input = document.getElementById('workTagInput');
+      container.innerHTML = workTags.map(tag => 
+        `<span class="tag">${tag}<button class="tag-remove" data-tag="${tag}">&times;</button></span>`
+      ).join('') + '<input type="text" class="tag-input" id="workTagInput" placeholder="Type and press Enter">';
+      
+      const newInput = document.getElementById('workTagInput');
+      newInput.addEventListener('keydown', handleTagInput);
+      
+      container.querySelectorAll('.tag-remove').forEach(btn => {
+        btn.addEventListener('click', () => {
+          workTags = workTags.filter(t => t !== btn.dataset.tag);
+          renderWorkTags();
         });
       });
     }
 
-    // Select post for editing
-    function selectPost(post) {
-      currentPost = post;
-      isNewPost = false;
-
-      welcomeState.style.display = 'none';
-      editorForm.style.display = 'block';
-      deleteBtn.style.display = 'inline-flex';
-
-      editorTitle.textContent = 'Edit Post';
-      postTitle.value = post.title;
-      postExcerpt.value = post.excerpt || '';
-      postCategory.value = post.category || 'insights';
-      postContent.value = post.content;
-      postPublished.checked = post.published;
-      slugPreview.textContent = post.slug;
-
-      renderPostsList();
+    function handleTagInput(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const value = e.target.value.trim();
+        if (value && !workTags.includes(value)) {
+          workTags.push(value);
+          renderWorkTags();
+        }
+        e.target.value = '';
+      }
     }
 
-    // New post
-    function newPost() {
-      currentPost = null;
-      isNewPost = true;
-
-      welcomeState.style.display = 'none';
-      editorForm.style.display = 'block';
-      deleteBtn.style.display = 'none';
-
-      editorTitle.textContent = 'New Post';
-      postTitle.value = '';
-      postExcerpt.value = '';
-      postCategory.value = categories.length > 0 ? categories[0].slug : 'insights';
-      postContent.value = '';
-      postPublished.checked = false;
-      slugPreview.textContent = '-';
-
-      renderPostsList();
-    }
-
-    // Save post
+    // Save functions
     async function savePost() {
-      const title = postTitle.value.trim();
-      const excerpt = postExcerpt.value.trim();
-      const category = postCategory.value;
-      const content = postContent.value.trim();
-      const published = postPublished.checked;
+      const data = {
+        title: document.getElementById('postTitle').value.trim(),
+        excerpt: document.getElementById('postExcerpt').value.trim(),
+        category: document.getElementById('postCategory').value,
+        content: document.getElementById('postContent').value.trim(),
+        published: document.getElementById('postPublished').checked
+      };
 
-      if (!title || !content) {
+      if (!data.title || !data.content) {
         showToast('Title and content are required', 'error');
         return;
       }
 
-      saveBtn.disabled = true;
-      saveBtn.textContent = 'Saving...';
+      const btn = document.getElementById('savePostBtn');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
 
       try {
-        const url = isNewPost ? '/api/admin/posts' : `/api/admin/posts/${currentPost.slug}`;
-        const method = isNewPost ? 'POST' : 'PUT';
-
+        const url = isNewItem ? '/api/admin/posts' : `/api/admin/posts/${currentItem.slug}`;
         const res = await fetch(url, {
-          method,
+          method: isNewItem ? 'POST' : 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title, excerpt, category, content, published })
+          body: JSON.stringify(data)
         });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          throw new Error(data.error || 'Failed to save');
-        }
-
-        showToast(isNewPost ? 'Post created!' : 'Post saved!');
-        await loadPosts();
-
-        // Select the saved post
-        const savedPost = posts.find(p => p.slug === data.slug);
-        if (savedPost) selectPost(savedPost);
-
-      } catch (error) {
-        showToast(error.message, 'error');
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error);
+        
+        showToast(isNewItem ? 'Post created!' : 'Post saved!');
+        await loadItems('posts');
+        const saved = items.posts.find(p => p.slug === result.slug);
+        if (saved) selectItem(saved);
+      } catch (e) {
+        showToast(e.message, 'error');
       } finally {
-        saveBtn.disabled = false;
-        saveBtn.textContent = 'Save Post';
+        btn.disabled = false;
+        btn.textContent = 'Save Post';
       }
     }
 
-    // Delete post
-    async function deletePost() {
-      if (!currentPost) return;
+    async function saveWork() {
+      const data = {
+        industry: document.getElementById('workIndustry').value.trim(),
+        problem: document.getElementById('workProblem').value.trim(),
+        solution: document.getElementById('workSolution').value.trim(),
+        client: document.getElementById('workClient').value.trim(),
+        date: document.getElementById('workDate').value,
+        image: document.getElementById('workImage').value.trim(),
+        caseStudyUrl: document.getElementById('workCaseStudy').value.trim(),
+        tags: workTags,
+        published: document.getElementById('workPublished').checked
+      };
 
-      if (!confirm(`Are you sure you want to delete "${currentPost.title}"?`)) {
+      if (!data.industry || !data.problem || !data.solution) {
+        showToast('Industry, problem, and solution are required', 'error');
         return;
       }
 
-      deleteBtn.disabled = true;
-      deleteBtn.textContent = 'Deleting...';
+      const btn = document.getElementById('saveWorkBtn');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
 
       try {
-        const res = await fetch(`/api/admin/posts/${currentPost.slug}`, {
-          method: 'DELETE'
+        const url = isNewItem ? '/api/admin/work' : `/api/admin/work/${currentItem.id}`;
+        const res = await fetch(url, {
+          method: isNewItem ? 'POST' : 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
         });
-
-        if (!res.ok) {
-          const data = await res.json();
-          throw new Error(data.error || 'Failed to delete');
-        }
-
-        showToast('Post deleted');
-        currentPost = null;
-        welcomeState.style.display = 'flex';
-        editorForm.style.display = 'none';
-        await loadPosts();
-
-      } catch (error) {
-        showToast(error.message, 'error');
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error);
+        
+        showToast(isNewItem ? 'Work item created!' : 'Work item saved!');
+        await loadItems('work');
+        const saved = items.work.find(w => w.id === result.id);
+        if (saved) selectItem(saved);
+      } catch (e) {
+        showToast(e.message, 'error');
       } finally {
-        deleteBtn.disabled = false;
-        deleteBtn.textContent = 'Delete';
+        btn.disabled = false;
+        btn.textContent = 'Save Work';
       }
     }
 
-    // Logout
-    async function logout() {
-      await fetch('/api/auth/logout', { method: 'POST' });
-      window.location.href = '/admin/login';
+    async function saveCapability() {
+      const data = {
+        title: document.getElementById('capabilityTitle').value.trim(),
+        description: document.getElementById('capabilityDescription').value.trim(),
+        published: document.getElementById('capabilityPublished').checked
+      };
+
+      if (!data.title || !data.description) {
+        showToast('Title and description are required', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('saveCapabilityBtn');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
+      try {
+        const url = isNewItem ? '/api/admin/capabilities' : `/api/admin/capabilities/${currentItem.id}`;
+        const res = await fetch(url, {
+          method: isNewItem ? 'POST' : 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error);
+        
+        showToast(isNewItem ? 'Capability created!' : 'Capability saved!');
+        await loadItems('capabilities');
+        const saved = items.capabilities.find(c => c.id === result.id);
+        if (saved) selectItem(saved);
+      } catch (e) {
+        showToast(e.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save Capability';
+      }
+    }
+
+    // Delete functions
+    async function deleteItem(type, id, name) {
+      if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
+
+      try {
+        const endpoint = type === 'posts' ? `/api/admin/posts/${id}` : `/api/admin/${type}/${id}`;
+        const res = await fetch(endpoint, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Failed to delete');
+        
+        showToast('Deleted successfully');
+        currentItem = null;
+        document.querySelectorAll('.editor-form').forEach(f => f.style.display = 'none');
+        welcomeState.style.display = 'flex';
+        await loadItems(type);
+      } catch (e) {
+        showToast(e.message, 'error');
+      }
     }
 
     // Event listeners
-    document.getElementById('newPostBtn').addEventListener('click', newPost);
-    document.getElementById('saveBtn').addEventListener('click', savePost);
-    document.getElementById('deleteBtn').addEventListener('click', deletePost);
-    document.getElementById('logoutBtn').addEventListener('click', logout);
+    document.querySelectorAll('.content-type-tab').forEach(tab => {
+      tab.addEventListener('click', () => switchType(tab.dataset.type));
+    });
 
-    postTitle.addEventListener('input', () => {
-      const slug = slugify(postTitle.value);
-      slugPreview.textContent = slug || '-';
+    document.getElementById('newItemBtn').addEventListener('click', newItem);
+    document.getElementById('savePostBtn').addEventListener('click', savePost);
+    document.getElementById('saveWorkBtn').addEventListener('click', saveWork);
+    document.getElementById('saveCapabilityBtn').addEventListener('click', saveCapability);
+
+    document.getElementById('deletePostBtn').addEventListener('click', () => {
+      if (currentItem) deleteItem('posts', currentItem.slug, currentItem.title);
+    });
+    document.getElementById('deleteWorkBtn').addEventListener('click', () => {
+      if (currentItem) deleteItem('work', currentItem.id, currentItem.industry);
+    });
+    document.getElementById('deleteCapabilityBtn').addEventListener('click', () => {
+      if (currentItem) deleteItem('capabilities', currentItem.id, currentItem.title);
+    });
+
+    document.getElementById('postTitle').addEventListener('input', (e) => {
+      document.getElementById('slugPreview').textContent = slugify(e.target.value) || '-';
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      window.location.href = '/admin/login';
     });
 
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 's') {
         e.preventDefault();
-        if (editorForm.style.display !== 'none') {
-          savePost();
-        }
+        if (currentType === 'posts' && document.getElementById('postsEditor').style.display !== 'none') savePost();
+        if (currentType === 'work' && document.getElementById('workEditor').style.display !== 'none') saveWork();
+        if (currentType === 'capabilities' && document.getElementById('capabilitiesEditor').style.display !== 'none') saveCapability();
       }
     });
 
@@ -809,7 +1199,7 @@
     checkAuth().then(authenticated => {
       if (authenticated) {
         loadCategories();
-        loadPosts();
+        loadItems('posts');
       }
     });
   </script>

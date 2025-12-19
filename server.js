@@ -66,6 +66,8 @@ if (isProduction) {
 const DATA_DIR = path.join(__dirname, 'data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const POSTS_FILE = path.join(DATA_DIR, 'posts.json');
+const WORK_FILE = path.join(DATA_DIR, 'work.json');
+const CAPABILITIES_FILE = path.join(DATA_DIR, 'capabilities.json');
 
 // Initialize data files
 async function initializeData() {
@@ -192,6 +194,88 @@ The patterns people create organically are the real requirements. Our job is to 
     fs.writeFileSync(POSTS_FILE, JSON.stringify(samplePosts, null, 2));
     console.log('Sample blog posts created');
   }
+
+  // Initialize work file
+  if (!fs.existsSync(WORK_FILE)) {
+    const sampleWork = [
+      {
+        id: uuidv4(),
+        industry: 'Healthcare',
+        problem: 'Staff coordinated schedules outside the system to avoid conflicts',
+        solution: 'Observer watched the handoffs, removed duplicate entry, and made constraints explicit. Coordination dropped from about 40 minutes a day to under 5.',
+        tags: ['Scheduling', 'Fewer handoffs'],
+        image: '',
+        client: '',
+        date: '2024-03',
+        caseStudyUrl: '',
+        order: 1,
+        published: true
+      },
+      {
+        id: uuidv4(),
+        industry: 'Logistics',
+        problem: 'Managers chased updates across reports, radios, and the floor',
+        solution: 'Observer removed the "where is the truth" loop by putting current state and exceptions on one live surface. Fewer checks, faster decisions.',
+        tags: ['Visibility', 'Exceptions'],
+        image: '',
+        client: '',
+        date: '2024-02',
+        caseStudyUrl: '',
+        order: 2,
+        published: true
+      },
+      {
+        id: uuidv4(),
+        industry: 'Professional Services',
+        problem: 'Intake relied on retyping the same details in multiple places',
+        solution: 'Observer removed repeated questions and collapsed handoffs into one guided flow. Onboarding time dropped by roughly 60%.',
+        tags: ['Intake', 'One flow'],
+        image: '',
+        client: '',
+        date: '2024-01',
+        caseStudyUrl: '',
+        order: 3,
+        published: true
+      },
+      {
+        id: uuidv4(),
+        industry: 'Education',
+        problem: 'Compliance tracking lived in spreadsheets and last-minute reminders',
+        solution: 'Observer replaced scattered lists with a single record of truth and clear status. Admin time shifted from chasing updates to handling exceptions.',
+        tags: ['Compliance', 'Clear status'],
+        image: '',
+        client: '',
+        date: '2023-12',
+        caseStudyUrl: '',
+        order: 4,
+        published: true
+      }
+    ];
+    fs.writeFileSync(WORK_FILE, JSON.stringify(sampleWork, null, 2));
+    console.log('Sample work items created');
+  }
+
+  // Initialize capabilities file
+  if (!fs.existsSync(CAPABILITIES_FILE)) {
+    const sampleCapabilities = [
+      {
+        id: uuidv4(),
+        title: 'DataDragon',
+        description: 'Transform raw data into clear, actionable insights. Built for teams that need answers, not dashboards.',
+        order: 1,
+        published: true
+      },
+      {
+        id: uuidv4(),
+        title: 'TableFlow',
+        description: 'Streamline data entry and workflow automation. Reduce manual steps, increase clarity.',
+        order: 2,
+        published: true
+      }
+    ];
+    fs.writeFileSync(CAPABILITIES_FILE, JSON.stringify(sampleCapabilities, null, 2));
+    console.log('Sample capabilities created');
+  }
 }
 
 // Helper functions
@@ -205,6 +289,30 @@ function readPosts() {
 
 function writePosts(posts) {
   fs.writeFileSync(POSTS_FILE, JSON.stringify(posts, null, 2));
+}
+
+function readWork() {
+  try {
+    return JSON.parse(fs.readFileSync(WORK_FILE, 'utf8'));
+  } catch {
+    return [];
+  }
+}
+
+function writeWork(work) {
+  fs.writeFileSync(WORK_FILE, JSON.stringify(work, null, 2));
+}
+
+function readCapabilities() {
+  try {
+    return JSON.parse(fs.readFileSync(CAPABILITIES_FILE, 'utf8'));
+  } catch {
+    return [];
+  }
+}
+
+function writeCapabilities(capabilities) {
+  fs.writeFileSync(CAPABILITIES_FILE, JSON.stringify(capabilities, null, 2));
 }
 
 function readUsers() {
@@ -444,6 +552,174 @@ app.delete('/api/admin/posts/:slug', requireAuth, (req, res) => {
 
   posts.splice(index, 1);
   writePosts(posts);
+  res.json({ success: true });
+});
+
+// ============================================
+// WORK ROUTES
+// ============================================
+
+// Public: Get published work items
+app.get('/api/work', (req, res) => {
+  const work = readWork()
+    .filter(w => w.published)
+    .sort((a, b) => a.order - b.order);
+  res.json(work);
+});
+
+// Admin: Get all work items
+app.get('/api/admin/work', requireAuth, (req, res) => {
+  const work = readWork().sort((a, b) => a.order - b.order);
+  res.json(work);
+});
+
+// Admin: Create work item
+app.post('/api/admin/work', requireAuth, (req, res) => {
+  const { industry, problem, solution, tags, image, client, date, caseStudyUrl, published } = req.body;
+
+  if (!industry || !problem || !solution) {
+    return res.status(400).json({ error: 'Industry, problem, and solution are required' });
+  }
+
+  const work = readWork();
+  const maxOrder = work.reduce((max, w) => Math.max(max, w.order || 0), 0);
+
+  const newWork = {
+    id: uuidv4(),
+    industry,
+    problem,
+    solution,
+    tags: tags || [],
+    image: image || '',
+    client: client || '',
+    date: date || '',
+    caseStudyUrl: caseStudyUrl || '',
+    order: maxOrder + 1,
+    published: !!published
+  };
+
+  work.push(newWork);
+  writeWork(work);
+  res.json(newWork);
+});
+
+// Admin: Update work item
+app.put('/api/admin/work/:id', requireAuth, (req, res) => {
+  const { industry, problem, solution, tags, image, client, date, caseStudyUrl, order, published } = req.body;
+  const work = readWork();
+  const index = work.findIndex(w => w.id === req.params.id);
+
+  if (index === -1) {
+    return res.status(404).json({ error: 'Work item not found' });
+  }
+
+  work[index] = {
+    ...work[index],
+    industry: industry !== undefined ? industry : work[index].industry,
+    problem: problem !== undefined ? problem : work[index].problem,
+    solution: solution !== undefined ? solution : work[index].solution,
+    tags: tags !== undefined ? tags : work[index].tags,
+    image: image !== undefined ? image : work[index].image,
+    client: client !== undefined ? client : work[index].client,
+    date: date !== undefined ? date : work[index].date,
+    caseStudyUrl: caseStudyUrl !== undefined ? caseStudyUrl : work[index].caseStudyUrl,
+    order: order !== undefined ? order : work[index].order,
+    published: published !== undefined ? published : work[index].published
+  };
+
+  writeWork(work);
+  res.json(work[index]);
+});
+
+// Admin: Delete work item
+app.delete('/api/admin/work/:id', requireAuth, (req, res) => {
+  const work = readWork();
+  const index = work.findIndex(w => w.id === req.params.id);
+
+  if (index === -1) {
+    return res.status(404).json({ error: 'Work item not found' });
+  }
+
+  work.splice(index, 1);
+  writeWork(work);
+  res.json({ success: true });
+});
+
+// ============================================
+// CAPABILITIES ROUTES
+// ============================================
+
+// Public: Get published capabilities
+app.get('/api/capabilities', (req, res) => {
+  const capabilities = readCapabilities()
+    .filter(c => c.published)
+    .sort((a, b) => a.order - b.order);
+  res.json(capabilities);
+});
+
+// Admin: Get all capabilities
+app.get('/api/admin/capabilities', requireAuth, (req, res) => {
+  const capabilities = readCapabilities().sort((a, b) => a.order - b.order);
+  res.json(capabilities);
+});
+
+// Admin: Create capability
+app.post('/api/admin/capabilities', requireAuth, (req, res) => {
+  const { title, description, published } = req.body;
+
+  if (!title || !description) {
+    return res.status(400).json({ error: 'Title and description are required' });
+  }
+
+  const capabilities = readCapabilities();
+  const maxOrder = capabilities.reduce((max, c) => Math.max(max, c.order || 0), 0);
+
+  const newCapability = {
+    id: uuidv4(),
+    title,
+    description,
+    order: maxOrder + 1,
+    published: !!published
+  };
+
+  capabilities.push(newCapability);
+  writeCapabilities(capabilities);
+  res.json(newCapability);
+});
+
+// Admin: Update capability
+app.put('/api/admin/capabilities/:id', requireAuth, (req, res) => {
+  const { title, description, order, published } = req.body;
+  const capabilities = readCapabilities();
+  const index = capabilities.findIndex(c => c.id === req.params.id);
+
+  if (index === -1) {
+    return res.status(404).json({ error: 'Capability not found' });
+  }
+
+  capabilities[index] = {
+    ...capabilities[index],
+    title: title !== undefined ? title : capabilities[index].title,
+    description: description !== undefined ? description : capabilities[index].description,
+    order: order !== undefined ? order : capabilities[index].order,
+    published: published !== undefined ? published : capabilities[index].published
+  };
+
+  writeCapabilities(capabilities);
+  res.json(capabilities[index]);
+});
+
+// Admin: Delete capability
+app.delete('/api/admin/capabilities/:id', requireAuth, (req, res) => {
+  const capabilities = readCapabilities();
+  const index = capabilities.findIndex(c => c.id === req.params.id);
+
+  if (index === -1) {
+    return res.status(404).json({ error: 'Capability not found' });
+  }
+
+  capabilities.splice(index, 1);
+  writeCapabilities(capabilities);
   res.json({ success: true });
 });
 

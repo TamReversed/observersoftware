@@ -15,35 +15,50 @@ window.addEventListener("scroll", () => {
 const prefersReducedMotion =
   window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-if (prefersReducedMotion) {
-  document.querySelectorAll(".reveal").forEach((el) => el.classList.add("visible"));
-} else {
-  const observerOptions = {
-    root: null,
-    rootMargin: "0px",
-    threshold: 0.1,
-  };
+let revealObserver = null;
 
-  const observer = new IntersectionObserver((entries) => {
-    for (const entry of entries) {
-      if (entry.isIntersecting) {
-        const idx = Number(entry.target.getAttribute("data-reveal-index") || "0");
-        const delay = idx * 100;
+function initRevealObserver() {
+  if (prefersReducedMotion) {
+    document.querySelectorAll(".reveal:not(.visible)").forEach((el) => el.classList.add("visible"));
+    return;
+  }
 
-        window.setTimeout(() => {
-          entry.target.classList.add("visible");
-        }, delay);
+  if (!revealObserver) {
+    const observerOptions = {
+      root: null,
+      rootMargin: "0px",
+      threshold: 0.1,
+    };
 
-        observer.unobserve(entry.target);
+    revealObserver = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          const idx = Number(entry.target.getAttribute("data-reveal-index") || "0");
+          const delay = Math.min(idx * 100, 500); // Cap delay at 500ms
+
+          window.setTimeout(() => {
+            entry.target.classList.add("visible");
+          }, delay);
+
+          revealObserver.unobserve(entry.target);
+        }
       }
-    }
-  }, observerOptions);
+    }, observerOptions);
+  }
 
-  document.querySelectorAll(".reveal").forEach((el, index) => {
+  // Find new reveal elements that haven't been observed yet
+  document.querySelectorAll(".reveal:not(.visible):not([data-reveal-observed])").forEach((el, index) => {
     el.setAttribute("data-reveal-index", String(index));
-    observer.observe(el);
+    el.setAttribute("data-reveal-observed", "true");
+    revealObserver.observe(el);
   });
 }
+
+// Expose globally for dynamic content
+window.initRevealObserver = initRevealObserver;
+
+// Initial call
+initRevealObserver();
 
 // Smooth scroll for anchor links
 document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
