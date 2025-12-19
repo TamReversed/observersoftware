@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog — Observer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./styles/styles.css">
+    <style>
+        /* Blog-specific styles */
+        .blog-hero {
+            padding: calc(var(--space-3xl) + 80px) 0 var(--space-2xl);
+            text-align: center;
+            position: relative;
+        }
+
+        .blog-hero::before {
+            content: '';
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, var(--color-accent-glow) 0%, transparent 70%);
+            opacity: 0.4;
+            pointer-events: none;
+            filter: blur(60px);
+        }
+
+        .blog-hero__title {
+            font-family: var(--font-display);
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 300;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            color: var(--color-text-primary);
+            margin-bottom: var(--space-md);
+        }
+
+        .blog-hero__subtitle {
+            font-size: 1.125rem;
+            color: var(--color-text-secondary);
+            max-width: 540px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+
+        /* Search and filters */
+        .blog-controls {
+            padding: var(--space-lg) 0;
+            background: var(--color-surface);
+            border-bottom: 1px solid var(--color-border);
+            position: sticky;
+            top: 72px;
+            z-index: 100;
+            backdrop-filter: blur(20px);
+        }
+
+        .blog-controls__inner {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--space-md);
+        }
+
+        .blog-search {
+            position: relative;
+            flex: 1;
+            max-width: 320px;
+        }
+
+        .blog-search__input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.75rem;
+            font-family: var(--font-body);
+            font-size: 0.9375rem;
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            color: var(--color-text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .blog-search__input:focus {
+            outline: none;
+            border-color: var(--color-accent);
+            box-shadow: 0 0 0 3px var(--color-accent-subtle);
+        }
+
+        .blog-search__input::placeholder {
+            color: var(--color-text-tertiary);
+        }
+
+        .blog-search__icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            color: var(--color-text-tertiary);
+            pointer-events: none;
+        }
+
+        .blog-categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .blog-category {
+            padding: 0.5rem 1rem;
+            font-family: var(--font-body);
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: var(--color-text-secondary);
+            background: transparent;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .blog-category:hover {
+            border-color: var(--color-accent);
+            color: var(--color-accent);
+        }
+
+        .blog-category.active {
+            background: var(--color-accent);
+            border-color: var(--color-accent);
+            color: white;
+        }
+
+        /* Posts grid */
+        .blog-posts {
+            padding: var(--space-2xl) 0;
+            min-height: 400px;
+        }
+
+        .blog-posts__grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-lg);
+        }
+
+        .blog-post-card {
+            display: flex;
+            flex-direction: column;
+            padding: var(--space-xl);
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-xl);
+            text-decoration: none;
+            transition: all 0.5s var(--ease-out);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .blog-post-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--color-accent), var(--color-accent-light));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.5s var(--ease-out);
+        }
+
+        .blog-post-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-lg), var(--shadow-glow);
+            border-color: transparent;
+        }
+
+        .blog-post-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .blog-post-card__meta {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-md);
+        }
+
+        .blog-post-card__category {
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--color-accent);
+        }
+
+        .blog-post-card__dot {
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            background: var(--color-text-tertiary);
+        }
+
+        .blog-post-card__date {
+            font-size: 0.8125rem;
+            color: var(--color-text-tertiary);
+        }
+
+        .blog-post-card__title {
+            font-family: var(--font-display);
+            font-size: 1.375rem;
+            font-weight: 400;
+            line-height: 1.35;
+            color: var(--color-text-primary);
+            margin-bottom: var(--space-sm);
+        }
+
+        .blog-post-card__excerpt {
+            font-size: 0.9375rem;
+            color: var(--color-text-secondary);
+            line-height: 1.7;
+            flex: 1;
+        }
+
+        .blog-post-card__footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: var(--space-lg);
+            padding-top: var(--space-md);
+            border-top: 1px solid var(--color-border);
+        }
+
+        .blog-post-card__read-time {
+            font-size: 0.8125rem;
+            color: var(--color-text-tertiary);
+        }
+
+        .blog-post-card__arrow {
+            width: 20px;
+            height: 20px;
+            color: var(--color-accent);
+            transition: transform 0.3s ease;
+        }
+
+        .blog-post-card:hover .blog-post-card__arrow {
+            transform: translateX(4px);
+        }
+
+        /* Pagination */
+        .blog-pagination {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-xs);
+            padding: var(--space-xl) 0 var(--space-3xl);
+        }
+
+        .blog-pagination__btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            font-family: var(--font-body);
+            font-size: 0.9375rem;
+            font-weight: 500;
+            color: var(--color-text-secondary);
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .blog-pagination__btn:hover:not(:disabled) {
+            border-color: var(--color-accent);
+            color: var(--color-accent);
+        }
+
+        .blog-pagination__btn.active {
+            background: var(--color-accent);
+            border-color: var(--color-accent);
+            color: white;
+        }
+
+        .blog-pagination__btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .blog-pagination__btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* Empty state */
+        .blog-empty {
+            text-align: center;
+            padding: var(--space-3xl) var(--space-lg);
+        }
+
+        .blog-empty__icon {
+            width: 64px;
+            height: 64px;
+            color: var(--color-text-tertiary);
+            margin-bottom: var(--space-md);
+        }
+
+        .blog-empty__title {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            color: var(--color-text-primary);
+            margin-bottom: var(--space-xs);
+        }
+
+        .blog-empty__text {
+            color: var(--color-text-secondary);
+        }
+
+        /* Loading state */
+        .blog-loading {
+            text-align: center;
+            padding: var(--space-3xl);
+            color: var(--color-text-tertiary);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .blog-posts__grid {
+                grid-template-columns: 1fr;
+            }
+
+            .blog-controls__inner {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .blog-search {
+                max-width: none;
+            }
+
+            .blog-categories {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <!-- Navigation -->
+    <nav class="nav" id="nav">
+        <div class="container">
+            <div class="nav__inner">
+                <a href="/" class="nav__logo">
+                    <img class="logo-mark" src="./assets/observer-logo-white.png" alt="" aria-hidden="true">
+                    <span class="nav__brand">Observer</span>
+                    <span class="nav__meta">a Techademy LLC subsidiary</span>
+                </a>
+                <ul class="nav__links">
+                    <li><a href="/#work" class="nav__link">Work</a></li>
+                    <li><a href="/#capabilities" class="nav__link">Capabilities</a></li>
+                    <li><a href="./blog.html" class="nav__link">Blog</a></li>
+                    <li><a href="/#about" class="nav__link">About</a></li>
+                    <li><a href="/#contact" class="nav__link">Contact</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main">
+        <!-- Hero -->
+        <section class="blog-hero">
+            <div class="container">
+                <h1 class="blog-hero__title">Insights</h1>
+                <p class="blog-hero__subtitle">Thoughts on software, design, and building systems that work the way people actually do.</p>
+            </div>
+        </section>
+
+        <!-- Controls -->
+        <div class="blog-controls">
+            <div class="container">
+                <div class="blog-controls__inner">
+                    <div class="blog-search">
+                        <svg class="blog-search__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="M21 21l-4.35-4.35"/>
+                        </svg>
+                        <input type="text" class="blog-search__input" id="searchInput" placeholder="Search posts...">
+                    </div>
+                    <div class="blog-categories" id="categoriesContainer">
+                        <button class="blog-category active" data-category="">All</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Posts -->
+        <section class="blog-posts">
+            <div class="container">
+                <div class="blog-posts__grid" id="postsGrid">
+                    <div class="blog-loading">Loading posts...</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pagination -->
+        <nav class="blog-pagination" id="pagination" aria-label="Blog pagination">
+        </nav>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer" id="contact">
+        <div class="container">
+            <div class="footer__main">
+                <div class="footer__cta-group">
+                    <h2 class="footer__cta-title">A clearer way through the work</h2>
+                    <p class="footer__cta-subtitle">Send a short note with the workflow, the constraints, and where people get stuck.</p>
+                    <a href="mailto:INFO@techademy.io" class="footer__email">INFO@techademy.io</a>
+                </div>
+                <nav class="footer__nav" aria-label="Footer">
+                    <div class="footer__nav-group">
+                        <h4>Navigation</h4>
+                        <ul>
+                            <li><a href="/#work">Work</a></li>
+                            <li><a href="/#capabilities">Capabilities</a></li>
+                            <li><a href="./blog.html">Blog</a></li>
+                            <li><a href="/#about">About</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer__nav-group">
+                        <h4>Links</h4>
+                        <ul>
+                            <li><a href="#">LinkedIn</a></li>
+                            <li><a href="#">GitHub</a></li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+            <div class="footer__bottom">
+                <p class="footer__copyright">© 2025 Observer. All rights reserved.</p>
+                <div class="footer__legal">
+                    <a href="#">Privacy</a>
+                    <a href="#">Terms</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // State
+        let currentPage = 1;
+        let currentCategory = '';
+        let currentSearch = '';
+        let categories = [];
+        let debounceTimer = null;
+
+        // Elements
+        const postsGrid = document.getElementById('postsGrid');
+        const categoriesContainer = document.getElementById('categoriesContainer');
+        const searchInput = document.getElementById('searchInput');
+        const pagination = document.getElementById('pagination');
+        const nav = document.getElementById('nav');
+
+        // Format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            });
+        }
+
+        // Load categories
+        async function loadCategories() {
+            try {
+                const res = await fetch('/api/categories');
+                categories = await res.json();
+                renderCategories();
+            } catch (error) {
+                console.error('Failed to load categories:', error);
+            }
+        }
+
+        // Render categories
+        function renderCategories() {
+            const allBtn = `<button class="blog-category ${!currentCategory ? 'active' : ''}" data-category="">All</button>`;
+            const categoryBtns = categories.map(cat => 
+                `<button class="blog-category ${currentCategory === cat.slug ? 'active' : ''}" data-category="${cat.slug}">${cat.name}</button>`
+            ).join('');
+            categoriesContainer.innerHTML = allBtn + categoryBtns;
+
+            // Add click handlers
+            categoriesContainer.querySelectorAll('.blog-category').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    currentCategory = btn.dataset.category;
+                    currentPage = 1;
+                    loadPosts();
+                    renderCategories();
+                });
+            });
+        }
+
+        // Load posts
+        async function loadPosts() {
+            try {
+                const params = new URLSearchParams({
+                    page: currentPage,
+                    limit: 6
+                });
+                if (currentCategory) params.append('category', currentCategory);
+                if (currentSearch) params.append('search', currentSearch);
+
+                const res = await fetch(`/api/posts?${params}`);
+                const data = await res.json();
+                renderPosts(data.posts);
+                renderPagination(data.pagination);
+            } catch (error) {
+                console.error('Failed to load posts:', error);
+                postsGrid.innerHTML = `
+                    <div class="blog-empty">
+                        <svg class="blog-empty__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 8v4M12 16h.01"/>
+                        </svg>
+                        <h3 class="blog-empty__title">Unable to load posts</h3>
+                        <p class="blog-empty__text">Please try again later.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Render posts
+        function renderPosts(posts) {
+            if (posts.length === 0) {
+                postsGrid.innerHTML = `
+                    <div class="blog-empty" style="grid-column: 1 / -1;">
+                        <svg class="blog-empty__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M9 12h6M12 9v6"/>
+                            <circle cx="12" cy="12" r="10"/>
+                        </svg>
+                        <h3 class="blog-empty__title">No posts found</h3>
+                        <p class="blog-empty__text">${currentSearch ? 'Try a different search term.' : 'Check back soon for new content.'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            postsGrid.innerHTML = posts.map(post => `
+                <a href="/blog/${post.slug}" class="blog-post-card">
+                    <div class="blog-post-card__meta">
+                        <span class="blog-post-card__category">${post.categoryName || 'Insights'}</span>
+                        <span class="blog-post-card__dot"></span>
+                        <span class="blog-post-card__date">${formatDate(post.publishedAt)}</span>
+                    </div>
+                    <h2 class="blog-post-card__title">${post.title}</h2>
+                    <p class="blog-post-card__excerpt">${post.excerpt}</p>
+                    <div class="blog-post-card__footer">
+                        <span class="blog-post-card__read-time">${post.readTime} min read</span>
+                        <svg class="blog-post-card__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                </a>
+            `).join('');
+        }
+
+        // Render pagination
+        function renderPagination(paginationData) {
+            if (paginationData.totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+
+            // Previous button
+            html += `
+                <button class="blog-pagination__btn" ${!paginationData.hasPrev ? 'disabled' : ''} data-page="${currentPage - 1}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M15 18l-6-6 6-6"/>
+                    </svg>
+                </button>
+            `;
+
+            // Page numbers
+            for (let i = 1; i <= paginationData.totalPages; i++) {
+                if (
+                    i === 1 ||
+                    i === paginationData.totalPages ||
+                    (i >= currentPage - 1 && i <= currentPage + 1)
+                ) {
+                    html += `
+                        <button class="blog-pagination__btn ${i === currentPage ? 'active' : ''}" data-page="${i}">
+                            ${i}
+                        </button>
+                    `;
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    html += `<span style="color: var(--color-text-tertiary);">...</span>`;
+                }
+            }
+
+            // Next button
+            html += `
+                <button class="blog-pagination__btn" ${!paginationData.hasNext ? 'disabled' : ''} data-page="${currentPage + 1}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 18l6-6-6-6"/>
+                    </svg>
+                </button>
+            `;
+
+            pagination.innerHTML = html;
+
+            // Add click handlers
+            pagination.querySelectorAll('.blog-pagination__btn:not(:disabled)').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    currentPage = parseInt(btn.dataset.page, 10);
+                    loadPosts();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            });
+        }
+
+        // Search handler with debounce
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                currentSearch = e.target.value.trim();
+                currentPage = 1;
+                loadPosts();
+            }, 300);
+        });
+
+        // Nav scroll effect
+        function handleScroll() {
+            if (window.scrollY > 50) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        }
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+
+        // Initialize
+        loadCategories();
+        loadPosts();
+    </script>
+</body>
+</html>
+

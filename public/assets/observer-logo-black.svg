@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 260" role="img" aria-label="Observer logo mark">
+  <title>Observer</title>
+  <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <!-- outer hex (slightly offset double-line feel) -->
+    <path d="M160 24 L262 84 L262 176 L160 236 L58 176 L58 84 Z" stroke-width="6"/>
+    <path d="M160 34 L252 88 L252 172 L160 226 L68 172 L68 88 Z" stroke-width="3" opacity="0.55"/>
+
+    <!-- nodes -->
+    <circle cx="160" cy="24" r="10" fill="currentColor" stroke="none"/>
+    <circle cx="262" cy="84" r="10" fill="currentColor" stroke="none"/>
+    <circle cx="262" cy="176" r="10" fill="currentColor" stroke="none"/>
+    <circle cx="160" cy="236" r="10" fill="currentColor" stroke="none"/>
+    <circle cx="58" cy="176" r="10" fill="currentColor" stroke="none"/>
+    <circle cx="58" cy="84" r="10" fill="currentColor" stroke="none"/>
+
+    <!-- subtle inner “guide” lines -->
+    <path d="M160 24 L262 84" stroke-width="3" opacity="0.35"/>
+    <path d="M262 84 L262 176" stroke-width="3" opacity="0.35"/>
+    <path d="M262 176 L160 236" stroke-width="3" opacity="0.35"/>
+    <path d="M160 236 L58 176" stroke-width="3" opacity="0.35"/>
+    <path d="M58 176 L58 84" stroke-width="3" opacity="0.35"/>
+    <path d="M58 84 L160 24" stroke-width="3" opacity="0.35"/>
+
+    <!-- eye -->
+    <path d="M92 130 C118 104, 202 104, 228 130 C202 156, 118 156, 92 130 Z" stroke-width="8"/>
+    <circle cx="160" cy="130" r="26" stroke-width="8"/>
+    <path d="M151 122 C159 112, 175 114, 176 128 C177 141, 163 148, 152 140" stroke-width="6"/>
+  </g>
+</svg>
+
+
