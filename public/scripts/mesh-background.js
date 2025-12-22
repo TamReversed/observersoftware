@@ -551,10 +551,13 @@
 
       // Handle different states
       if (blackHoleState === 'active') {
-        // Easing for smooth drain effect - starts slow, accelerates
-        const eased = Math.pow(blackHoleProgress, 2);
+        // Easing for gravity effect - accelerates over time
+        const eased = Math.pow(blackHoleProgress, 1.5);
         
-        // Update particles with water-drain physics
+        // Gravity strength increases over time
+        const gravityStrength = 0.8 + eased * 3;
+        
+        // Update particles with gravity-fall physics (like falling into a hole)
         for (let i = 0; i < particleCount; i++) {
           const data = particleData[i];
           
@@ -563,36 +566,53 @@
           const prevY = positions[i * 3 + 1];
           const prevZ = positions[i * 3 + 2];
           
-          // Calculate current radius - shrinks from initial distance to 0
-          const currentRadius = data.initialDist * (1 - eased);
+          // Calculate direction to black hole center
+          const dx = blackHoleWorldPos.x - prevX;
+          const dy = blackHoleWorldPos.y - prevY;
+          const dz = -prevZ; // Pull Z toward 0
+          const dist = Math.sqrt(dx * dx + dy * dy);
           
-          // Calculate current angle - increases over time for spiral effect
-          // Orbital speed increases as radius decreases (conservation of angular momentum feel)
-          const speedMultiplier = 1 + eased * 3;
-          const currentAngle = data.initialAngle + time * data.orbitalSpeed * speedMultiplier;
+          // Avoid division by zero
+          const safeDist = Math.max(dist, 2);
           
-          // Target position: spiral around center at decreasing radius
-          const targetX = blackHoleWorldPos.x + Math.cos(currentAngle) * currentRadius;
-          const targetY = blackHoleWorldPos.y + Math.sin(currentAngle) * currentRadius;
-          const targetZ = data.originalZ * (1 - eased); // Z converges to 0
+          // Normalize direction
+          const dirX = dx / safeDist;
+          const dirY = dy / safeDist;
+          const dirZ = dz / (Math.abs(dz) + 1);
           
-          // Smooth interpolation toward target (creates fluid motion)
-          const lerpFactor = 0.15;
-          const newX = prevX + (targetX - prevX) * lerpFactor;
-          const newY = prevY + (targetY - prevY) * lerpFactor;
-          const newZ = prevZ + (targetZ - prevZ) * lerpFactor;
+          // Gravity acceleration: stronger when closer (inverse relationship)
+          // Particles accelerate as they fall toward the hole
+          const acceleration = gravityStrength / (safeDist * 0.1 + 1);
           
-          // Calculate velocity for trails
-          data.velocityX = newX - prevX;
-          data.velocityY = newY - prevY;
-          data.velocityZ = newZ - prevZ;
+          // Add slight random jitter for organic feel
+          const jitterX = (Math.random() - 0.5) * 0.1;
+          const jitterY = (Math.random() - 0.5) * 0.1;
+          
+          // Update velocity (accumulates for acceleration effect)
+          data.velocityX = (data.velocityX || 0) * 0.95 + dirX * acceleration * 0.1 + jitterX;
+          data.velocityY = (data.velocityY || 0) * 0.95 + dirY * acceleration * 0.1 + jitterY;
+          data.velocityZ = (data.velocityZ || 0) * 0.95 + dirZ * 0.05;
+          
+          // Clamp velocity to prevent runaway speeds
+          const maxVel = 4;
+          const velMag = Math.sqrt(data.velocityX ** 2 + data.velocityY ** 2);
+          if (velMag > maxVel) {
+            data.velocityX = (data.velocityX / velMag) * maxVel;
+            data.velocityY = (data.velocityY / velMag) * maxVel;
+          }
+          
+          // Apply velocity to position
+          const newX = prevX + data.velocityX;
+          const newY = prevY + data.velocityY;
+          const newZ = prevZ + data.velocityZ;
           
           positions[i * 3] = newX;
           positions[i * 3 + 1] = newY;
           positions[i * 3 + 2] = newZ;
           
           // Stars grow brighter as they approach, then shrink at the very end
-          const brightnessMultiplier = 1 + eased * 1.5;
+          const proximityFactor = 1 - Math.min(dist / data.initialDist, 1);
+          const brightnessMultiplier = 1 + proximityFactor * 1.5;
           const shrinkAtEnd = blackHoleProgress > 0.85 ? 1 - (blackHoleProgress - 0.85) / 0.15 : 1;
           sizes[i] = data.baseSize * brightnessMultiplier * shrinkAtEnd;
         }

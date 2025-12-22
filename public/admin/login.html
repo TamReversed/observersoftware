@@ -47,10 +47,18 @@
       margin-bottom: 3rem;
     }
 
-    .login-logo {
+    .login-symbols {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .login-symbol {
       width: 48px;
-      height: 48px;
-      margin-bottom: 1.5rem;
+      height: 58px;
+      color: var(--color-text);
+      opacity: 0.8;
     }
 
     .login-title {
@@ -165,7 +173,23 @@
 <body>
   <div class="login-container">
     <div class="login-header">
-      <img src="/assets/observer-logo.png" alt="Observer" class="login-logo">
+      <div class="login-symbols">
+        <!-- Seek: Triangle with circle at top -->
+        <svg class="login-symbol" viewBox="0 0 100 120" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="50" cy="15" r="10"/>
+          <path d="M50 35 L80 90 L20 90 Z"/>
+        </svg>
+        <!-- Learn: Triangle with circle in center -->
+        <svg class="login-symbol" viewBox="0 0 100 120" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M50 25 L80 90 L20 90 Z"/>
+          <circle cx="50" cy="65" r="12"/>
+        </svg>
+        <!-- Integrate: Overlapping triangles -->
+        <svg class="login-symbol" viewBox="0 0 100 120" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M50 20 L80 75 L20 75 Z"/>
+          <path d="M50 95 L20 40 L80 40 Z"/>
+        </svg>
+      </div>
       <h1 class="login-title">Admin Login</h1>
       <p class="login-subtitle">Sign in to manage your content</p>
     </div>
