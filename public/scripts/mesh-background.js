@@ -397,19 +397,31 @@
       blackHoleState = 'active';
       blackHoleStartTime = performance.now();
       
-      // Store original positions for each particle
+      // Store original positions and calculate initial distance for each particle
       const positions = particles.geometry.attributes.position.array;
       for (let i = 0; i < particleCount; i++) {
         particleData[i].originalX = positions[i * 3];
         particleData[i].originalY = positions[i * 3 + 1];
         particleData[i].originalZ = positions[i * 3 + 2];
-        // Add slight random orbital velocity for spiral effect
-        particleData[i].orbitalAngle = Math.random() * Math.PI * 2;
-        particleData[i].orbitalSpeed = Math.random() * 3 + 1.5;
+        
+        // Calculate initial distance from black hole center
+        const dx = positions[i * 3] - blackHoleWorldPos.x;
+        const dy = positions[i * 3 + 1] - blackHoleWorldPos.y;
+        particleData[i].initialDist = Math.sqrt(dx * dx + dy * dy);
+        
+        // Calculate initial angle from center (for consistent spiral starting point)
+        particleData[i].initialAngle = Math.atan2(dy, dx);
+        
+        // Orbital speed - particles further out rotate slower (like accretion disk)
+        particleData[i].orbitalSpeed = (Math.random() * 1.5 + 1.5) * (60 / Math.max(particleData[i].initialDist, 10));
+        
         // Reset velocity for trails
         particleData[i].velocityX = 0;
         particleData[i].velocityY = 0;
         particleData[i].velocityZ = 0;
+        particleData[i].prevX = positions[i * 3];
+        particleData[i].prevY = positions[i * 3 + 1];
+        particleData[i].prevZ = positions[i * 3 + 2];
       }
     }
 
@@ -539,53 +551,49 @@
 
       // Handle different states
       if (blackHoleState === 'active') {
-        // Easing for dramatic pull - starts slow, accelerates exponentially
-        const eased = Math.pow(blackHoleProgress, 2.5);
+        // Easing for smooth drain effect - starts slow, accelerates
+        const eased = Math.pow(blackHoleProgress, 2);
         
-        // Update particles with black hole physics
+        // Update particles with water-drain physics
         for (let i = 0; i < particleCount; i++) {
           const data = particleData[i];
           
-          // Store previous position for trail
-          data.prevX = positions[i * 3];
-          data.prevY = positions[i * 3 + 1];
-          data.prevZ = positions[i * 3 + 2];
+          // Store previous position for trail calculation
+          const prevX = positions[i * 3];
+          const prevY = positions[i * 3 + 1];
+          const prevZ = positions[i * 3 + 2];
           
-          // Calculate direction to black hole center
-          const currentX = positions[i * 3];
-          const currentY = positions[i * 3 + 1];
-          const currentZ = positions[i * 3 + 2];
+          // Calculate current radius - shrinks from initial distance to 0
+          const currentRadius = data.initialDist * (1 - eased);
           
-          const dx = blackHoleWorldPos.x - currentX;
-          const dy = blackHoleWorldPos.y - currentY;
-          const dz = -currentZ;
+          // Calculate current angle - increases over time for spiral effect
+          // Orbital speed increases as radius decreases (conservation of angular momentum feel)
+          const speedMultiplier = 1 + eased * 3;
+          const currentAngle = data.initialAngle + time * data.orbitalSpeed * speedMultiplier;
           
-          const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+          // Target position: spiral around center at decreasing radius
+          const targetX = blackHoleWorldPos.x + Math.cos(currentAngle) * currentRadius;
+          const targetY = blackHoleWorldPos.y + Math.sin(currentAngle) * currentRadius;
+          const targetZ = data.originalZ * (1 - eased); // Z converges to 0
           
-          // Spiral effect - rotate around center as being pulled
-          data.orbitalAngle += data.orbitalSpeed * 0.06 * (1 + eased * 4);
-          const spiralRadius = dist * (1 - eased * 0.98);
-          const spiralX = Math.cos(data.orbitalAngle) * spiralRadius * 0.15;
-          const spiralY = Math.sin(data.orbitalAngle) * spiralRadius * 0.15;
-          
-          // Accelerating pull toward center
-          const pullStrength = eased * 0.12;
-          const newX = currentX + (dx * pullStrength) + spiralX * (1 - eased);
-          const newY = currentY + (dy * pullStrength) + spiralY * (1 - eased);
-          const newZ = currentZ + (dz * pullStrength * 0.5);
+          // Smooth interpolation toward target (creates fluid motion)
+          const lerpFactor = 0.15;
+          const newX = prevX + (targetX - prevX) * lerpFactor;
+          const newY = prevY + (targetY - prevY) * lerpFactor;
+          const newZ = prevZ + (targetZ - prevZ) * lerpFactor;
           
           // Calculate velocity for trails
-          data.velocityX = newX - currentX;
-          data.velocityY = newY - currentY;
-          data.velocityZ = newZ - currentZ;
+          data.velocityX = newX - prevX;
+          data.velocityY = newY - prevY;
+          data.velocityZ = newZ - prevZ;
           
           positions[i * 3] = newX;
           positions[i * 3 + 1] = newY;
           positions[i * 3 + 2] = newZ;
           
-          // Stars grow brighter and larger as they approach, then shrink at the very end
-          const brightnessMultiplier = 1 + eased * 2;
-          const shrinkAtEnd = blackHoleProgress > 0.8 ? 1 - (blackHoleProgress - 0.8) / 0.2 : 1;
+          // Stars grow brighter as they approach, then shrink at the very end
+          const brightnessMultiplier = 1 + eased * 1.5;
+          const shrinkAtEnd = blackHoleProgress > 0.85 ? 1 - (blackHoleProgress - 0.85) / 0.15 : 1;
           sizes[i] = data.baseSize * brightnessMultiplier * shrinkAtEnd;
         }
         
