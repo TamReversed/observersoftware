@@ -486,9 +486,10 @@ main {
 .symbols__canvas {
     position: relative;
     width: 100%;
-    max-width: 900px;
-    height: 250px;
+    max-width: 800px;
+    height: 300px;
     margin: 0 auto;
+    overflow: hidden;
 }
 
 .symbols__canvas canvas {
@@ -541,7 +542,7 @@ main {
     }
     
     .symbols__canvas {
-        height: 180px;
+        height: 300px;
     }
     
     .symbols__labels {
@@ -551,7 +552,7 @@ main {
 
 @media (max-width: 480px) {
     .symbols__canvas {
-        height: 140px;
+        height: 220px;
     }
     
     .symbols__labels {

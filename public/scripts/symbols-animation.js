@@ -18,10 +18,10 @@
   let isInView = false;
 
   // Symbol definitions based on the SVG
-  // Triangle dimensions: roughly 150 units wide, 150 units tall
-  const SYMBOL_SPACING = 180;
-  const TRIANGLE_SIZE = 60;
-  const CIRCLE_RADIUS = 12;
+  // Large symbols for visual impact - spacing calculated for 3 symbols
+  const SYMBOL_SPACING = 160;
+  const TRIANGLE_SIZE = 80;
+  const CIRCLE_RADIUS = 15;
 
   function init() {
     const Three = window.THREE;
@@ -41,7 +41,8 @@
 
     // Camera - orthographic for 2D-like symbols
     const aspect = container.clientWidth / container.clientHeight;
-    const frustumSize = 300;
+    // Use height-based frustum to keep symbols at consistent size
+    const frustumSize = 280;
     camera = new Three.OrthographicCamera(
       frustumSize * aspect / -2,
       frustumSize * aspect / 2,
@@ -305,7 +306,7 @@
       if (!container) return;
       
       const aspect = container.clientWidth / container.clientHeight;
-      const frustumSize = 300;
+      const frustumSize = 280;
       
       camera.left = frustumSize * aspect / -2;
       camera.right = frustumSize * aspect / 2;
