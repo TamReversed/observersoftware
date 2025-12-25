@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./styles/styles.css">
     <script src="https://cdn.jsdelivr.net/npm/three@0.150.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lottie-web@5.12.2/build/player/lottie.min.js"></script>
 </head>
 <body>
     <div id="mesh-background" aria-hidden="true"></div>
@@ -72,16 +73,6 @@
         </div>
         <div class="hero__scroll-indicator">
             <div class="hero__scroll-line"></div>
-        </div>
-    </section>
-
-    <!-- Seek, Learn, Integrate Symbols -->
-    <section class="symbols" id="symbols">
-        <div class="symbols__canvas" id="symbols-canvas"></div>
-        <div class="symbols__labels">
-            <span class="symbols__label" data-symbol="seek">Seek</span>
-            <span class="symbols__label" data-symbol="learn">Learn</span>
-            <span class="symbols__label" data-symbol="integrate">Integrate</span>
         </div>
     </section>
 
@@ -221,208 +212,50 @@
     </footer>
     </main>
 
+    <!-- Product Modal -->
+    <div class="product-modal" id="productModal" aria-hidden="true" role="dialog" aria-labelledby="modalTitle">
+        <div class="product-modal__backdrop" id="modalBackdrop"></div>
+        <div class="product-modal__container">
+            <div class="product-modal__content">
+                <button class="product-modal__close" id="modalClose" aria-label="Close modal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+                
+                <div class="product-modal__header">
+                    <div class="product-modal__icon" id="modalIcon"></div>
+                    <h2 class="product-modal__title" id="modalTitle"></h2>
+                    <p class="product-modal__subtitle" id="modalSubtitle"></p>
+                </div>
+
+                <div class="product-modal__body">
+                    <div class="product-modal__description" id="modalDescription"></div>
+                    
+                    <div class="product-modal__features" id="modalFeatures">
+                        <h3 class="product-modal__features-title">Key Features</h3>
+                        <ul class="product-modal__features-list" id="modalFeaturesList"></ul>
+                    </div>
+
+                    <div class="product-modal__screenshots" id="modalScreenshots"></div>
+                </div>
+
+                <div class="product-modal__footer" id="modalFooter">
+                    <a href="#" class="product-modal__cta" id="modalCta" target="_blank" rel="noopener noreferrer">
+                        Learn More
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M3 8h10M9 4l4 4-4 4"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="./scripts/main.js" defer></script>
     <script src="./scripts/mesh-background.js" defer></script>
-    <script src="./scripts/symbols-animation.js" defer></script>
-    <script>
-        // Dynamic content loading for Work and Capabilities
-        (function() {
-            // Fallback data in case API is unavailable
-            const fallbackWork = [
-                {
-                    industry: 'Healthcare',
-                    problem: 'Staff coordinated schedules outside the system to avoid conflicts',
-                    solution: 'Observer watched the handoffs, removed duplicate entry, and made constraints explicit. Coordination dropped from about 40 minutes a day to under 5.',
-                    tags: ['Scheduling', 'Fewer handoffs']
-                },
-                {
-                    industry: 'Logistics',
-                    problem: 'Managers chased updates across reports, radios, and the floor',
-                    solution: 'Observer removed the "where is the truth" loop by putting current state and exceptions on one live surface. Fewer checks, faster decisions.',
-                    tags: ['Visibility', 'Exceptions']
-                },
-                {
-                    industry: 'Professional Services',
-                    problem: 'Intake relied on retyping the same details in multiple places',
-                    solution: 'Observer removed repeated questions and collapsed handoffs into one guided flow. Onboarding time dropped by roughly 60%.',
-                    tags: ['Intake', 'One flow']
-                },
-                {
-                    industry: 'Education',
-                    problem: 'Compliance tracking lived in spreadsheets and last-minute reminders',
-                    solution: 'Observer replaced scattered lists with a single record of truth and clear status. Admin time shifted from chasing updates to handling exceptions.',
-                    tags: ['Compliance', 'Clear status']
-                }
-            ];
-
-            const fallbackCapabilities = [
-                {
-                    title: 'DataDragon',
-                    description: 'Transform raw data into clear, actionable insights. Built for teams that need answers, not dashboards.'
-                },
-                {
-                    title: 'TableFlow',
-                    description: 'Streamline data entry and workflow automation. Reduce manual steps, increase clarity.'
-                }
-            ];
-
-            // Escape HTML to prevent XSS
-            function escapeHtml(str) {
-                if (str == null) return '';
-                const div = document.createElement('div');
-                div.textContent = str;
-                return div.innerHTML;
-            }
-
-            // Render work items
-            function renderWork(items) {
-                const grid = document.getElementById('workGrid');
-                if (!grid) return;
-
-                grid.innerHTML = '';
-                items.forEach(item => {
-                    const article = document.createElement('article');
-                    article.className = 'project-card reveal';
-
-                    const industry = document.createElement('p');
-                    industry.className = 'project-card__industry';
-                    industry.textContent = item.industry || '';
-
-                    const problem = document.createElement('h3');
-                    problem.className = 'project-card__problem';
-                    problem.textContent = item.problem || '';
-
-                    const solution = document.createElement('p');
-                    solution.className = 'project-card__solution';
-                    solution.textContent = item.solution || '';
-
-                    article.appendChild(industry);
-                    article.appendChild(problem);
-                    article.appendChild(solution);
-
-                    if (item.tags && item.tags.length > 0) {
-                        const tagsDiv = document.createElement('div');
-                        tagsDiv.className = 'project-card__tags';
-                        item.tags.forEach(tag => {
-                            const span = document.createElement('span');
-                            span.className = 'project-card__tag';
-                            span.textContent = tag;
-                            tagsDiv.appendChild(span);
-                        });
-                        article.appendChild(tagsDiv);
-                    }
-
-                    grid.appendChild(article);
-                });
-
-                // Re-trigger reveal animations
-                if (typeof initRevealObserver === 'function') {
-                    initRevealObserver();
-                }
-            }
-
-            // Render capabilities
-            function renderCapabilities(items) {
-                const grid = document.getElementById('capabilitiesGrid');
-                if (!grid) return;
-
-                // Default icons for capabilities
-                const icons = [
-                    `<svg class="capability__icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <path d="M4 8h24M4 16h24M4 24h24"/>
-                        <circle cx="8" cy="8" r="2" fill="currentColor"/>
-                        <circle cx="8" cy="16" r="2" fill="currentColor"/>
-                        <circle cx="8" cy="24" r="2" fill="currentColor"/>
-                        <path d="M14 8v16M20 8v16"/>
-                    </svg>`,
-                    `<svg class="capability__icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <rect x="4" y="6" width="24" height="20" rx="2"/>
-                        <path d="M4 14h24M4 20h24"/>
-                        <circle cx="10" cy="10" r="1.5" fill="currentColor"/>
-                        <circle cx="16" cy="10" r="1.5" fill="currentColor"/>
-                        <path d="M8 16h16M8 22h12"/>
-                    </svg>`,
-                    `<svg class="capability__icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <circle cx="16" cy="16" r="10"/>
-                        <path d="M16 10v6l4 4"/>
-                    </svg>`,
-                    `<svg class="capability__icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <path d="M4 16h8l3-8 6 16 3-8h8"/>
-                    </svg>`
-                ];
-
-                grid.innerHTML = '';
-                items.forEach((item, i) => {
-                    const div = document.createElement('div');
-                    div.className = 'capability reveal';
-
-                    // Add icon (safe - these are static SVGs)
-                    div.innerHTML = icons[i % icons.length];
-
-                    const title = document.createElement('h3');
-                    title.className = 'capability__title';
-                    title.textContent = item.title || '';
-
-                    const desc = document.createElement('p');
-                    desc.className = 'capability__desc';
-                    desc.textContent = item.description || '';
-
-                    div.appendChild(title);
-                    div.appendChild(desc);
-                    grid.appendChild(div);
-                });
-
-                // Re-trigger reveal animations
-                if (typeof initRevealObserver === 'function') {
-                    initRevealObserver();
-                }
-            }
-
-            // Fetch and render content
-            async function loadContent() {
-                // Load work items
-                try {
-                    const workRes = await fetch('/api/work');
-                    if (workRes.ok) {
-                        const work = await workRes.json();
-                        if (work.length > 0) {
-                            renderWork(work);
-                        } else {
-                            renderWork(fallbackWork);
-                        }
-                    } else {
-                        renderWork(fallbackWork);
-                    }
-                } catch (e) {
-                    renderWork(fallbackWork);
-                }
-
-                // Load capabilities
-                try {
-                    const capRes = await fetch('/api/capabilities');
-                    if (capRes.ok) {
-                        const capabilities = await capRes.json();
-                        if (capabilities.length > 0) {
-                            renderCapabilities(capabilities);
-                        } else {
-                            renderCapabilities(fallbackCapabilities);
-                        }
-                    } else {
-                        renderCapabilities(fallbackCapabilities);
-                    }
-                } catch (e) {
-                    renderCapabilities(fallbackCapabilities);
-                }
-            }
-
-            // Initialize when DOM is ready
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', loadContent);
-            } else {
-                loadContent();
-            }
-        })();
-    </script>
+    <script src="./scripts/icons.js" defer></script>
+    <script src="./scripts/home.js" defer></script>
 </body>
 </html>
 
