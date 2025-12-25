@@ -4,360 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Loading... — Observer</title>
+    <meta name="description" content="Insights on software, design, and building systems that work the way people actually do.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/styles/styles.css">
     <link rel="stylesheet" href="/styles/post.css">
-            padding: calc(var(--space-3xl) + 80px) 0 var(--space-2xl);
-            position: relative;
-        }
-
-        .post-hero::before {
-            content: '';
-            position: absolute;
-            top: 10%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 800px;
-            height: 600px;
-            background: radial-gradient(circle, var(--color-accent-glow) 0%, transparent 70%);
-            opacity: 0.3;
-            pointer-events: none;
-            filter: blur(80px);
-        }
-
-        .post-hero__back {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--color-text-secondary);
-            text-decoration: none;
-            margin-bottom: var(--space-lg);
-            transition: all 0.3s ease;
-        }
-
-        .post-hero__back:hover {
-            color: var(--color-accent);
-        }
-
-        .post-hero__back svg {
-            width: 18px;
-            height: 18px;
-            transition: transform 0.3s ease;
-        }
-
-        .post-hero__back:hover svg {
-            transform: translateX(-4px);
-        }
-
-        .post-hero__meta {
-            display: flex;
-            align-items: center;
-            gap: var(--space-sm);
-            margin-bottom: var(--space-md);
-        }
-
-        .post-hero__category {
-            font-size: 0.7rem;
-            font-weight: 700;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: var(--color-accent);
-            padding: 0.375rem 0.75rem;
-            background: var(--color-accent-subtle);
-            border-radius: var(--radius-sm);
-        }
-
-        .post-hero__date {
-            font-size: 0.875rem;
-            color: var(--color-text-tertiary);
-        }
-
-        .post-hero__dot {
-            width: 3px;
-            height: 3px;
-            border-radius: 50%;
-            background: var(--color-text-tertiary);
-        }
-
-        .post-hero__read-time {
-            font-size: 0.875rem;
-            color: var(--color-text-tertiary);
-        }
-
-        .post-hero__title {
-            font-family: var(--font-display);
-            font-size: clamp(2.5rem, 5vw, 4rem);
-            font-weight: 300;
-            line-height: 1.1;
-            letter-spacing: -0.02em;
-            color: var(--color-text-primary);
-            margin-bottom: var(--space-lg);
-            max-width: 900px;
-        }
-
-        .post-hero__excerpt {
-            font-size: 1.25rem;
-            color: var(--color-text-secondary);
-            line-height: 1.7;
-            max-width: 720px;
-        }
-
-        /* Post content */
-        .post-content {
-            padding: var(--space-2xl) 0 var(--space-3xl);
-        }
-
-        .post-content__inner {
-            max-width: 720px;
-            margin: 0 auto;
-        }
-
-        /* Markdown content styling */
-        .post-content__body {
-            font-size: 1.0625rem;
-            line-height: 1.85;
-            color: var(--color-text-secondary);
-        }
-
-        .post-content__body h1,
-        .post-content__body h2,
-        .post-content__body h3,
-        .post-content__body h4 {
-            font-family: var(--font-display);
-            color: var(--color-text-primary);
-            margin-top: var(--space-xl);
-            margin-bottom: var(--space-md);
-            line-height: 1.3;
-        }
-
-        .post-content__body h1 {
-            font-size: 2.25rem;
-            font-weight: 300;
-        }
-
-        .post-content__body h2 {
-            font-size: 1.75rem;
-            font-weight: 400;
-        }
-
-        .post-content__body h3 {
-            font-size: 1.375rem;
-            font-weight: 400;
-        }
-
-        .post-content__body h4 {
-            font-family: var(--font-body);
-            font-size: 1.125rem;
-            font-weight: 600;
-        }
-
-        .post-content__body p {
-            margin-bottom: var(--space-md);
-        }
-
-        .post-content__body a {
-            color: var(--color-accent);
-            text-decoration: underline;
-            text-underline-offset: 3px;
-            transition: color 0.3s ease;
-        }
-
-        .post-content__body a:hover {
-            color: var(--color-accent-light);
-        }
-
-        .post-content__body ul,
-        .post-content__body ol {
-            margin-bottom: var(--space-md);
-            padding-left: 1.5rem;
-        }
-
-        .post-content__body li {
-            margin-bottom: 0.5rem;
-        }
-
-        .post-content__body li::marker {
-            color: var(--color-accent);
-        }
-
-        .post-content__body strong {
-            color: var(--color-text-primary);
-            font-weight: 600;
-        }
-
-        .post-content__body blockquote {
-            margin: var(--space-lg) 0;
-            padding: var(--space-md) var(--space-lg);
-            border-left: 3px solid var(--color-accent);
-            background: var(--color-surface);
-            border-radius: 0 var(--radius-md) var(--radius-md) 0;
-            font-style: italic;
-        }
-
-        .post-content__body blockquote p {
-            margin-bottom: 0;
-        }
-
-        .post-content__body code {
-            font-family: 'SF Mono', 'Fira Code', monospace;
-            font-size: 0.875em;
-            padding: 0.2em 0.4em;
-            background: var(--color-surface-2);
-            border-radius: 4px;
-            color: var(--color-accent);
-        }
-
-        .post-content__body pre {
-            margin: var(--space-lg) 0;
-            padding: var(--space-lg);
-            background: var(--color-surface);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-md);
-            overflow-x: auto;
-        }
-
-        .post-content__body pre code {
-            padding: 0;
-            background: none;
-            color: var(--color-text-primary);
-        }
-
-        .post-content__body hr {
-            margin: var(--space-xl) 0;
-            border: none;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--color-border-strong), transparent);
-        }
-
-        .post-content__body img {
-            max-width: 100%;
-            height: auto;
-            border-radius: var(--radius-md);
-            margin: var(--space-lg) 0;
-        }
-
-        /* Related posts */
-        .related-posts {
-            padding: var(--space-2xl) 0;
-            background: var(--color-surface);
-            border-top: 1px solid var(--color-border);
-        }
-
-        .related-posts__header {
-            text-align: center;
-            margin-bottom: var(--space-xl);
-        }
-
-        .related-posts__title {
-            font-family: var(--font-display);
-            font-size: 1.75rem;
-            font-weight: 400;
-            color: var(--color-text-primary);
-        }
-
-        .related-posts__grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: var(--space-md);
-        }
-
-        .related-post-card {
-            padding: var(--space-lg);
-            background: var(--color-bg);
-            border: 1px solid var(--color-border);
-            border-radius: var(--radius-lg);
-            text-decoration: none;
-            transition: all 0.4s var(--ease-out);
-        }
-
-        .related-post-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-md);
-            border-color: var(--color-accent);
-        }
-
-        .related-post-card__title {
-            font-family: var(--font-display);
-            font-size: 1.125rem;
-            font-weight: 400;
-            color: var(--color-text-primary);
-            line-height: 1.4;
-            margin-bottom: var(--space-xs);
-        }
-
-        .related-post-card__meta {
-            font-size: 0.8125rem;
-            color: var(--color-text-tertiary);
-        }
-
-        /* Loading & error states */
-        .post-loading,
-        .post-error {
-            text-align: center;
-            padding: calc(var(--space-3xl) + 80px) var(--space-lg) var(--space-3xl);
-            min-height: 60vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .post-error__icon {
-            width: 64px;
-            height: 64px;
-            color: var(--color-text-tertiary);
-            margin-bottom: var(--space-md);
-        }
-
-        .post-error__title {
-            font-family: var(--font-display);
-            font-size: 2rem;
-            color: var(--color-text-primary);
-            margin-bottom: var(--space-xs);
-        }
-
-        .post-error__text {
-            color: var(--color-text-secondary);
-            margin-bottom: var(--space-lg);
-        }
-
-        .post-error__btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.75rem 1.5rem;
-            font-family: var(--font-body);
-            font-size: 0.9375rem;
-            font-weight: 500;
-            color: var(--color-surface);
-            background: var(--color-text-primary);
-            border: none;
-            border-radius: var(--radius-md);
-            text-decoration: none;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .post-error__btn:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .related-posts__grid {
-                grid-template-columns: 1fr;
-            }
-
-            .post-hero__meta {
-                flex-wrap: wrap;
-            }
-        }
-    </style>
 </head>
 <body>
     <a class="skip-link" href="#main">Skip to content</a>
@@ -373,8 +25,8 @@
                 </a>
                 <ul class="nav__links">
                     <li><a href="/#work" class="nav__link">Work</a></li>
-                    <li><a href="/#capabilities" class="nav__link">Capabilities</a></li>
-                    <li><a href="./blog.html" class="nav__link">Blog</a></li>
+                    <li><a href="/#capabilities" class="nav__link">Products</a></li>
+                    <li><a href="/blog" class="nav__link">Blog</a></li>
                     <li><a href="/#about" class="nav__link">About</a></li>
                     <li><a href="/#contact" class="nav__link">Contact</a></li>
                 </ul>
@@ -454,7 +106,7 @@
             <div class="footer__main">
                 <div class="footer__cta-group">
                     <h2 class="footer__cta-title">A clearer way through the work</h2>
-                    <p class="footer__cta-subtitle">Send a short note with the workflow, the constraints, and where people get stuck.</p>
+                    <p class="footer__cta-subtitle">Send a short note with the workflow, the constraints, and where people get stuck. Observer will respond with a simple next step.</p>
                     <a href="mailto:INFO@techademy.io" class="footer__email">INFO@techademy.io</a>
                 </div>
                 <nav class="footer__nav" aria-label="Footer">
@@ -462,16 +114,16 @@
                         <h4>Navigation</h4>
                         <ul>
                             <li><a href="/#work">Work</a></li>
-                            <li><a href="/#capabilities">Capabilities</a></li>
-                            <li><a href="./blog.html">Blog</a></li>
+                            <li><a href="/#capabilities">Products</a></li>
+                            <li><a href="/blog">Blog</a></li>
                             <li><a href="/#about">About</a></li>
                         </ul>
                     </div>
                     <div class="footer__nav-group">
                         <h4>Links</h4>
                         <ul>
-                            <li><a href="#">LinkedIn</a></li>
-                            <li><a href="#">GitHub</a></li>
+                            <li><a href="/coming-soon">LinkedIn</a></li>
+                            <li><a href="/coming-soon">GitHub</a></li>
                         </ul>
                     </div>
                 </nav>
@@ -479,111 +131,13 @@
             <div class="footer__bottom">
                 <p class="footer__copyright">© 2025 Observer. All rights reserved.</p>
                 <div class="footer__legal">
-                    <a href="#">Privacy</a>
-                    <a href="#">Terms</a>
+                    <a href="/coming-soon">Privacy</a>
+                    <a href="/coming-soon">Terms</a>
                 </div>
             </div>
         </div>
     </footer>
 
-    <script>
-        // Elements
-        const loadingState = document.getElementById('loadingState');
-        const errorState = document.getElementById('errorState');
-        const postContent = document.getElementById('postContent');
-        const nav = document.getElementById('nav');
-
-        // Get slug from URL
-        function getSlug() {
-            const path = window.location.pathname;
-            const parts = path.split('/');
-            return parts[parts.length - 1];
-        }
-
-        // Format date
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', {
-                month: 'long',
-                day: 'numeric',
-                year: 'numeric'
-            });
-        }
-
-        // Load post
-        async function loadPost() {
-            const slug = getSlug();
-
-            try {
-                const res = await fetch(`/api/posts/${slug}`);
-
-                if (!res.ok) {
-                    throw new Error('Post not found');
-                }
-
-                const post = await res.json();
-                renderPost(post);
-            } catch (error) {
-                console.error('Failed to load post:', error);
-                loadingState.style.display = 'none';
-                errorState.style.display = 'flex';
-            }
-        }
-
-        // Render post
-        function renderPost(post) {
-            // Update page title
-            document.title = `${post.title} — Observer`;
-
-            // Update meta
-            document.getElementById('postCategory').textContent = post.categoryName || 'Insights';
-            document.getElementById('postDate').textContent = formatDate(post.publishedAt);
-            document.getElementById('postReadTime').textContent = `${post.readTime} min read`;
-
-            // Update content
-            document.getElementById('postTitle').textContent = post.title;
-            document.getElementById('postExcerpt').textContent = post.excerpt;
-            document.getElementById('postBody').innerHTML = post.htmlContent;
-
-            // Render related posts
-            if (post.relatedPosts && post.relatedPosts.length > 0) {
-                renderRelatedPosts(post.relatedPosts);
-            }
-
-            // Show content
-            loadingState.style.display = 'none';
-            postContent.style.display = 'block';
-        }
-
-        // Render related posts
-        function renderRelatedPosts(posts) {
-            const relatedGrid = document.getElementById('relatedGrid');
-            const relatedSection = document.getElementById('relatedPosts');
-
-            relatedGrid.innerHTML = posts.map(post => `
-                <a href="/blog/${post.slug}" class="related-post-card">
-                    <h3 class="related-post-card__title">${post.title}</h3>
-                    <p class="related-post-card__meta">${post.readTime} min read</p>
-                </a>
-            `).join('');
-
-            relatedSection.style.display = 'block';
-        }
-
-        // Nav scroll effect
-        function handleScroll() {
-            if (window.scrollY > 50) {
-                nav.classList.add('scrolled');
-            } else {
-                nav.classList.remove('scrolled');
-            }
-        }
-
-        window.addEventListener('scroll', handleScroll, { passive: true });
-
-        // Initialize
-        loadPost();
-    </script>
+    <script src="/scripts/post.js" defer></script>
 </body>
 </html>
-

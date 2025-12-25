@@ -4,11 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Observer — Purposeful Software</title>
+    <meta name="description" content="Observer builds software by watching real workflows, finding friction, and removing steps. Clear, lightweight systems that stay maintainable.">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Observer — Purposeful Software">
+    <meta property="og:description" content="Software shaped by real work. We watch workflows, find friction, and remove unnecessary steps.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://observersoftware.io">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Observer — Purposeful Software">
+    <meta name="twitter:description" content="Software shaped by real work. We watch workflows, find friction, and remove unnecessary steps.">
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./styles/styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/three@0.150.0/build/three.min.js"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+    <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js"}}</script>
+    <script type="module">
+        import * as THREE from 'three';
+        window.THREE = THREE;
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/lottie-web@5.12.2/build/player/lottie.min.js"></script>
 </head>
 <body>
@@ -18,14 +36,14 @@
     <nav class="nav" id="nav">
         <div class="container">
             <div class="nav__inner">
-                <a href="#" class="nav__logo">
+                <a href="/" class="nav__logo">
                     <img class="logo-mark" src="./assets/observer-logo-white.png" alt="" aria-hidden="true">
                     <span class="nav__brand">Observer</span>
                     <span class="nav__meta">a Techademy LLC subsidiary</span>
                 </a>
                 <ul class="nav__links">
                     <li><a href="#work" class="nav__link">Work</a></li>
-                    <li><a href="#capabilities" class="nav__link">Capabilities</a></li>
+                    <li><a href="#capabilities" class="nav__link">Products</a></li>
                     <li><a href="./blog.html" class="nav__link">Blog</a></li>
                     <li><a href="#about" class="nav__link">About</a></li>
                     <li><a href="#contact" class="nav__link">Contact</a></li>
@@ -138,7 +156,7 @@
     <section class="capabilities" id="capabilities">
         <div class="container">
             <header class="section-header reveal">
-                <p class="section-label">Capabilities</p>
+                <p class="section-label">Products</p>
                 <h2 class="section-title">Systems that fit the work</h2>
             </header>
             <div class="capabilities__grid" id="capabilitiesGrid">
@@ -187,7 +205,7 @@
                         <h4>Navigation</h4>
                         <ul>
                             <li><a href="#work">Work</a></li>
-                            <li><a href="#capabilities">Capabilities</a></li>
+                            <li><a href="#capabilities">Products</a></li>
                             <li><a href="./blog.html">Blog</a></li>
                             <li><a href="#about">About</a></li>
                         </ul>
@@ -195,8 +213,8 @@
                     <div class="footer__nav-group">
                         <h4>Links</h4>
                         <ul>
-                            <li><a href="#">LinkedIn</a></li>
-                            <li><a href="#">GitHub</a></li>
+                            <li><a href="/coming-soon">LinkedIn</a></li>
+                            <li><a href="/coming-soon">GitHub</a></li>
                         </ul>
                     </div>
                 </nav>
@@ -204,8 +222,8 @@
             <div class="footer__bottom">
                 <p class="footer__copyright">© 2025 Observer. All rights reserved.</p>
                 <div class="footer__legal">
-                    <a href="#">Privacy</a>
-                    <a href="#">Terms</a>
+                    <a href="/coming-soon">Privacy</a>
+                    <a href="/coming-soon">Terms</a>
                 </div>
             </div>
         </div>

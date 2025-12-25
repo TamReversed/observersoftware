@@ -51,6 +51,10 @@ app.get('/admin/login', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin', 'login.html'));
 });
 
+app.get('/coming-soon', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'coming-soon.html'));
+});
+
 // Error handler
 app.use(errorHandler);
 

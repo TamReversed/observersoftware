@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coming Soon — Observer</title>
+    <meta name="description" content="This page is under construction. Something is being built.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,300;8..60,400&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --font-display: 'Source Serif 4', Georgia, serif;
+            --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: #030308;
+            color: #fff;
+            min-height: 100vh;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+
+        /* Galaxy Canvas */
+        #galaxy {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        /* Nebula overlay */
+        .nebula {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+            background: 
+                radial-gradient(ellipse at 20% 80%, rgba(88, 28, 135, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(30, 64, 175, 0.12) 0%, transparent 45%),
+                radial-gradient(ellipse at 50% 50%, rgba(67, 56, 202, 0.08) 0%, transparent 60%);
+            animation: nebulaPulse 12s ease-in-out infinite alternate;
+        }
+
+        @keyframes nebulaPulse {
+            0% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        /* Content */
+        .content {
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 2rem;
+            opacity: 0;
+            animation: fadeIn 1s ease-out 0.3s forwards;
+            filter: drop-shadow(0 0 30px rgba(124, 155, 221, 0.5));
+        }
+
+        .title {
+            font-family: var(--font-display);
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            font-weight: 300;
+            letter-spacing: -0.02em;
+            margin-bottom: 1rem;
+            opacity: 0;
+            animation: fadeUp 1s ease-out 0.5s forwards;
+            background: linear-gradient(135deg, #fff 0%, #a3b8e8 50%, #7c9bdd 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: clamp(1rem, 2.5vw, 1.25rem);
+            color: rgba(255, 255, 255, 0.5);
+            max-width: 400px;
+            line-height: 1.7;
+            margin-bottom: 3rem;
+            opacity: 0;
+            animation: fadeUp 1s ease-out 0.7s forwards;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            padding: 0.875rem 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            opacity: 0;
+            animation: fadeUp 1s ease-out 0.9s forwards;
+        }
+
+        .back-link:hover {
+            color: #fff;
+            border-color: rgba(124, 155, 221, 0.5);
+            background: rgba(124, 155, 221, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(124, 155, 221, 0.2);
+        }
+
+        .back-link svg {
+            width: 18px;
+            height: 18px;
+            transition: transform 0.3s ease;
+        }
+
+        .back-link:hover svg {
+            transform: translateX(-4px);
+        }
+
+        /* Floating orbs */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 2;
+            filter: blur(60px);
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(124, 155, 221, 0.2) 0%, transparent 70%);
+            top: -10%;
+            right: -5%;
+            animation-delay: 0s;
+        }
+
+        .orb-2 {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%);
+            bottom: -5%;
+            left: -5%;
+            animation-delay: -7s;
+        }
+
+        .orb-3 {
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.12) 0%, transparent 70%);
+            top: 40%;
+            left: 20%;
+            animation-delay: -14s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -30px) scale(1.05); }
+            50% { transform: translate(-20px, 20px) scale(0.95); }
+            75% { transform: translate(20px, 30px) scale(1.02); }
+        }
+
+        /* Mouse trail effect hint */
+        .hint {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.25);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            opacity: 0;
+            animation: fadeIn 1s ease-out 2s forwards;
+            z-index: 10;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .title, .subtitle, .back-link {
+            transform: translateY(20px);
+        }
+
+        /* Star cursor trail */
+        .trail-star {
+            position: fixed;
+            pointer-events: none;
+            z-index: 5;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 0 10px 2px rgba(124, 155, 221, 0.8),
+                        0 0 20px 4px rgba(124, 155, 221, 0.4);
+            animation: starFade 1s ease-out forwards;
+        }
+
+        @keyframes starFade {
+            0% { 
+                opacity: 1; 
+                transform: scale(1);
+            }
+            100% { 
+                opacity: 0; 
+                transform: scale(0.2);
+            }
+        }
+
+        /* Constellation lines */
+        .constellation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        .constellation line {
+            stroke: rgba(124, 155, 221, 0.15);
+            stroke-width: 1;
+            transition: stroke 0.3s ease;
+        }
+
+        /* Interactive prompt glow */
+        .glow-ring {
+            position: fixed;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 1px solid rgba(124, 155, 221, 0.3);
+            pointer-events: none;
+            z-index: 4;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .glow-ring.active {
+            opacity: 1;
+            animation: ringPulse 2s ease-out infinite;
+        }
+
+        @keyframes ringPulse {
+            0% { 
+                transform: translate(-50%, -50%) scale(0.8);
+                opacity: 0.5;
+            }
+            100% { 
+                transform: translate(-50%, -50%) scale(1.5);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="galaxy"></canvas>
+    
+    <div class="nebula"></div>
+    
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    
+    <svg class="constellation" id="constellation"></svg>
+    
+    <div class="glow-ring" id="glowRing"></div>
+    
+    <div class="content">
+        <img src="/assets/observer-logo-white.png" alt="Observer" class="logo">
+        <h1 class="title">Coming Soon</h1>
+        <p class="subtitle">Something is being observed. This page is still taking shape—check back soon.</p>
+        <a href="/" class="back-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Return to Observer
+        </a>
+    </div>
+    
+    <p class="hint">Move your cursor to create stars</p>
+
+    <script>
+        // Galaxy starfield
+        const canvas = document.getElementById('galaxy');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        const stars = [];
+        const shootingStars = [];
+        const numStars = 400;
+        
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        
+        resize();
+        window.addEventListener('resize', resize);
+        
+        // Create stars
+        for (let i = 0; i < numStars; i++) {
+            stars.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                size: Math.random() * 2 + 0.5,
+                twinkleSpeed: Math.random() * 0.02 + 0.005,
+                twinklePhase: Math.random() * Math.PI * 2,
+                color: ['#ffffff', '#cce5ff', '#aaccff', '#fff4e6'][Math.floor(Math.random() * 4)]
+            });
+        }
+        
+        // Shooting star class
+        class ShootingStar {
+            constructor() {
+                this.reset();
+            }
+            
+            reset() {
+                this.x = Math.random() * width * 1.5;
+                this.y = Math.random() * height * 0.5;
+                this.length = Math.random() * 80 + 40;
+                this.speed = Math.random() * 15 + 10;
+                this.angle = Math.PI / 4 + (Math.random() - 0.5) * 0.3;
+                this.opacity = 1;
+                this.active = true;
+            }
+            
+            update() {
+                this.x += Math.cos(this.angle) * this.speed;
+                this.y += Math.sin(this.angle) * this.speed;
+                this.opacity -= 0.015;
+                
+                if (this.opacity <= 0 || this.x > width + 100 || this.y > height + 100) {
+                    this.active = false;
+                }
+            }
+            
+            draw() {
+                if (!this.active) return;
+                
+                const tailX = this.x - Math.cos(this.angle) * this.length;
+                const tailY = this.y - Math.sin(this.angle) * this.length;
+                
+                const gradient = ctx.createLinearGradient(tailX, tailY, this.x, this.y);
+                gradient.addColorStop(0, 'transparent');
+                gradient.addColorStop(1, `rgba(255, 255, 255, ${this.opacity})`);
+                
+                ctx.beginPath();
+                ctx.moveTo(tailX, tailY);
+                ctx.lineTo(this.x, this.y);
+                ctx.strokeStyle = gradient;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Head glow
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.fill();
+            }
+        }
+        
+        // Spawn shooting stars occasionally
+        setInterval(() => {
+            if (Math.random() < 0.3) {
+                const star = shootingStars.find(s => !s.active);
+                if (star) {
+                    star.reset();
+                } else if (shootingStars.length < 5) {
+                    shootingStars.push(new ShootingStar());
+                }
+            }
+        }, 2000);
+        
+        let time = 0;
+        
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            time += 0.016;
+            
+            // Draw stars with twinkling
+            stars.forEach(star => {
+                const twinkle = Math.sin(time * star.twinkleSpeed * 60 + star.twinklePhase) * 0.5 + 0.5;
+                const alpha = 0.3 + twinkle * 0.7;
+                
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size * (0.8 + twinkle * 0.4), 0, Math.PI * 2);
+                ctx.fillStyle = star.color.replace(')', `, ${alpha})`).replace('rgb', 'rgba').replace('#', '');
+                
+                // Parse hex color
+                if (star.color.startsWith('#')) {
+                    const hex = star.color.slice(1);
+                    const r = parseInt(hex.slice(0, 2), 16);
+                    const g = parseInt(hex.slice(2, 4), 16);
+                    const b = parseInt(hex.slice(4, 6), 16);
+                    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+                }
+                
+                ctx.fill();
+                
+                // Glow for larger stars
+                if (star.size > 1.5) {
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, star.size * 3, 0, Math.PI * 2);
+                    const glowAlpha = alpha * 0.15;
+                    if (star.color.startsWith('#')) {
+                        const hex = star.color.slice(1);
+                        const r = parseInt(hex.slice(0, 2), 16);
+                        const g = parseInt(hex.slice(2, 4), 16);
+                        const b = parseInt(hex.slice(4, 6), 16);
+                        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${glowAlpha})`;
+                    }
+                    ctx.fill();
+                }
+            });
+            
+            // Update and draw shooting stars
+            shootingStars.forEach(star => {
+                star.update();
+                star.draw();
+            });
+            
+            requestAnimationFrame(animate);
+        }
+        
+        animate();
+        
+        // Mouse trail effect
+        let mouseX = 0, mouseY = 0;
+        let lastTrailTime = 0;
+        const trailStars = [];
+        const maxTrailStars = 50;
+        
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            
+            const now = Date.now();
+            if (now - lastTrailTime > 30) {
+                lastTrailTime = now;
+                createTrailStar(e.clientX, e.clientY);
+            }
+            
+            // Update glow ring position
+            const glowRing = document.getElementById('glowRing');
+            glowRing.style.left = e.clientX + 'px';
+            glowRing.style.top = e.clientY + 'px';
+        });
+        
+        function createTrailStar(x, y) {
+            const star = document.createElement('div');
+            star.className = 'trail-star';
+            star.style.left = x + 'px';
+            star.style.top = y + 'px';
+            
+            // Random offset for organic feel
+            const offsetX = (Math.random() - 0.5) * 10;
+            const offsetY = (Math.random() - 0.5) * 10;
+            star.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+            
+            document.body.appendChild(star);
+            
+            // Remove after animation
+            setTimeout(() => star.remove(), 1000);
+        }
+        
+        // Click effect - create constellation
+        const constellationSVG = document.getElementById('constellation');
+        const clickPoints = [];
+        const maxPoints = 8;
+        
+        document.addEventListener('click', (e) => {
+            // Don't trigger on link clicks
+            if (e.target.closest('a')) return;
+            
+            const point = { x: e.clientX, y: e.clientY, time: Date.now() };
+            clickPoints.push(point);
+            
+            // Create burst effect
+            createBurst(e.clientX, e.clientY);
+            
+            // Update constellation
+            updateConstellation();
+            
+            // Limit points
+            if (clickPoints.length > maxPoints) {
+                clickPoints.shift();
+                updateConstellation();
+            }
+        });
+        
+        function createBurst(x, y) {
+            for (let i = 0; i < 12; i++) {
+                const star = document.createElement('div');
+                star.className = 'trail-star';
+                star.style.left = x + 'px';
+                star.style.top = y + 'px';
+                
+                const angle = (i / 12) * Math.PI * 2;
+                const distance = 30 + Math.random() * 20;
+                const endX = Math.cos(angle) * distance;
+                const endY = Math.sin(angle) * distance;
+                
+                star.style.transition = 'transform 0.6s ease-out, opacity 0.6s ease-out';
+                document.body.appendChild(star);
+                
+                requestAnimationFrame(() => {
+                    star.style.transform = `translate(${endX}px, ${endY}px)`;
+                    star.style.opacity = '0';
+                });
+                
+                setTimeout(() => star.remove(), 600);
+            }
+            
+            // Show glow ring
+            const glowRing = document.getElementById('glowRing');
+            glowRing.classList.add('active');
+            setTimeout(() => glowRing.classList.remove('active'), 500);
+        }
+        
+        function updateConstellation() {
+            constellationSVG.innerHTML = '';
+            
+            if (clickPoints.length < 2) return;
+            
+            // Draw lines between nearby points
+            for (let i = 0; i < clickPoints.length; i++) {
+                for (let j = i + 1; j < clickPoints.length; j++) {
+                    const p1 = clickPoints[i];
+                    const p2 = clickPoints[j];
+                    const dist = Math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2);
+                    
+                    if (dist < 300) {
+                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        line.setAttribute('x1', p1.x);
+                        line.setAttribute('y1', p1.y);
+                        line.setAttribute('x2', p2.x);
+                        line.setAttribute('y2', p2.y);
+                        line.style.opacity = 1 - (dist / 300);
+                        constellationSVG.appendChild(line);
+                    }
+                }
+            }
+            
+            // Draw points
+            clickPoints.forEach(p => {
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', p.x);
+                circle.setAttribute('cy', p.y);
+                circle.setAttribute('r', '3');
+                circle.setAttribute('fill', 'rgba(124, 155, 221, 0.8)');
+                constellationSVG.appendChild(circle);
+            });
+        }
+        
+        // Parallax on orbs
+        document.addEventListener('mousemove', (e) => {
+            const x = (e.clientX / width - 0.5) * 2;
+            const y = (e.clientY / height - 0.5) * 2;
+            
+            document.querySelectorAll('.orb').forEach((orb, i) => {
+                const speed = (i + 1) * 15;
+                orb.style.transform = `translate(${x * speed}px, ${y * speed}px)`;
+            });
+        });
+    </script>
+</body>
+</html>
+
