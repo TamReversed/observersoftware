@@ -49,7 +49,7 @@ function getAllCapabilities(req, res, next) {
 
 function createCapability(req, res, next) {
   try {
-    const { title, description, longDescription, features, screenshots, externalUrl, published } = req.body;
+    const { title, description, longDescription, features, screenshots, externalUrl, icon, order, published } = req.body;
 
     if (!title || !description) {
       return res.status(400).json({ error: 'Title and description are required' });
@@ -66,7 +66,8 @@ function createCapability(req, res, next) {
       features: features || [],
       screenshots: screenshots || [],
       externalUrl: externalUrl || '',
-      order: maxOrder + 1,
+      icon: icon || { type: 'preset', preset: '', svg: '', lottieUrl: '', lottieData: null },
+      order: order || maxOrder + 1,
       published: !!published
     };
 
@@ -79,7 +80,7 @@ function createCapability(req, res, next) {
 
 function updateCapability(req, res, next) {
   try {
-    const { title, description, longDescription, features, screenshots, externalUrl, order, published } = req.body;
+    const { title, description, longDescription, features, screenshots, externalUrl, icon, order, published } = req.body;
     const capability = capabilitiesService.findById(req.params.id);
 
     if (!capability) {
@@ -93,6 +94,7 @@ function updateCapability(req, res, next) {
     if (features !== undefined) updates.features = features;
     if (screenshots !== undefined) updates.screenshots = screenshots;
     if (externalUrl !== undefined) updates.externalUrl = externalUrl;
+    if (icon !== undefined) updates.icon = icon;
     if (order !== undefined) updates.order = order;
     if (published !== undefined) updates.published = published;
 

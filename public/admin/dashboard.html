@@ -539,6 +539,126 @@
       border-color: rgba(239, 68, 68, 0.3);
     }
 
+    /* Icon Selector */
+    .icon-selector {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .icon-type-tabs {
+      display: flex;
+      background: var(--color-bg);
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .icon-type-tab {
+      flex: 1;
+      padding: 0.625rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      font-family: var(--font-sans);
+      background: transparent;
+      border: none;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .icon-type-tab:hover {
+      color: var(--color-text);
+    }
+
+    .icon-type-tab.active {
+      background: var(--color-surface);
+      color: var(--color-accent);
+    }
+
+    .icon-type-content {
+      padding: 1rem;
+    }
+
+    .icon-preset-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+      gap: 0.5rem;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .icon-preset-item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      background: var(--color-bg);
+      border: 2px solid transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--color-text-muted);
+    }
+
+    .icon-preset-item:hover {
+      border-color: var(--color-border-hover);
+      color: var(--color-text);
+    }
+
+    .icon-preset-item.selected {
+      border-color: var(--color-accent);
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--color-accent);
+    }
+
+    .icon-preset-item svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    /* Screenshots List */
+    .screenshots-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .screenshot-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem 0.75rem;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      font-size: 0.875rem;
+    }
+
+    .screenshot-item span {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--color-text-muted);
+    }
+
+    .screenshot-remove {
+      background: none;
+      border: none;
+      color: var(--color-error);
+      cursor: pointer;
+      padding: 0.25rem;
+      font-size: 1.25rem;
+      line-height: 1;
+      opacity: 0.7;
+    }
+
+    .screenshot-remove:hover {
+      opacity: 1;
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
       .admin-layout {
@@ -713,9 +833,71 @@
             <input type="text" id="capabilityTitle" class="form-input" placeholder="e.g., DataDragon, TableFlow">
           </div>
           <div class="form-group">
-            <label class="form-label" for="capabilityDescription">Description</label>
-            <textarea id="capabilityDescription" class="form-input form-textarea" placeholder="Describe what this capability/product does..."></textarea>
+            <label class="form-label" for="capabilityDescription">Short Description</label>
+            <textarea id="capabilityDescription" class="form-input form-textarea small" placeholder="Brief description shown on the card..."></textarea>
           </div>
+          
+          <!-- Icon Selection -->
+          <div class="form-group">
+            <label class="form-label">Icon</label>
+            <div class="icon-selector">
+              <div class="icon-type-tabs">
+                <button type="button" class="icon-type-tab active" data-icon-type="preset">Preset</button>
+                <button type="button" class="icon-type-tab" data-icon-type="svg">Custom SVG</button>
+                <button type="button" class="icon-type-tab" data-icon-type="lottie">Lottie</button>
+              </div>
+              
+              <div class="icon-type-content" id="iconPresetContent">
+                <div class="icon-preset-grid" id="iconPresetGrid"></div>
+                <input type="hidden" id="capabilityIconPreset" value="">
+              </div>
+              
+              <div class="icon-type-content" id="iconSvgContent" style="display: none;">
+                <textarea id="capabilityIconSvg" class="form-input form-textarea small" placeholder="Paste SVG code here..."></textarea>
+                <p class="form-hint">Paste a valid SVG element. It will be sanitized for security.</p>
+              </div>
+              
+              <div class="icon-type-content" id="iconLottieContent" style="display: none;">
+                <input type="text" id="capabilityIconLottieUrl" class="form-input" placeholder="https://assets.lottiefiles.com/...">
+                <p class="form-hint">Paste a URL to a Lottie JSON file</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="capabilityLongDescription">Long Description (Markdown)</label>
+            <textarea id="capabilityLongDescription" class="form-input form-textarea content" placeholder="Detailed description shown in the modal. Supports Markdown..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Features</label>
+            <div class="tags-container" id="capabilityFeaturesContainer">
+              <input type="text" class="tag-input" id="capabilityFeatureInput" placeholder="Type feature and press Enter">
+            </div>
+            <p class="form-hint">Press Enter to add features</p>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="capabilityExternalUrl">External URL</label>
+              <input type="text" id="capabilityExternalUrl" class="form-input" placeholder="https://product.example.com">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="capabilityOrder">Display Order</label>
+              <input type="number" id="capabilityOrder" class="form-input" placeholder="1" min="1">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Screenshots</label>
+            <div class="screenshots-list" id="capabilityScreenshotsList"></div>
+            <div class="form-row">
+              <input type="text" id="capabilityScreenshotInput" class="form-input" placeholder="/assets/products/screenshot.png">
+              <button type="button" class="btn btn-ghost" id="addScreenshotBtn">Add</button>
+            </div>
+            <p class="form-hint">Add URLs to product screenshots</p>
+          </div>
+
           <div class="form-group">
             <label class="form-toggle">
               <div class="toggle-switch">
@@ -733,6 +915,51 @@
   <div class="toast" id="toast"></div>
 
   <script>
+    // Preset Icons (matching the frontend icons.js)
+    const presetIcons = {
+      "database": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 12V7a9 3 0 0 1 18 0v5M3 12a9 3 0 0 0 9 3 9 3 0 0 0 9-3"/></svg>`,
+      "chart": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>`,
+      "pieChart": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>`,
+      "trendingUp": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>`,
+      "table": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/></svg>`,
+      "grid": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>`,
+      "list": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>`,
+      "workflow": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="2"/><path d="M7 11v4a2 2 0 0 0 2 2h4"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>`,
+      "gitBranch": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>`,
+      "repeat": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>`,
+      "file": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>`,
+      "folder": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>`,
+      "users": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+      "user": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+      "lock": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
+      "shield": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+      "settings": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
+      "mail": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>`,
+      "messageSquare": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
+      "bell": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>`,
+      "zap": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+      "target": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,
+      "compass": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>`,
+      "layers": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>`,
+      "box": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>`,
+      "cpu": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>`,
+      "activity": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>`,
+      "code": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`,
+      "terminal": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>`,
+      "search": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>`,
+      "eye": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`,
+      "clock": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+      "checkCircle": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>`,
+      "star": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+      "globe": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>`,
+      "link": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`,
+      "calendar": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>`,
+      "package": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16.5 9.4-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" x2="12" y1="22" y2="12"/></svg>`,
+      "share": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>`,
+      "filter": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>`,
+      "plug": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"/></svg>`
+    };
+
     // State
     let currentType = 'posts';
     let items = { posts: [], work: [], capabilities: [] };
@@ -740,6 +967,12 @@
     let currentItem = null;
     let isNewItem = false;
     let workTags = [];
+    
+    // Capability-specific state
+    let capabilityFeatures = [];
+    let capabilityScreenshots = [];
+    let selectedIconType = 'preset';
+    let selectedPresetIcon = '';
 
     // Elements
     const itemsList = document.getElementById('itemsList');
@@ -932,8 +1165,29 @@
         document.getElementById('capabilitiesEditorTitle').textContent = 'Edit Capability';
         document.getElementById('capabilityTitle').value = item.title || '';
         document.getElementById('capabilityDescription').value = item.description || '';
+        document.getElementById('capabilityLongDescription').value = item.longDescription || '';
+        document.getElementById('capabilityExternalUrl').value = item.externalUrl || '';
+        document.getElementById('capabilityOrder').value = item.order || '';
         document.getElementById('capabilityPublished').checked = item.published;
         document.getElementById('deleteCapabilityBtn').style.display = 'inline-flex';
+        
+        // Features
+        capabilityFeatures = item.features || [];
+        renderCapabilityFeatures();
+        
+        // Screenshots
+        capabilityScreenshots = item.screenshots || [];
+        renderCapabilityScreenshots();
+        
+        // Icon
+        const icon = item.icon || { type: 'preset', preset: '' };
+        selectedIconType = icon.type || 'preset';
+        selectedPresetIcon = icon.preset || '';
+        document.getElementById('capabilityIconSvg').value = icon.svg || '';
+        document.getElementById('capabilityIconLottieUrl').value = icon.lottieUrl || '';
+        
+        updateIconTypeTabs();
+        renderPresetIconGrid();
       }
 
       renderItemsList();
@@ -976,8 +1230,28 @@
         document.getElementById('capabilitiesEditorTitle').textContent = 'New Capability';
         document.getElementById('capabilityTitle').value = '';
         document.getElementById('capabilityDescription').value = '';
+        document.getElementById('capabilityLongDescription').value = '';
+        document.getElementById('capabilityExternalUrl').value = '';
+        document.getElementById('capabilityOrder').value = '';
         document.getElementById('capabilityPublished').checked = false;
         document.getElementById('deleteCapabilityBtn').style.display = 'none';
+        
+        // Reset features
+        capabilityFeatures = [];
+        renderCapabilityFeatures();
+        
+        // Reset screenshots
+        capabilityScreenshots = [];
+        renderCapabilityScreenshots();
+        
+        // Reset icon
+        selectedIconType = 'preset';
+        selectedPresetIcon = '';
+        document.getElementById('capabilityIconSvg').value = '';
+        document.getElementById('capabilityIconLottieUrl').value = '';
+        
+        updateIconTypeTabs();
+        renderPresetIconGrid();
       }
 
       renderItemsList();
@@ -1100,9 +1374,24 @@
     }
 
     async function saveCapability() {
+      // Build icon object based on selected type
+      const icon = {
+        type: selectedIconType,
+        preset: selectedIconType === 'preset' ? selectedPresetIcon : '',
+        svg: selectedIconType === 'svg' ? document.getElementById('capabilityIconSvg').value.trim() : '',
+        lottieUrl: selectedIconType === 'lottie' ? document.getElementById('capabilityIconLottieUrl').value.trim() : '',
+        lottieData: null
+      };
+
       const data = {
         title: document.getElementById('capabilityTitle').value.trim(),
         description: document.getElementById('capabilityDescription').value.trim(),
+        longDescription: document.getElementById('capabilityLongDescription').value.trim(),
+        features: capabilityFeatures,
+        screenshots: capabilityScreenshots,
+        externalUrl: document.getElementById('capabilityExternalUrl').value.trim(),
+        order: parseInt(document.getElementById('capabilityOrder').value) || 1,
+        icon: icon,
         published: document.getElementById('capabilityPublished').checked
       };
 
@@ -1156,6 +1445,104 @@
       }
     }
 
+    // Capability Features
+    function renderCapabilityFeatures() {
+      const container = document.getElementById('capabilityFeaturesContainer');
+      if (!container) return;
+      
+      container.innerHTML = capabilityFeatures.map(feature => 
+        `<span class="tag">${escapeHtml(feature)}<button class="tag-remove" data-feature="${escapeHtml(feature)}">&times;</button></span>`
+      ).join('') + '<input type="text" class="tag-input" id="capabilityFeatureInput" placeholder="Type feature and press Enter">';
+      
+      const newInput = document.getElementById('capabilityFeatureInput');
+      if (newInput) {
+        newInput.addEventListener('keydown', handleFeatureInput);
+      }
+      
+      container.querySelectorAll('.tag-remove').forEach(btn => {
+        btn.addEventListener('click', () => {
+          capabilityFeatures = capabilityFeatures.filter(f => f !== btn.dataset.feature);
+          renderCapabilityFeatures();
+        });
+      });
+    }
+
+    function handleFeatureInput(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const value = e.target.value.trim();
+        if (value && !capabilityFeatures.includes(value)) {
+          capabilityFeatures.push(value);
+          renderCapabilityFeatures();
+        }
+        e.target.value = '';
+      }
+    }
+
+    // Capability Screenshots
+    function renderCapabilityScreenshots() {
+      const container = document.getElementById('capabilityScreenshotsList');
+      if (!container) return;
+      
+      container.innerHTML = capabilityScreenshots.map((url, index) => 
+        `<div class="screenshot-item">
+          <span>${escapeHtml(url)}</span>
+          <button class="screenshot-remove" data-index="${index}">&times;</button>
+        </div>`
+      ).join('');
+      
+      container.querySelectorAll('.screenshot-remove').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const index = parseInt(btn.dataset.index);
+          capabilityScreenshots.splice(index, 1);
+          renderCapabilityScreenshots();
+        });
+      });
+    }
+
+    function addScreenshot() {
+      const input = document.getElementById('capabilityScreenshotInput');
+      if (!input) return;
+      
+      const url = input.value.trim();
+      if (url && !capabilityScreenshots.includes(url)) {
+        capabilityScreenshots.push(url);
+        renderCapabilityScreenshots();
+        input.value = '';
+      }
+    }
+
+    // Icon Type Tabs
+    function updateIconTypeTabs() {
+      document.querySelectorAll('.icon-type-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.iconType === selectedIconType);
+      });
+      
+      document.getElementById('iconPresetContent').style.display = selectedIconType === 'preset' ? 'block' : 'none';
+      document.getElementById('iconSvgContent').style.display = selectedIconType === 'svg' ? 'block' : 'none';
+      document.getElementById('iconLottieContent').style.display = selectedIconType === 'lottie' ? 'block' : 'none';
+    }
+
+    // Preset Icon Grid
+    function renderPresetIconGrid() {
+      const grid = document.getElementById('iconPresetGrid');
+      if (!grid) return;
+      
+      grid.innerHTML = Object.entries(presetIcons).map(([name, svg]) => 
+        `<div class="icon-preset-item ${selectedPresetIcon === name ? 'selected' : ''}" data-icon="${name}" title="${name}">
+          ${svg}
+        </div>`
+      ).join('');
+      
+      grid.querySelectorAll('.icon-preset-item').forEach(item => {
+        item.addEventListener('click', () => {
+          selectedPresetIcon = item.dataset.icon;
+          grid.querySelectorAll('.icon-preset-item').forEach(i => i.classList.remove('selected'));
+          item.classList.add('selected');
+        });
+      });
+    }
+
     // Event listeners
     document.querySelectorAll('.content-type-tab').forEach(tab => {
       tab.addEventListener('click', () => switchType(tab.dataset.type));
@@ -1180,6 +1567,23 @@
       document.getElementById('slugPreview').textContent = slugify(e.target.value) || '-';
     });
 
+    // Icon type tabs
+    document.querySelectorAll('.icon-type-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        selectedIconType = tab.dataset.iconType;
+        updateIconTypeTabs();
+      });
+    });
+
+    // Screenshot add button
+    document.getElementById('addScreenshotBtn')?.addEventListener('click', addScreenshot);
+    document.getElementById('capabilityScreenshotInput')?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addScreenshot();
+      }
+    });
+
     document.getElementById('logoutBtn').addEventListener('click', async () => {
       await fetch('/api/auth/logout', { method: 'POST' });
       window.location.href = '/admin/login';
@@ -1200,6 +1604,8 @@
       if (authenticated) {
         loadCategories();
         loadItems('posts');
+        // Initialize preset icon grid
+        renderPresetIconGrid();
       }
     });
   </script>
