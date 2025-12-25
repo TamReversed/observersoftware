@@ -282,19 +282,100 @@
             }
         }
 
-        // Render screenshots
+        // Render screenshots carousel
         if (modalScreenshots) {
+            const carousel = document.getElementById('modalScreenshotsCarousel');
+            const indicators = document.getElementById('modalScreenshotsIndicators');
+            const prevBtn = document.getElementById('modalScreenshotsPrev');
+            const nextBtn = document.getElementById('modalScreenshotsNext');
+            
             if (data.screenshots && data.screenshots.length > 0) {
-                modalScreenshots.innerHTML = '';
-                data.screenshots.forEach(src => {
+                // Clear previous content
+                if (carousel) carousel.innerHTML = '';
+                if (indicators) indicators.innerHTML = '';
+                
+                // Create carousel items
+                data.screenshots.forEach((src, index) => {
                     const img = document.createElement('img');
                     img.src = src;
-                    img.alt = `${data.title} screenshot`;
+                    img.alt = `${data.title} screenshot ${index + 1}`;
                     img.className = 'product-modal__screenshot';
                     img.loading = 'lazy';
-                    modalScreenshots.appendChild(img);
+                    if (carousel) carousel.appendChild(img);
+                    
+                    // Create indicator
+                    if (indicators) {
+                        const indicator = document.createElement('button');
+                        indicator.className = 'product-modal__screenshots-indicator';
+                        indicator.setAttribute('aria-label', `Go to screenshot ${index + 1}`);
+                        indicator.setAttribute('data-index', index);
+                        if (index === 0) indicator.classList.add('active');
+                        indicators.appendChild(indicator);
+                    }
                 });
-                modalScreenshots.style.display = 'grid';
+                
+                modalScreenshots.style.display = 'block';
+                
+                // Initialize carousel state
+                let currentIndex = 0;
+                
+                // Navigation function
+                const goToScreenshot = (index) => {
+                    if (!carousel || index < 0 || index >= data.screenshots.length) return;
+                    
+                    currentIndex = index;
+                    carousel.style.transform = `translateX(-${index * 100}%)`;
+                    
+                    // Update indicators
+                    if (indicators) {
+                        indicators.querySelectorAll('.product-modal__screenshots-indicator').forEach((ind, i) => {
+                            ind.classList.toggle('active', i === index);
+                        });
+                    }
+                    
+                    // Update nav buttons
+                    if (prevBtn) prevBtn.disabled = index === 0;
+                    if (nextBtn) nextBtn.disabled = index === data.screenshots.length - 1;
+                };
+                
+                // Attach indicator click handlers
+                if (indicators) {
+                    indicators.querySelectorAll('.product-modal__screenshots-indicator').forEach((indicator, index) => {
+                        indicator.addEventListener('click', () => goToScreenshot(index));
+                    });
+                }
+                
+                // Attach navigation handlers
+                if (prevBtn) {
+                    prevBtn.onclick = () => goToScreenshot(currentIndex - 1);
+                    prevBtn.disabled = currentIndex === 0;
+                }
+                
+                if (nextBtn) {
+                    nextBtn.onclick = () => goToScreenshot(currentIndex + 1);
+                    nextBtn.disabled = currentIndex === data.screenshots.length - 1;
+                }
+                
+                // Keyboard navigation
+                const handleKeyNav = (e) => {
+                    if (modal?.getAttribute('aria-hidden') === 'false') {
+                        if (e.key === 'ArrowLeft' && currentIndex > 0) {
+                            e.preventDefault();
+                            goToScreenshot(currentIndex - 1);
+                        } else if (e.key === 'ArrowRight' && currentIndex < data.screenshots.length - 1) {
+                            e.preventDefault();
+                            goToScreenshot(currentIndex + 1);
+                        }
+                    }
+                };
+                
+                document.addEventListener('keydown', handleKeyNav);
+                
+                // Store cleanup function
+                modal._screenshotCleanup = () => {
+                    document.removeEventListener('keydown', handleKeyNav);
+                };
+                
             } else {
                 modalScreenshots.style.display = 'none';
             }
@@ -317,6 +398,12 @@
 
         modal.setAttribute('aria-hidden', 'true');
         document.body.style.overflow = '';
+
+        // Cleanup screenshot carousel listeners
+        if (modal._screenshotCleanup) {
+            modal._screenshotCleanup();
+            delete modal._screenshotCleanup;
+        }
 
         // Restore focus
         if (lastFocusedElement) {

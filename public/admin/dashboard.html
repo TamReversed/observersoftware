@@ -636,6 +636,14 @@
       font-size: 0.875rem;
     }
 
+    .screenshot-item img {
+      width: 40px;
+      height: 40px;
+      object-fit: cover;
+      border-radius: 4px;
+      border: 1px solid var(--color-border);
+    }
+
     .screenshot-item span {
       flex: 1;
       overflow: hidden;
@@ -657,6 +665,55 @@
 
     .screenshot-remove:hover {
       opacity: 1;
+    }
+
+    /* Screenshot Upload Zone */
+    .screenshot-upload-zone {
+      border: 2px dashed var(--color-border);
+      border-radius: 8px;
+      padding: 2rem;
+      text-align: center;
+      background: var(--color-surface);
+      transition: all 0.2s;
+      cursor: pointer;
+      margin-bottom: 0.75rem;
+    }
+
+    .screenshot-upload-zone:hover {
+      border-color: var(--color-accent);
+      background: var(--color-surface-elevated);
+    }
+
+    .screenshot-upload-zone.dragover {
+      border-color: var(--color-accent);
+      background: var(--color-surface-elevated);
+      transform: scale(1.02);
+    }
+
+    .screenshot-upload-content {
+      pointer-events: none;
+    }
+
+    .screenshot-upload-text {
+      font-size: 0.9375rem;
+      color: var(--color-text);
+      margin-bottom: 0.25rem;
+    }
+
+    .screenshot-upload-link {
+      color: var(--color-accent);
+      text-decoration: underline;
+    }
+
+    .screenshot-upload-hint {
+      font-size: 0.8125rem;
+      color: var(--color-text-muted);
+      margin-top: 0.5rem;
+    }
+
+    .screenshot-upload-zone.uploading {
+      opacity: 0.6;
+      pointer-events: none;
     }
 
     /* Responsive */
@@ -891,11 +948,23 @@
           <div class="form-group">
             <label class="form-label">Screenshots</label>
             <div class="screenshots-list" id="capabilityScreenshotsList"></div>
-            <div class="form-row">
-              <input type="text" id="capabilityScreenshotInput" class="form-input" placeholder="/assets/products/screenshot.png">
-              <button type="button" class="btn btn-ghost" id="addScreenshotBtn">Add</button>
+            <div class="screenshot-upload-zone" id="screenshotUploadZone">
+              <div class="screenshot-upload-content">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 0.5rem; opacity: 0.5;">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" x2="12" y1="3" y2="15"></line>
+                </svg>
+                <p class="screenshot-upload-text">Drag & drop images here, or <span class="screenshot-upload-link">click to browse</span></p>
+                <p class="screenshot-upload-hint">You can also paste images from clipboard (Ctrl/Cmd+V)</p>
+              </div>
+              <input type="file" id="screenshotFileInput" accept="image/*" multiple style="display: none;">
             </div>
-            <p class="form-hint">Add URLs to product screenshots</p>
+            <div class="form-row" style="margin-top: 0.75rem;">
+              <input type="text" id="capabilityScreenshotInput" class="form-input" placeholder="Or paste image URL here">
+              <button type="button" class="btn btn-ghost" id="addScreenshotBtn">Add URL</button>
+            </div>
+            <p class="form-hint">Drag, paste, or enter URLs for product screenshots</p>
           </div>
 
           <div class="form-group">
@@ -1486,6 +1555,7 @@
       
       container.innerHTML = capabilityScreenshots.map((url, index) => 
         `<div class="screenshot-item">
+          <img src="${escapeHtml(url)}" alt="Screenshot ${index + 1}" onerror="this.style.display='none'">
           <span>${escapeHtml(url)}</span>
           <button class="screenshot-remove" data-index="${index}">&times;</button>
         </div>`
@@ -1500,6 +1570,38 @@
       });
     }
 
+    async function uploadScreenshot(file) {
+      const formData = new FormData();
+      formData.append('screenshot', file);
+
+      const uploadZone = document.getElementById('screenshotUploadZone');
+      uploadZone.classList.add('uploading');
+
+      try {
+        const res = await fetch('/api/upload/screenshot', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.error || 'Upload failed');
+        }
+
+        const data = await res.json();
+        if (data.url && !capabilityScreenshots.includes(data.url)) {
+          capabilityScreenshots.push(data.url);
+          renderCapabilityScreenshots();
+          showToast('Screenshot uploaded successfully', 'success');
+        }
+      } catch (error) {
+        console.error('Upload error:', error);
+        showToast(error.message || 'Failed to upload screenshot', 'error');
+      } finally {
+        uploadZone.classList.remove('uploading');
+      }
+    }
+
     function addScreenshot() {
       const input = document.getElementById('capabilityScreenshotInput');
       if (!input) return;
@@ -1510,6 +1612,70 @@
         renderCapabilityScreenshots();
         input.value = '';
       }
+    }
+
+    // Drag and drop handlers
+    function setupScreenshotUpload() {
+      const uploadZone = document.getElementById('screenshotUploadZone');
+      const fileInput = document.getElementById('screenshotFileInput');
+      
+      if (!uploadZone || !fileInput) return;
+
+      // Click to browse
+      uploadZone.addEventListener('click', () => fileInput.click());
+
+      // File input change
+      fileInput.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files);
+        files.forEach(file => {
+          if (file.type.startsWith('image/')) {
+            uploadScreenshot(file);
+          }
+        });
+        fileInput.value = ''; // Reset input
+      });
+
+      // Drag and drop
+      uploadZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadZone.classList.add('dragover');
+      });
+
+      uploadZone.addEventListener('dragleave', () => {
+        uploadZone.classList.remove('dragover');
+      });
+
+      uploadZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        
+        const files = Array.from(e.dataTransfer.files);
+        files.forEach(file => {
+          if (file.type.startsWith('image/')) {
+            uploadScreenshot(file);
+          }
+        });
+      });
+
+      // Paste from clipboard
+      document.addEventListener('paste', async (e) => {
+        // Only handle paste when in capabilities editor
+        const capabilitiesEditor = document.getElementById('capabilitiesEditor');
+        if (!capabilitiesEditor || capabilitiesEditor.style.display === 'none') return;
+        
+        const items = e.clipboardData?.items;
+        if (!items) return;
+
+        for (let item of items) {
+          if (item.type.startsWith('image/')) {
+            e.preventDefault();
+            const file = item.getAsFile();
+            if (file) {
+              uploadScreenshot(file);
+            }
+          }
+        }
+      });
     }
 
     // Icon Type Tabs
@@ -1583,6 +1749,9 @@
         addScreenshot();
       }
     });
+
+    // Setup screenshot upload (drag, drop, paste)
+    setupScreenshotUpload();
 
     document.getElementById('logoutBtn').addEventListener('click', async () => {
       await fetch('/api/auth/logout', { method: 'POST' });
