@@ -712,15 +712,19 @@
         // Get assertion from authenticator (SimpleWebAuthn handles base64url conversion)
         const assertion = await startAuthentication(options);
 
+        // Get a fresh CSRF token before finishing authentication
+        // The session might have changed during the WebAuthn interaction
+        const freshCsrfToken = await getCsrfToken();
+
         // SimpleWebAuthn returns the response in the correct format already
         // Finish authentication
         const finishRes = await fetch('/api/auth/webauthn/login/finish', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-Token': csrfToken
+            'X-CSRF-Token': freshCsrfToken
           },
-          body: JSON.stringify({ response: assertion, csrfToken })
+          body: JSON.stringify({ response: assertion, csrfToken: freshCsrfToken })
         });
 
         const result = await finishRes.json();
