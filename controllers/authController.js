@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const DataService = require('../services/dataService');
 const config = require('../config');
 const webauthnService = require('../services/webauthnService');
+const { getRpIDFromOrigin } = require('../services/webauthnService');
 
 const usersService = new DataService(config.paths.usersFile);
 
@@ -142,21 +143,28 @@ async function finishWebAuthnRegistration(req, res, next) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Get origin from request
-    const origin = req.protocol + '://' + req.get('host');
+    // Get origin from request (handle Railway proxy)
+    const protocol = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
+    const host = req.headers.host || req.get('host');
+    const origin = `${protocol}://${host}`;
+    
+    // Get rpID from origin
+    const rpID = getRpIDFromOrigin(origin);
     
     // Create options object with stored challenge
     const options = {
       challenge: req.session.webauthnChallenge,
-      rpID: config.webauthn.rpID,
+      rpID: rpID,
       origin: origin
     };
 
-    const verification = await webauthnService.verifyRegistration(options, response, origin);
+    try {
+      const verification = await webauthnService.verifyRegistration(options, response, origin);
 
-    if (!verification.verified) {
-      return res.status(400).json({ error: 'Registration verification failed' });
-    }
+      if (!verification.verified) {
+        console.error('Registration verification failed');
+        return res.status(400).json({ error: 'Registration verification failed' });
+      }
 
     // Add credential to user
     const updatedCredentials = user.webauthnCredentials || [];
@@ -166,13 +174,23 @@ async function finishWebAuthnRegistration(req, res, next) {
       webauthnCredentials: updatedCredentials
     });
 
-    // Clear session
-    delete req.session.webauthnChallenge;
-    delete req.session.webauthnUserId;
-    delete req.session.webauthnType;
+      // Clear session
+      delete req.session.webauthnChallenge;
+      delete req.session.webauthnUserId;
+      delete req.session.webauthnType;
 
-    res.json({ success: true, message: 'Passkey registered successfully' });
+      res.json({ success: true, message: 'Passkey registered successfully' });
+    } catch (error) {
+      console.error('Error in finishWebAuthnRegistration verification:', error);
+      console.error('Error stack:', error.stack);
+      return res.status(500).json({ 
+        error: 'Registration verification failed',
+        details: error.message,
+        stack: process.env.NODE_ENV !== 'production' ? error.stack : undefined
+      });
+    }
   } catch (error) {
+    console.error('Error in finishWebAuthnRegistration:', error);
     next(error);
   }
 }

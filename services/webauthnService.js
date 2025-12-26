@@ -25,6 +25,9 @@ function getRpIDFromOrigin(originUrl) {
   }
 }
 
+// Export helper function for use in controllers
+module.exports.getRpIDFromOrigin = getRpIDFromOrigin;
+
 // Helper to get origin from request
 function getOriginFromRequest(req) {
   // Check for Railway's public domain env var first
@@ -123,6 +126,10 @@ async function verifyRegistration(options, response, expectedOrigin) {
   if (!expectedOrigin) {
     expectedOrigin = config.webauthn.origin;
   }
+  
+  // Use rpID from options (which should be set from the origin)
+  const rpID = options.rpID || getRpIDFromOrigin(expectedOrigin);
+  
   const verification = await verifyRegistrationResponse({
     response,
     expectedChallenge: options.challenge,
