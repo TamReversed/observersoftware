@@ -371,7 +371,10 @@ async function generateAuthenticationOptionsForUser(userId, credentials = [], or
   // Get rpID from origin
   const rpID = getRpIDFromOrigin(origin || config.webauthn.origin);
 
-  // Map credentials, handling potential format issues
+  // Map credentials for SimpleWebAuthn
+  // SimpleWebAuthn's generateAuthenticationOptions expects credential IDs as Uint8Array
+  // But it validates them first by checking if they're base64url strings
+  // So we need to pass them as Uint8Array, not as strings
   const allowCredentials = credentials.map((cred, index) => {
     try {
       if (!cred.id) {
@@ -384,87 +387,21 @@ async function generateAuthenticationOptionsForUser(userId, credentials = [], or
         idIsBuffer: Buffer.isBuffer(cred.id),
         idIsArray: Array.isArray(cred.id),
         idValue: typeof cred.id === 'string' ? cred.id.substring(0, 20) + '...' : (Array.isArray(cred.id) ? `[Array: ${cred.id.length} items]` : String(cred.id).substring(0, 20)),
-        idLength: cred.id?.length,
-        idConstructor: cred.id?.constructor?.name
+        idLength: cred.id?.length
       });
       
-      // cred.id should be a base64url string, convert to Buffer
-      // Handle all possible formats defensively
-      let credentialID;
+      // cred.id is stored as a base64url string (e.g., 'xtW6W7_XunrgRLRknlXEXQ')
+      // SimpleWebAuthn expects it as Uint8Array
+      let credentialIDForOptions;
       
-      if (Buffer.isBuffer(cred.id)) {
-        credentialID = cred.id;
-      } else if (Array.isArray(cred.id)) {
-        // If it's an array (like [1,2,3] from JSON), convert to Buffer directly
-        // This happens when JSON serializes a Buffer as an array
-        credentialID = Buffer.from(cred.id);
-      } else if (typeof cred.id === 'string') {
-        // It's a string - convert to Buffer
+      if (typeof cred.id === 'string') {
+        // Decode base64url string to Uint8Array
         const idStr = String(cred.id).trim();
         if (!idStr) {
           throw new Error(`Credential at index ${index} has empty id string`);
         }
-        
-        // Ensure it's a real string primitive with replace method
-        // Create a new string to ensure it's a primitive
-        const cleanId = '' + idStr;
-        
-        // Try to decode as base64url
-        // Use try-catch to handle any encoding issues
         try {
-          // First try base64url (which requires .replace method)
-          // If that fails due to replace issue, fall back to manual decoding
-          if (typeof cleanId.replace === 'function') {
-            credentialID = Buffer.from(cleanId, 'base64url');
-          } else {
-            // Manual base64url decode
-            const base64 = cleanId.replace(/-/g, '+').replace(/_/g, '/');
-            const padding = '='.repeat((4 - base64.length % 4) % 4);
-            credentialID = Buffer.from(base64 + padding, 'base64');
-          }
-        } catch (e) {
-          // If base64url fails, try regular base64
-          try {
-            credentialID = Buffer.from(cleanId, 'base64');
-          } catch (e2) {
-            // Last resort: treat as raw bytes
-            credentialID = Buffer.from(cleanId, 'utf8');
-          }
-        }
-      } else {
-        // For other types, try to convert to string first, then to Buffer
-        const idStr = String(cred.id);
-        try {
-          credentialID = Buffer.from(idStr, 'base64url');
-        } catch (e) {
-          try {
-            credentialID = Buffer.from(idStr, 'base64');
-          } catch (e2) {
-            credentialID = Buffer.from(idStr, 'utf8');
-          }
-        }
-      }
-      
-      if (!credentialID || !Buffer.isBuffer(credentialID)) {
-        throw new Error(`Credential at index ${index} could not be converted to Buffer. Type: ${typeof cred.id}, IsArray: ${Array.isArray(cred.id)}, Value: ${JSON.stringify(cred.id)}`);
-      }
-
-      // SimpleWebAuthn's generateAuthenticationOptions expects credential ID as Uint8Array
-      // But it validates it first by checking if it's base64url (which requires a string)
-      // So we need to pass it in a format that can be validated
-      // The library will handle the conversion internally
-      let credentialIDForOptions;
-      if (Buffer.isBuffer(credentialID)) {
-        // Convert Buffer to Uint8Array
-        credentialIDForOptions = new Uint8Array(credentialID);
-      } else if (credentialID instanceof Uint8Array) {
-        credentialIDForOptions = credentialID;
-      } else {
-        // If it's a string, decode it to Uint8Array
-        // First ensure it's a proper string
-        const idStr = String(credentialID);
-        try {
-          // Decode base64url string to Buffer, then to Uint8Array
+          // Decode base64url to Buffer, then to Uint8Array
           const decodedBuffer = Buffer.from(idStr, 'base64url');
           credentialIDForOptions = new Uint8Array(decodedBuffer);
         } catch (e) {
@@ -473,11 +410,20 @@ async function generateAuthenticationOptionsForUser(userId, credentials = [], or
             const decodedBuffer = Buffer.from(idStr, 'base64');
             credentialIDForOptions = new Uint8Array(decodedBuffer);
           } catch (e2) {
-            // Last resort: treat as UTF-8
-            const decodedBuffer = Buffer.from(idStr, 'utf8');
-            credentialIDForOptions = new Uint8Array(decodedBuffer);
+            throw new Error(`Credential at index ${index} has invalid base64url id: ${e.message}`);
           }
         }
+      } else if (Buffer.isBuffer(cred.id)) {
+        // Already a Buffer, convert to Uint8Array
+        credentialIDForOptions = new Uint8Array(cred.id);
+      } else if (Array.isArray(cred.id)) {
+        // If it's an array (from JSON), convert directly to Uint8Array
+        credentialIDForOptions = new Uint8Array(cred.id);
+      } else if (cred.id instanceof Uint8Array) {
+        // Already a Uint8Array
+        credentialIDForOptions = cred.id;
+      } else {
+        throw new Error(`Credential at index ${index} has invalid id type: ${typeof cred.id}`);
       }
 
       return {
