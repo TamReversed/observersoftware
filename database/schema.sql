@@ -76,12 +76,15 @@ END;
 $$ language 'plpgsql';
 
 -- Triggers to auto-update updated_at
+DROP TRIGGER IF EXISTS update_capabilities_updated_at ON capabilities;
 CREATE TRIGGER update_capabilities_updated_at BEFORE UPDATE ON capabilities
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_work_updated_at ON work;
 CREATE TRIGGER update_work_updated_at BEFORE UPDATE ON work
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_posts_updated_at ON posts;
 CREATE TRIGGER update_posts_updated_at BEFORE UPDATE ON posts
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 

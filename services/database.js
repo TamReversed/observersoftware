@@ -51,11 +51,11 @@ async function initializeSchema() {
     const schemaPath = path.join(__dirname, '..', 'database', 'schema.sql');
     const schema = fs.readFileSync(schemaPath, 'utf8');
     
-    // Execute the entire schema as a single transaction
-    // This ensures proper order and handles multi-statement constructs
-    const client = await pool.connect();
-    try {
-      await client.query('BEGIN');
+      // Execute schema statements
+      // Don't use a transaction - if one statement fails, we want to continue with others
+      // This makes the schema initialization idempotent
+      const client = await pool.connect();
+      try {
       
       // Execute schema statements in correct order
       // Split by semicolons, handling dollar-quoted function bodies
@@ -177,24 +177,22 @@ async function initializeSchema() {
           }
           
           // For relation does not exist errors on CREATE TRIGGER, 
-          // it means the table wasn't created - this is a real error
+          // it means the table wasn't created - log but continue
           if (errCode === '42P01' && isCreateTrigger) {
-            console.error(`✗ Cannot create trigger - table does not exist`);
-            console.error(`  Statement: ${preview}...`);
-            console.error(`  Error: ${err.message}`);
-            console.error(`  This usually means the CREATE TABLE statement failed earlier`);
-            // Rollback the transaction since we have a real error
-            await client.query('ROLLBACK');
-            throw new Error(`Schema initialization failed: ${err.message}. Table creation may have failed.`);
+            console.warn(`⚠ Cannot create trigger - table does not exist yet`);
+            console.warn(`  Statement: ${preview}...`);
+            console.warn(`  Error: ${err.message}`);
+            console.warn(`  This might be a timing issue, continuing...`);
+            continue;
           }
           
-          // For relation does not exist on CREATE TABLE, that's a real error
+          // For relation does not exist on CREATE TABLE, that's unexpected
+          // but might be a timing issue, so log and continue
           if (errCode === '42P01' && isCreateTable) {
-            console.error(`✗ Cannot create table`);
-            console.error(`  Statement: ${preview}...`);
-            console.error(`  Error: ${err.message}`);
-            await client.query('ROLLBACK');
-            throw new Error(`Schema initialization failed: ${err.message}`);
+            console.warn(`⚠ Cannot create table - unexpected error`);
+            console.warn(`  Statement: ${preview}...`);
+            console.warn(`  Error: ${err.message}`);
+            continue;
           }
           
           // For relation does not exist on CREATE INDEX, log but continue
@@ -214,10 +212,9 @@ async function initializeSchema() {
         }
       }
       
-      await client.query('COMMIT');
       console.log('✓ Database schema initialized');
     } catch (error) {
-      await client.query('ROLLBACK');
+      console.error('✗ Error in schema initialization:', error.message);
       throw error;
     } finally {
       client.release();

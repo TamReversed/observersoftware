@@ -238,7 +238,11 @@ class DbService {
 
     for (const [key, value] of Object.entries(data)) {
       // Convert camelCase to database field name
-      const dbKey = this._getDbFieldName(key);
+      let dbKey = this._getDbFieldName(key);
+      // Quote reserved words like "order"
+      if (dbKey === 'order' || dbKey === 'user' || dbKey === 'group') {
+        dbKey = `"${dbKey}"`;
+      }
       columns.push(dbKey);
       values.push(this._serializeValue(value));
       placeholders.push(`$${paramIndex}`);
@@ -261,7 +265,11 @@ class DbService {
     let paramIndex = 1;
 
     for (const [key, value] of Object.entries(updates)) {
-      const dbKey = this._getDbFieldName(key);
+      let dbKey = this._getDbFieldName(key);
+      // Quote reserved words like "order"
+      if (dbKey === 'order' || dbKey === 'user' || dbKey === 'group') {
+        dbKey = `"${dbKey}"`;
+      }
       setClauses.push(`${dbKey} = $${paramIndex}`);
       values.push(this._serializeValue(value));
       paramIndex++;
