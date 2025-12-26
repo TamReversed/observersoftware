@@ -57,82 +57,90 @@ async function initializeSchema() {
     try {
       await client.query('BEGIN');
       
-      // Better SQL parsing that handles dollar-quoted strings (functions)
-      // Remove single-line comments first
-      let cleanedSchema = schema.replace(/--.*$/gm, '');
+      // Use a simpler approach: execute the entire schema file
+      // PostgreSQL can handle multiple statements in one query
+      // But we need to handle dollar-quoted function bodies
       
-      // Split statements more carefully, handling dollar-quoted function bodies
-      const statements = [];
-      let currentStatement = '';
-      let inDollarQuote = false;
-      let dollarTag = '';
-      
-      for (let i = 0; i < cleanedSchema.length; i++) {
-        const char = cleanedSchema[i];
+      // First, let's try executing the whole thing
+      // If that fails, fall back to statement-by-statement
+      try {
+        await client.query(schema);
+        console.log('✓ Schema executed as single query');
+      } catch (err) {
+        // If that fails, try statement by statement
+        console.log('Executing schema statements individually...');
         
-        // Check for dollar-quote start/end ($$ or $tag$)
-        if (char === '$' && !inDollarQuote) {
-          // Look ahead to find the closing $
-          let j = i + 1;
-          while (j < cleanedSchema.length && cleanedSchema[j] !== '$') {
-            j++;
-          }
-          if (j < cleanedSchema.length) {
-            dollarTag = cleanedSchema.substring(i, j + 1);
-            inDollarQuote = true;
-            currentStatement += dollarTag;
-            i = j;
-            continue;
-          }
-        } else if (inDollarQuote && cleanedSchema.substring(i, i + dollarTag.length) === dollarTag) {
-          inDollarQuote = false;
-          currentStatement += dollarTag;
-          i += dollarTag.length - 1;
-          continue;
-        }
+        // Remove comments
+        let cleanedSchema = schema.replace(/--.*$/gm, '');
         
-        currentStatement += char;
+        // Split by semicolon, but be smarter about it
+        // Use a regex that respects dollar-quoted strings
+        const statements = [];
+        let current = '';
+        let depth = 0;
+        let inDollarQuote = false;
+        let dollarTag = '';
         
-        // If we hit a semicolon and we're not in a dollar-quote, end the statement
-        if (char === ';' && !inDollarQuote) {
-          const trimmed = currentStatement.trim();
-          if (trimmed.length > 0) {
-            statements.push(trimmed);
-          }
-          currentStatement = '';
-        }
-      }
-      
-      // Add any remaining statement
-      if (currentStatement.trim().length > 0) {
-        statements.push(currentStatement.trim());
-      }
-      
-      // Execute each statement
-      for (const statement of statements) {
-        if (statement.trim()) {
-          try {
-            await client.query(statement);
-          } catch (err) {
-            // Ignore "already exists" errors (idempotent)
-            const errCode = err.code;
-            const errMsg = err.message.toLowerCase();
-            
-            // PostgreSQL error codes for "already exists"
-            if (errCode === '42P07' || // relation already exists
-                errCode === '42710' || // duplicate object
-                errCode === '42P16' || // invalid table definition
-                errMsg.includes('already exists') ||
-                errMsg.includes('duplicate')) {
-              // Silently ignore - schema is already initialized
+        for (let i = 0; i < cleanedSchema.length; i++) {
+          const char = cleanedSchema[i];
+          const nextChar = cleanedSchema[i + 1] || '';
+          
+          // Handle dollar-quoted strings
+          if (char === '$' && !inDollarQuote) {
+            // Find the closing $
+            let tagEnd = i + 1;
+            while (tagEnd < cleanedSchema.length && cleanedSchema[tagEnd] !== '$') {
+              tagEnd++;
+            }
+            if (tagEnd < cleanedSchema.length) {
+              dollarTag = cleanedSchema.substring(i, tagEnd + 1);
+              inDollarQuote = true;
+              current += dollarTag;
+              i = tagEnd;
               continue;
             }
-            
-            // For other errors, log but don't fail completely
-            console.warn(`Warning executing statement: ${err.message}`);
-            console.warn(`Error code: ${errCode}`);
-            console.warn(`Statement preview: ${statement.substring(0, 150)}...`);
-            // Continue with other statements
+          } else if (inDollarQuote && cleanedSchema.substring(i, i + dollarTag.length) === dollarTag) {
+            inDollarQuote = false;
+            current += dollarTag;
+            i += dollarTag.length - 1;
+            continue;
+          }
+          
+          current += char;
+          
+          // End statement on semicolon (if not in dollar quote)
+          if (char === ';' && !inDollarQuote) {
+            const trimmed = current.trim();
+            if (trimmed.length > 0 && !trimmed.match(/^\s*$/)) {
+              statements.push(trimmed);
+            }
+            current = '';
+          }
+        }
+        
+        // Execute statements one by one
+        for (const statement of statements) {
+          const trimmed = statement.trim();
+          if (trimmed.length > 0) {
+            try {
+              await client.query(trimmed);
+            } catch (err) {
+              // Ignore "already exists" errors
+              const errCode = err.code;
+              const errMsg = err.message.toLowerCase();
+              
+              if (errCode === '42P07' || // relation already exists
+                  errCode === '42710' || // duplicate object
+                  errCode === '42P16' || // invalid table definition
+                  errMsg.includes('already exists') ||
+                  errMsg.includes('duplicate')) {
+                continue; // Skip
+              }
+              
+              // Log other errors but continue
+              console.warn(`SQL warning: ${err.message} (code: ${errCode})`);
+              console.warn(`Statement: ${trimmed.substring(0, 100)}...`);
+            }
           }
         }
       }
