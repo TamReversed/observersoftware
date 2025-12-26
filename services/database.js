@@ -57,31 +57,82 @@ async function initializeSchema() {
     try {
       await client.query('BEGIN');
       
-      // Remove comments and split by semicolons more carefully
-      const statements = schema
-        .split(/;\s*(?=\n|$)/) // Split on semicolons followed by newline or end
-        .map(s => s.trim())
-        .filter(s => {
-          // Remove comment-only lines and empty statements
-          const cleaned = s.replace(/--.*$/gm, '').trim();
-          return cleaned.length > 0 && !cleaned.startsWith('--');
-        });
+      // Better SQL parsing that handles dollar-quoted strings (functions)
+      // Remove single-line comments first
+      let cleanedSchema = schema.replace(/--.*$/gm, '');
       
+      // Split statements more carefully, handling dollar-quoted function bodies
+      const statements = [];
+      let currentStatement = '';
+      let inDollarQuote = false;
+      let dollarTag = '';
+      
+      for (let i = 0; i < cleanedSchema.length; i++) {
+        const char = cleanedSchema[i];
+        
+        // Check for dollar-quote start/end ($$ or $tag$)
+        if (char === '$' && !inDollarQuote) {
+          // Look ahead to find the closing $
+          let j = i + 1;
+          while (j < cleanedSchema.length && cleanedSchema[j] !== '$') {
+            j++;
+          }
+          if (j < cleanedSchema.length) {
+            dollarTag = cleanedSchema.substring(i, j + 1);
+            inDollarQuote = true;
+            currentStatement += dollarTag;
+            i = j;
+            continue;
+          }
+        } else if (inDollarQuote && cleanedSchema.substring(i, i + dollarTag.length) === dollarTag) {
+          inDollarQuote = false;
+          currentStatement += dollarTag;
+          i += dollarTag.length - 1;
+          continue;
+        }
+        
+        currentStatement += char;
+        
+        // If we hit a semicolon and we're not in a dollar-quote, end the statement
+        if (char === ';' && !inDollarQuote) {
+          const trimmed = currentStatement.trim();
+          if (trimmed.length > 0) {
+            statements.push(trimmed);
+          }
+          currentStatement = '';
+        }
+      }
+      
+      // Add any remaining statement
+      if (currentStatement.trim().length > 0) {
+        statements.push(currentStatement.trim());
+      }
+      
+      // Execute each statement
       for (const statement of statements) {
         if (statement.trim()) {
           try {
             await client.query(statement);
           } catch (err) {
             // Ignore "already exists" errors (idempotent)
+            const errCode = err.code;
             const errMsg = err.message.toLowerCase();
-            if (!errMsg.includes('already exists') && 
-                !errMsg.includes('duplicate') &&
-                !errMsg.includes('relation') && // Ignore if relation already exists
-                err.code !== '42P07') { // PostgreSQL code for "relation already exists"
-              console.warn(`Warning executing statement: ${err.message}`);
-              console.warn(`Statement: ${statement.substring(0, 100)}...`);
-              // Continue with other statements
+            
+            // PostgreSQL error codes for "already exists"
+            if (errCode === '42P07' || // relation already exists
+                errCode === '42710' || // duplicate object
+                errCode === '42P16' || // invalid table definition
+                errMsg.includes('already exists') ||
+                errMsg.includes('duplicate')) {
+              // Silently ignore - schema is already initialized
+              continue;
             }
+            
+            // For other errors, log but don't fail completely
+            console.warn(`Warning executing statement: ${err.message}`);
+            console.warn(`Error code: ${errCode}`);
+            console.warn(`Statement preview: ${statement.substring(0, 150)}...`);
+            // Continue with other statements
           }
         }
       }
