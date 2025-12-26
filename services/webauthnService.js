@@ -147,6 +147,12 @@ async function verifyRegistration(options, response, expectedOrigin) {
       expectedRPID: rpID
     });
 
+    console.log('Verification result:', {
+      verified: verification.verified,
+      hasRegistrationInfo: !!verification.registrationInfo,
+      registrationInfoKeys: verification.registrationInfo ? Object.keys(verification.registrationInfo) : []
+    });
+
     if (verification.verified && verification.registrationInfo) {
       const { credentialID, credentialPublicKey, counter } = verification.registrationInfo;
 
@@ -162,16 +168,22 @@ async function verifyRegistration(options, response, expectedOrigin) {
       };
     }
 
-    console.error('Verification failed - not verified or no registrationInfo');
+    console.error('Verification failed - not verified or no registrationInfo', {
+      verified: verification.verified,
+      hasRegistrationInfo: !!verification.registrationInfo
+    });
     return { verified: false };
   } catch (error) {
     console.error('Error in verifyRegistration:', error);
     console.error('Error details:', {
       message: error.message,
+      name: error.name,
       stack: error.stack,
       rpID,
       expectedOrigin,
-      challengeLength: options.challenge?.length
+      challengeLength: options.challenge?.length,
+      responseType: response?.type,
+      responseId: response?.id
     });
     throw error;
   }
