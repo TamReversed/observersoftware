@@ -1,3 +1,9 @@
+// Ensure Web Crypto API is available globally
+if (typeof globalThis.crypto === 'undefined') {
+  const { webcrypto } = require('crypto');
+  globalThis.crypto = webcrypto;
+}
+
 const {
   generateRegistrationOptions,
   verifyRegistrationResponse,

@@ -1,3 +1,10 @@
+// Ensure Web Crypto API is available for @simplewebauthn/server
+// Node.js 18+ has Web Crypto API, but we need to ensure it's accessible
+if (typeof globalThis.crypto === 'undefined') {
+  const { webcrypto } = require('crypto');
+  globalThis.crypto = webcrypto;
+}
+
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
