@@ -132,8 +132,11 @@ async function verifyRegistration(options, response, expectedOrigin) {
     expectedOrigin,
     hasChallenge: !!options.challenge,
     challengeLength: options.challenge?.length,
+    challengePreview: options.challenge ? options.challenge.substring(0, 20) + '...' : 'MISSING',
     responseId: response?.id,
-    responseType: response?.type
+    responseType: response?.type,
+    hasResponse: !!response,
+    responseKeys: response ? Object.keys(response) : []
   });
   
   try {

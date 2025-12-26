@@ -152,8 +152,9 @@ async function finishWebAuthnRegistration(req, res, next) {
     const rpID = getRpIDFromOrigin(origin);
     
     // Create options object with stored challenge
+    const storedChallenge = req.session.webauthnChallenge;
     const options = {
-      challenge: req.session.webauthnChallenge,
+      challenge: storedChallenge,
       rpID: rpID,
       origin: origin
     };
@@ -165,7 +166,11 @@ async function finishWebAuthnRegistration(req, res, next) {
         origin,
         rpID: options.rpID,
         hasResponse: !!response,
-        responseId: response?.id
+        responseId: response?.id,
+        responseType: response?.type,
+        storedChallenge: storedChallenge ? storedChallenge.substring(0, 20) + '...' : 'MISSING',
+        storedChallengeLength: storedChallenge?.length,
+        responseChallenge: response?.response?.clientDataJSON ? 'present' : 'missing'
       });
       
       const verification = await webauthnService.verifyRegistration(options, response, origin);
