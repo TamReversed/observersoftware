@@ -21,7 +21,7 @@
     "express-session": "^1.17.3",
     "express-validator": "^7.3.1",
     "helmet": "^8.1.0",
-    "isomorphic-dompurify": "^2.34.0",
+    "isomorphic-dompurify": "^1.9.0",
     "marked": "^11.0.0",
     "multer": "^2.0.2",
     "uuid": "^9.0.0"

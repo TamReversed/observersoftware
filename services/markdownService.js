@@ -26,7 +26,3 @@ function renderMarkdown(content) {
 }
 
 module.exports = { renderMarkdown };
-
-
-
-
