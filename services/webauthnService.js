@@ -205,23 +205,29 @@ async function verifyRegistration(options, response, expectedOrigin) {
     console.log('Verification result:', {
       verified: verification.verified,
       hasRegistrationInfo: !!verification.registrationInfo,
-      registrationInfoKeys: verification.registrationInfo ? Object.keys(verification.registrationInfo) : [],
-      registrationInfo: verification.registrationInfo ? JSON.stringify(verification.registrationInfo, (key, value) => {
-        // Convert Buffers to readable format for logging
-        if (value instanceof Buffer || (value && value.type === 'Buffer')) {
-          return `<Buffer: ${value.length} bytes>`;
-        }
-        return value;
-      }) : null
+      registrationInfoKeys: verification.registrationInfo ? Object.keys(verification.registrationInfo) : []
     });
+
+    // Log the actual structure of registrationInfo (handling Buffers)
+    if (verification.registrationInfo) {
+      const info = verification.registrationInfo;
+      console.log('RegistrationInfo structure:', {
+        keys: Object.keys(info),
+        credentialID: info.credentialID ? (Buffer.isBuffer(info.credentialID) ? `<Buffer: ${info.credentialID.length} bytes>` : typeof info.credentialID) : 'MISSING',
+        credentialPublicKey: info.credentialPublicKey ? (Buffer.isBuffer(info.credentialPublicKey) ? `<Buffer: ${info.credentialPublicKey.length} bytes>` : typeof info.credentialPublicKey) : 'MISSING',
+        counter: info.counter,
+        fmt: info.fmt,
+        aaguid: info.aaguid
+      });
+    }
 
     if (verification.verified && verification.registrationInfo) {
       const registrationInfo = verification.registrationInfo;
       
       // SimpleWebAuthn returns credentialID and credentialPublicKey as Buffers
-      // But they might be in different formats, so let's handle both
-      let credentialID = registrationInfo.credentialID;
-      let credentialPublicKey = registrationInfo.credentialPublicKey;
+      // Check for both the expected names and alternative names
+      let credentialID = registrationInfo.credentialID || registrationInfo.credentialId;
+      let credentialPublicKey = registrationInfo.credentialPublicKey || registrationInfo.publicKey;
 
       // Validate that we have the required data
       if (!credentialID) {
