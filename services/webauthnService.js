@@ -127,29 +127,51 @@ async function verifyRegistration(options, response, expectedOrigin) {
   // Use rpID from options (which should be set from the origin)
   const rpID = options.rpID || getRpIDFromOrigin(expectedOrigin);
   
-  const verification = await verifyRegistrationResponse({
-    response,
-    expectedChallenge: options.challenge,
+  console.log('Verifying registration:', {
+    rpID,
     expectedOrigin,
-    expectedRPID: rpID
+    hasChallenge: !!options.challenge,
+    challengeLength: options.challenge?.length,
+    responseId: response?.id,
+    responseType: response?.type
   });
+  
+  try {
+    const verification = await verifyRegistrationResponse({
+      response,
+      expectedChallenge: options.challenge,
+      expectedOrigin,
+      expectedRPID: rpID
+    });
 
-  if (verification.verified && verification.registrationInfo) {
-    const { credentialID, credentialPublicKey, counter } = verification.registrationInfo;
+    if (verification.verified && verification.registrationInfo) {
+      const { credentialID, credentialPublicKey, counter } = verification.registrationInfo;
 
-    return {
-      verified: true,
-      credential: {
-        id: Buffer.from(credentialID).toString('base64url'),
-        publicKey: Buffer.from(credentialPublicKey).toString('base64url'),
-        counter: counter || 0,
-        deviceName: 'Passkey', // Default name, can be updated later
-        registeredAt: new Date().toISOString()
-      }
-    };
+      return {
+        verified: true,
+        credential: {
+          id: Buffer.from(credentialID).toString('base64url'),
+          publicKey: Buffer.from(credentialPublicKey).toString('base64url'),
+          counter: counter || 0,
+          deviceName: 'Passkey', // Default name, can be updated later
+          registeredAt: new Date().toISOString()
+        }
+      };
+    }
+
+    console.error('Verification failed - not verified or no registrationInfo');
+    return { verified: false };
+  } catch (error) {
+    console.error('Error in verifyRegistration:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      rpID,
+      expectedOrigin,
+      challengeLength: options.challenge?.length
+    });
+    throw error;
   }
-
-  return { verified: false };
 }
 
 /**

@@ -159,12 +159,23 @@ async function finishWebAuthnRegistration(req, res, next) {
     };
 
     try {
+      console.log('Starting registration verification:', {
+        userId,
+        username: user.username,
+        origin,
+        rpID: options.rpID,
+        hasResponse: !!response,
+        responseId: response?.id
+      });
+      
       const verification = await webauthnService.verifyRegistration(options, response, origin);
 
       if (!verification.verified) {
-        console.error('Registration verification failed');
+        console.error('Registration verification failed - not verified');
         return res.status(400).json({ error: 'Registration verification failed' });
       }
+      
+      console.log('Registration verified successfully');
 
     // Add credential to user
     const updatedCredentials = user.webauthnCredentials || [];
