@@ -72,12 +72,19 @@ async function startWebAuthnRegistration(req, res, next) {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    // Ensure webauthnCredentials array exists
+    if (!user.webauthnCredentials) {
+      user.webauthnCredentials = [];
+      // Update user to persist the empty array
+      usersService.updateById(user.id, { webauthnCredentials: [] });
+    }
+
     // Check if user already has a passkey (we only allow one per user)
-    if (user.webauthnCredentials && user.webauthnCredentials.length > 0) {
+    if (user.webauthnCredentials.length > 0) {
       return res.status(400).json({ error: 'User already has a passkey registered' });
     }
 
-    const existingCredentials = user.webauthnCredentials || [];
+    const existingCredentials = user.webauthnCredentials;
     
     try {
       const options = await webauthnService.generateRegistrationOptionsForUser(
