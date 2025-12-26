@@ -1,0 +1,342 @@
+[
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "industry": "Enterprise Technology",
+    "problem": "Complex platform implementations required coordination across multiple teams, tools, and timelines",
+    "solution": "Observer designed unified architecture patterns that reduced handoffs between teams by 70%. Clear interfaces and shared standards eliminated the coordination overhead that slowed delivery.",
+    "tags": [
+      "Architecture",
+      "Coordination",
+      "System Design"
+    ],
+    "image": "",
+    "client": "",
+    "date": "2025-12",
+    "caseStudyUrl": "",
+    "order": 1,
+    "published": true
+  },
+  {
+    "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+    "industry": "Platform Operations",
+    "problem": "Large-scale platform rollouts suffered from unclear priorities and competing stakeholder needs",
+    "solution": "Observer established program governance that made priorities explicit and visible. Teams stopped guessing what to build next, and delivery velocity increased by 40% while reducing rework.",
+    "tags": [
+      "Program Management",
+      "Governance",
+      "Priorities"
+    ],
+    "image": "",
+    "client": "",
+    "date": "2024-12",
+    "caseStudyUrl": "",
+    "order": 2,
+    "published": true
+  },
+  {
+    "id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+    "industry": "Product Strategy",
+    "problem": "Platform features were built based on assumptions rather than actual user workflows",
+    "solution": "Observer introduced product management practices that connected feature decisions to real usage patterns. The team shifted from building what seemed right to building what users actually needed, reducing unused features by 60%.",
+    "tags": [
+      "Product Management",
+      "User Research",
+      "User Needs"
+    ],
+    "image": "",
+    "client": "",
+    "date": "2024-01",
+    "caseStudyUrl": "",
+    "order": 3,
+    "published": true
+  },
+  {
+    "id": "d4e5f6a7-b8c9-0123-def0-234567890123",
+    "industry": "Client Delivery",
+    "problem": "Agile projects struggled with unclear requirements and shifting priorities mid-sprint",
+    "solution": "Observer implemented structured engagement practices that made requirements explicit before work began. Teams stopped mid-sprint pivots, and delivery predictability improved from 60% to 90% on-time completion.",
+    "tags": [
+      "Agile Delivery",
+      "Scrum",
+      "Requirements"
+    ],
+    "image": "",
+    "client": "",
+    "date": "2023-03",
+    "caseStudyUrl": "",
+    "order": 4,
+    "published": true
+  },
+  {
+    "id": "e5f6a7b8-c9d0-1234-ef01-345678901234",
+    "industry": "Technical Architecture",
+    "problem": "Legacy systems created bottlenecks that prevented teams from delivering new features quickly",
+    "solution": "Observer designed incremental migration strategies that allowed teams to modernize without disrupting operations. The phased approach reduced risk while enabling 3x faster feature delivery.",
+    "tags": [
+      "Legacy Modernization",
+      "Migration Strategy",
+      "Technical Debt"
+    ],
+    "image": "",
+    "client": "",
+    "date": "2022-08",
+    "caseStudyUrl": "",
+    "order": 5,
+    "published": true
+  },
+  {
+    "id": "f6a7b8c9-d0e1-2345-f012-456789012345",
+    "industry": "Engineering Leadership",
+    "problem": "Engineering teams lacked clear technical direction, leading to inconsistent code quality and architectural decisions",
+    "solution": "Observer established technical standards and review processes that aligned teams around shared principles. Code quality metrics improved by 50% and architectural consistency increased across all projects.",
+    "tags": [
+      "Engineering Standards",
+      "Code Quality",
+      "Technical Leadership"
+    ],
+    "image": "",
+    "client": "",
+    "date": "2022-02",
+    "caseStudyUrl": "",
+    "order": 6,
+    "published": true
+  },
+  {
+    "id": "a7b8c9d0-e1f2-3456-0123-567890123456",
+    "industry": "Integration Services",
+    "problem": "Third-party integrations were failing frequently, causing service disruptions and customer complaints",
+    "solution": "Observer redesigned integration patterns with proper error handling and retry logic. System reliability improved from 85% to 99.5% uptime, eliminating customer-facing outages.",
+    "tags": [
+      "System Integration",
+      "Reliability",
+      "Error Handling"
+    ],
+    "image": "",
+    "client": "",
+    "date": "2021-09",
+    "caseStudyUrl": "",
+    "order": 7,
+    "published": true
+  },
+  {
+    "id": "b8c9d0e1-f2a3-4567-1234-678901234567",
+    "industry": "Data Infrastructure",
+    "problem": "Data pipelines were slow and unreliable, preventing teams from making timely business decisions",
+    "solution": "Observer optimized data processing workflows and implemented proper monitoring. Pipeline execution time decreased by 75% and data freshness improved from hours to minutes.",
+    "tags": [
+      "Data Engineering",
+      "Performance",
+      "Infrastructure"
+    ],
+    "image": "",
+    "client": "",
+    "date": "2021-04",
+    "caseStudyUrl": "",
+    "order": 8,
+    "published": true
+  },
+  {
+    "id": "c9d0e1f2-a3b4-5678-2345-789012345678",
+    "industry": "User Experience",
+    "problem": "Users were abandoning workflows mid-process due to confusing interfaces and unclear next steps",
+    "solution": "Observer conducted workflow observation sessions and redesigned interfaces to match actual user behavior. Task completion rates increased by 45% and support tickets decreased by 60%.",
+    "tags": [
+      "UX Design",
+      "User Research",
+      "Workflow Optimization"
+    ],
+    "image": "",
+    "client": "",
+    "date": "2020-11",
+    "caseStudyUrl": "",
+    "order": 9,
+    "published": true
+  },
+  {
+    "id": "d0e1f2a3-b4c5-6789-3456-890123456789",
+    "industry": "DevOps & Automation",
+    "problem": "Manual deployment processes caused delays and introduced errors into production environments",
+    "solution": "Observer automated deployment pipelines and established infrastructure-as-code practices. Deployment time reduced from days to hours, and production incidents decreased by 80%.",
+    "tags": [
+      "DevOps",
+      "Automation",
+      "CI/CD"
+    ],
+    "image": "",
+    "client": "",
+    "date": "2020-06",
+    "caseStudyUrl": "",
+    "order": 10,
+    "published": true
+  },
+  {
+    "id": "e1f2a3b4-c5d6-7890-4567-901234567890",
+    "industry": "API Design",
+    "problem": "Inconsistent API patterns across services made integration difficult for both internal and external developers",
+    "solution": "Observer established API design standards and created developer-friendly documentation. Integration time for new partners decreased by 70%, and developer satisfaction scores improved significantly.",
+    "tags": [
+      "API Design",
+      "Developer Experience",
+      "Documentation"
+    ],
+    "image": "",
+    "client": "",
+    "date": "2019-12",
+    "caseStudyUrl": "",
+    "order": 11,
+    "published": true
+  },
+  {
+    "id": "f2a3b4c5-d6e7-8901-5678-012345678901",
+    "industry": "Security & Compliance",
+    "problem": "Security vulnerabilities were discovered late in the development cycle, requiring expensive rework",
+    "solution": "Observer integrated security practices into the development workflow with automated scanning and early reviews. Security issues caught in production decreased by 90%, and compliance audit findings were eliminated.",
+    "tags": [
+      "Security",
+      "Compliance",
+      "DevSecOps"
+    ],
+    "image": "",
+    "client": "",
+    "date": "2019-07",
+    "caseStudyUrl": "",
+    "order": 12,
+    "published": true
+  },
+  {
+    "id": "a3b4c5d6-e7f8-9012-6789-123456789012",
+    "industry": "Microservices Architecture",
+    "problem": "Monolithic applications couldn't scale to meet growing user demand and slowed down feature development",
+    "solution": "Observer designed and executed a microservices migration strategy that enabled independent scaling and faster feature delivery. System capacity increased 5x and feature deployment frequency doubled.",
+    "tags": [
+      "Microservices",
+      "Scalability",
+      "Architecture"
+    ],
+    "image": "",
+    "client": "",
+    "date": "2019-01",
+    "caseStudyUrl": "",
+    "order": 13,
+    "published": true
+  },
+  {
+    "id": "b4c5d6e7-f8a9-0123-7890-234567890123",
+    "industry": "Team Collaboration",
+    "problem": "Distributed teams struggled with communication and knowledge sharing, leading to duplicated work and missed dependencies",
+    "solution": "Observer implemented collaboration tools and established communication protocols that improved visibility across teams. Duplicate work decreased by 50% and cross-team dependencies were identified earlier.",
+    "tags": [
+      "Team Collaboration",
+      "Communication",
+      "Knowledge Sharing"
+    ],
+    "image": "",
+    "client": "",
+    "date": "2018-08",
+    "caseStudyUrl": "",
+    "order": 14,
+    "published": true
+  },
+  {
+    "id": "c5d6e7f8-a9b0-1234-8901-345678901234",
+    "industry": "Performance Optimization",
+    "problem": "Application response times were slow, causing user frustration and lost revenue",
+    "solution": "Observer identified performance bottlenecks through systematic profiling and optimized critical paths. Page load times improved by 65% and user engagement metrics increased by 40%.",
+    "tags": [
+      "Performance",
+      "Optimization",
+      "User Experience"
+    ],
+    "image": "",
+    "client": "",
+    "date": "2018-03",
+    "caseStudyUrl": "",
+    "order": 15,
+    "published": true
+  },
+  {
+    "id": "d6e7f8a9-b0c1-2345-9012-456789012345",
+    "industry": "Testing & Quality",
+    "problem": "Bugs were frequently discovered in production, requiring emergency fixes and causing customer impact",
+    "solution": "Observer established comprehensive testing strategies including automated testing, code reviews, and quality gates. Production bug rate decreased by 75% and customer-reported issues dropped significantly.",
+    "tags": [
+      "Quality Assurance",
+      "Testing",
+      "Automation"
+    ],
+    "image": "",
+    "client": "",
+    "date": "2017-10",
+    "caseStudyUrl": "",
+    "order": 16,
+    "published": true
+  },
+  {
+    "id": "e7f8a9b0-c1d2-3456-0123-567890123456",
+    "industry": "Database Architecture",
+    "problem": "Database performance degraded as data volume grew, causing application slowdowns and user complaints",
+    "solution": "Observer redesigned database schemas and implemented proper indexing strategies. Query performance improved by 80% and the system scaled to handle 10x the original data volume.",
+    "tags": [
+      "Database Design",
+      "Performance",
+      "Scalability"
+    ],
+    "image": "",
+    "client": "",
+    "date": "2017-05",
+    "caseStudyUrl": "",
+    "order": 17,
+    "published": true
+  },
+  {
+    "id": "f8a9b0c1-d2e3-4567-1234-678901234567",
+    "industry": "Cloud Migration",
+    "problem": "On-premise infrastructure was expensive to maintain and couldn't scale with business needs",
+    "solution": "Observer planned and executed a cloud migration that reduced infrastructure costs by 40% while improving scalability and reliability. The new architecture supported 3x growth without proportional cost increases.",
+    "tags": [
+      "Cloud Computing",
+      "Migration",
+      "Cost Optimization"
+    ],
+    "image": "",
+    "client": "",
+    "date": "2016-12",
+    "caseStudyUrl": "",
+    "order": 18,
+    "published": true
+  },
+  {
+    "id": "a9b0c1d2-e3f4-5678-2345-789012345678",
+    "industry": "Mobile Development",
+    "problem": "Mobile app performance was poor, leading to low user retention and negative reviews",
+    "solution": "Observer optimized mobile applications for performance and improved user experience. App store ratings improved from 2.5 to 4.5 stars, and user retention increased by 55%.",
+    "tags": [
+      "Mobile Development",
+      "Performance",
+      "User Experience"
+    ],
+    "image": "",
+    "client": "",
+    "date": "2016-07",
+    "caseStudyUrl": "",
+    "order": 19,
+    "published": true
+  },
+  {
+    "id": "b0c1d2e3-f4a5-6789-3456-890123456789",
+    "industry": "Process Improvement",
+    "problem": "Development processes were inconsistent across teams, leading to unpredictable delivery timelines",
+    "solution": "Observer standardized development workflows and established best practices that teams could adapt to their context. Delivery predictability improved from 50% to 85% on-time completion.",
+    "tags": [
+      "Process Improvement",
+      "Best Practices",
+      "Delivery"
+    ],
+    "image": "",
+    "client": "",
+    "date": "2016-02",
+    "caseStudyUrl": "",
+    "order": 20,
+    "published": true
+  }
+]
