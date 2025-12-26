@@ -16,6 +16,7 @@ const routes = require('./routes');
 const { errorHandler } = require('./middleware/errorHandler');
 const { initializeData } = require('./services/initService');
 const { generateCsrfToken, validateCsrfToken } = require('./middleware/csrf');
+const { initializeSchema } = require('./services/database');
 
 // Validate environment variables
 validateEnv();
@@ -117,19 +118,37 @@ app.get('/coming-soon', (req, res) => {
 app.use(errorHandler);
 
 // Start server
-initializeData().then(() => {
-  app.listen(config.port, () => {
-    console.log(`Server running at http://localhost:${config.port}`);
-    console.log(`Admin panel: http://localhost:${config.port}/admin/login`);
-    console.log('Security features enabled:');
-    console.log('  ✓ Helmet.js security headers');
-    console.log('  ✓ CSRF protection');
-    console.log('  ✓ Rate limiting (login: 5/15min, API: 100/15min)');
-    console.log('  ✓ Input validation');
-    console.log('  ✓ Markdown sanitization');
-    console.log('  ✓ File upload validation');
-  });
-}).catch(err => {
-  console.error('Failed to initialize data:', err);
-  process.exit(1);
-});
+async function startServer() {
+  try {
+    // Initialize database if DATABASE_URL is set
+    if (config.database.useDatabase) {
+      await initializeSchema();
+      console.log('✓ Database initialized');
+    }
+    
+    // Initialize data (creates default admin user, sample data if needed)
+    await initializeData();
+    
+    app.listen(config.port, () => {
+      console.log(`Server running at http://localhost:${config.port}`);
+      console.log(`Admin panel: http://localhost:${config.port}/admin/login`);
+      if (config.database.useDatabase) {
+        console.log('✓ Using PostgreSQL database');
+      } else {
+        console.log('✓ Using JSON file storage');
+      }
+      console.log('Security features enabled:');
+      console.log('  ✓ Helmet.js security headers');
+      console.log('  ✓ CSRF protection');
+      console.log('  ✓ Rate limiting (login: 5/15min, API: 100/15min)');
+      console.log('  ✓ Input validation');
+      console.log('  ✓ Markdown sanitization');
+      console.log('  ✓ File upload validation');
+    });
+  } catch (err) {
+    console.error('Failed to initialize:', err);
+    process.exit(1);
+  }
+}
+
+startServer();

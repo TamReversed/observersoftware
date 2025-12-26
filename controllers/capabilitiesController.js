@@ -1,24 +1,27 @@
 const { v4: uuidv4 } = require('uuid');
 const DataService = require('../services/dataService');
+const DbService = require('../services/dbService');
 const { renderMarkdown } = require('../services/markdownService');
 const config = require('../config');
 
-const capabilitiesService = new DataService(config.paths.capabilitiesFile);
+// Use database if available, otherwise fall back to JSON files
+const capabilitiesService = config.database.useDatabase
+  ? new DbService('capabilities')
+  : new DataService(config.paths.capabilitiesFile);
 
-function getCapabilities(req, res, next) {
+async function getCapabilities(req, res, next) {
   try {
-    const capabilities = capabilitiesService
-      .findAll(c => c.published)
-      .sort((a, b) => a.order - b.order);
+    const capabilities = await capabilitiesService.findAll(c => c.published);
+    capabilities.sort((a, b) => (a.order || 0) - (b.order || 0));
     res.json(capabilities);
   } catch (error) {
     next(error);
   }
 }
 
-function getCapabilityById(req, res, next) {
+async function getCapabilityById(req, res, next) {
   try {
-    const capability = capabilitiesService.findById(req.params.id);
+    const capability = await capabilitiesService.findById(req.params.id);
 
     if (!capability || !capability.published) {
       return res.status(404).json({ error: 'Capability not found' });
@@ -36,18 +39,17 @@ function getCapabilityById(req, res, next) {
   }
 }
 
-function getAllCapabilities(req, res, next) {
+async function getAllCapabilities(req, res, next) {
   try {
-    const capabilities = capabilitiesService
-      .findAll()
-      .sort((a, b) => a.order - b.order);
+    const capabilities = await capabilitiesService.findAll();
+    capabilities.sort((a, b) => (a.order || 0) - (b.order || 0));
     res.json(capabilities);
   } catch (error) {
     next(error);
   }
 }
 
-function createCapability(req, res, next) {
+async function createCapability(req, res, next) {
   try {
     const { title, description, longDescription, features, screenshots, externalUrl, icon, order, published } = req.body;
 
@@ -55,7 +57,7 @@ function createCapability(req, res, next) {
       return res.status(400).json({ error: 'Title and description are required' });
     }
 
-    const capabilities = capabilitiesService.findAll();
+    const capabilities = await capabilitiesService.findAll();
     const maxOrder = capabilities.reduce((max, c) => Math.max(max, c.order || 0), 0);
 
     const newCapability = {
@@ -71,17 +73,17 @@ function createCapability(req, res, next) {
       published: !!published
     };
 
-    capabilitiesService.create(newCapability);
-    res.json(newCapability);
+    const created = await capabilitiesService.create(newCapability);
+    res.json(created);
   } catch (error) {
     next(error);
   }
 }
 
-function updateCapability(req, res, next) {
+async function updateCapability(req, res, next) {
   try {
     const { title, description, longDescription, features, screenshots, externalUrl, icon, order, published } = req.body;
-    const capability = capabilitiesService.findById(req.params.id);
+    const capability = await capabilitiesService.findById(req.params.id);
 
     if (!capability) {
       return res.status(404).json({ error: 'Capability not found' });
@@ -98,16 +100,16 @@ function updateCapability(req, res, next) {
     if (order !== undefined) updates.order = order;
     if (published !== undefined) updates.published = published;
 
-    const updatedCapability = capabilitiesService.updateById(req.params.id, updates);
+    const updatedCapability = await capabilitiesService.updateById(req.params.id, updates);
     res.json(updatedCapability);
   } catch (error) {
     next(error);
   }
 }
 
-function deleteCapability(req, res, next) {
+async function deleteCapability(req, res, next) {
   try {
-    const deleted = capabilitiesService.deleteById(req.params.id);
+    const deleted = await capabilitiesService.deleteById(req.params.id);
     if (!deleted) {
       return res.status(404).json({ error: 'Capability not found' });
     }

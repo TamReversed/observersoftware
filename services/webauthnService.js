@@ -371,10 +371,7 @@ async function generateAuthenticationOptionsForUser(userId, credentials = [], or
   // Get rpID from origin
   const rpID = getRpIDFromOrigin(origin || config.webauthn.origin);
 
-  // Map credentials for SimpleWebAuthn
-  // SimpleWebAuthn's generateAuthenticationOptions expects credential IDs as Uint8Array
-  // But it validates them first by checking if they're base64url strings
-  // So we need to pass them as Uint8Array, not as strings
+  // Map credentials, handling potential format issues
   const allowCredentials = credentials.map((cred, index) => {
     try {
       if (!cred.id) {
@@ -386,37 +383,65 @@ async function generateAuthenticationOptionsForUser(userId, credentials = [], or
         idType: typeof cred.id,
         idIsBuffer: Buffer.isBuffer(cred.id),
         idIsArray: Array.isArray(cred.id),
-        idValue: typeof cred.id === 'string' ? cred.id.substring(0, 20) + '...' : (Array.isArray(cred.id) ? `[Array: ${cred.id.length} items]` : String(cred.id).substring(0, 20)),
-        idLength: cred.id?.length
+        idValue: typeof cred.id === 'string' ? cred.id.substring(0, 20) + '...' : cred.id,
+        idLength: cred.id?.length,
+        fullCred: JSON.stringify(cred, (key, value) => {
+          if (Buffer.isBuffer(value)) return `<Buffer: ${value.length} bytes>`;
+          return value;
+        })
       });
       
-      // cred.id is stored as a base64url string (e.g., 'xtW6W7_XunrgRLRknlXEXQ')
-      // SimpleWebAuthn's generateAuthenticationOptions validates credential IDs as base64url strings
-      // It will convert them to Buffers internally, so we should pass the string directly
-      let credentialIDForOptions;
+      // cred.id should be a base64url string, convert to Buffer
+      // Handle all possible formats defensively
+      let credentialID;
       
-      if (typeof cred.id === 'string') {
-        // Pass the base64url string directly - SimpleWebAuthn will handle conversion
-        const idStr = String(cred.id).trim();
-        if (!idStr) {
-          throw new Error(`Credential at index ${index} has empty id string`);
-        }
-        credentialIDForOptions = idStr;
-      } else if (Buffer.isBuffer(cred.id)) {
-        // Convert Buffer to base64url string
-        credentialIDForOptions = cred.id.toString('base64url');
-      } else if (Array.isArray(cred.id)) {
-        // If it's an array (from JSON), convert to Buffer first, then to base64url string
-        credentialIDForOptions = Buffer.from(cred.id).toString('base64url');
-      } else if (cred.id instanceof Uint8Array) {
-        // Convert Uint8Array to Buffer, then to base64url string
-        credentialIDForOptions = Buffer.from(cred.id).toString('base64url');
+      if (Buffer.isBuffer(cred.id)) {
+        credentialID = cred.id;
+      } else if (cred.id === null || cred.id === undefined) {
+        throw new Error(`Credential at index ${index} has null/undefined id`);
       } else {
-        throw new Error(`Credential at index ${index} has invalid id type: ${typeof cred.id}`);
+        // Convert to string first, ensuring we have a valid string
+        let idString;
+        if (typeof cred.id === 'string') {
+          idString = cred.id.trim();
+        } else if (Array.isArray(cred.id)) {
+          // If it's an array (like [1,2,3]), convert to Buffer directly
+          credentialID = Buffer.from(cred.id);
+        } else if (typeof cred.id === 'object' && cred.id !== null) {
+          // If it's an object, try to stringify it
+          idString = JSON.stringify(cred.id);
+        } else {
+          // For numbers, booleans, etc., convert to string
+          idString = String(cred.id);
+        }
+        
+        if (idString !== undefined) {
+          if (!idString) {
+            throw new Error(`Credential at index ${index} has empty id string`);
+          }
+          try {
+            // Try base64url first (standard format)
+            credentialID = Buffer.from(idString, 'base64url');
+          } catch (e) {
+            console.warn(`Failed to parse credential ID as base64url, trying base64:`, e.message);
+            // If base64url fails, try regular base64
+            try {
+              credentialID = Buffer.from(idString, 'base64');
+            } catch (e2) {
+              console.warn(`Failed to parse credential ID as base64, trying utf8:`, e2.message);
+              // If both fail, try as raw string
+              credentialID = Buffer.from(idString, 'utf8');
+            }
+          }
+        }
+      }
+      
+      if (!credentialID) {
+        throw new Error(`Credential at index ${index} could not be converted to Buffer. Type: ${typeof cred.id}, Value: ${JSON.stringify(cred.id)}`);
       }
 
       return {
-        id: credentialIDForOptions,
+        id: credentialID,
         type: 'public-key',
         transports: cred.transports || []
       };
@@ -430,10 +455,7 @@ async function generateAuthenticationOptionsForUser(userId, credentials = [], or
   console.log('Generating authentication options:', {
     rpID,
     credentialCount: allowCredentials.length,
-    credentialIDs: allowCredentials.map(c => {
-      const idStr = typeof c.id === 'string' ? c.id : String(c.id);
-      return idStr.substring(0, 20) + '...';
-    })
+    credentialIDs: allowCredentials.map(c => c.id.toString('base64url').substring(0, 20) + '...')
   });
 
   const options = await generateAuthenticationOptions({

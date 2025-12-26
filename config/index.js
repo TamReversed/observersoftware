@@ -16,7 +16,7 @@ const config = {
   },
   paths: (() => {
     // Use persistent volume path on Railway, or default to ./data
-    // Railway persistent volumes are mounted at /data by default
+    // Set DATA_DIR=/data in Railway environment variables to use persistent volume
     const dataDir = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
     return {
       dataDir,
@@ -34,6 +34,11 @@ const config = {
     rpID: process.env.WEBAUTHN_RP_ID || (isProduction ? 'observersoftware.io' : 'localhost'),
     rpName: process.env.WEBAUTHN_RP_NAME || 'Observer',
     origin: process.env.WEBAUTHN_ORIGIN || (isProduction ? 'https://observersoftware.io' : 'http://localhost:3000')
+  },
+  database: {
+    url: process.env.DATABASE_URL,
+    // Use database if DATABASE_URL is set, otherwise fall back to JSON files
+    useDatabase: !!process.env.DATABASE_URL
   }
 };
 
