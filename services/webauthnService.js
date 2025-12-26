@@ -449,19 +449,35 @@ async function generateAuthenticationOptionsForUser(userId, credentials = [], or
         throw new Error(`Credential at index ${index} could not be converted to Buffer. Type: ${typeof cred.id}, IsArray: ${Array.isArray(cred.id)}, Value: ${JSON.stringify(cred.id)}`);
       }
 
-      // SimpleWebAuthn expects credential ID as a Uint8Array or Buffer
-      // But it validates it as a string first, so we need to ensure it's the right format
-      // Convert Buffer to Uint8Array if needed, or keep as Buffer
+      // SimpleWebAuthn's generateAuthenticationOptions expects credential ID as Uint8Array
+      // But it validates it first by checking if it's base64url (which requires a string)
+      // So we need to pass it in a format that can be validated
+      // The library will handle the conversion internally
       let credentialIDForOptions;
       if (Buffer.isBuffer(credentialID)) {
-        // Convert Buffer to Uint8Array (which SimpleWebAuthn can handle)
+        // Convert Buffer to Uint8Array
         credentialIDForOptions = new Uint8Array(credentialID);
       } else if (credentialID instanceof Uint8Array) {
         credentialIDForOptions = credentialID;
       } else {
-        // If it's still a string, convert to Uint8Array via Buffer
-        const tempBuffer = Buffer.from(String(credentialID), 'base64url');
-        credentialIDForOptions = new Uint8Array(tempBuffer);
+        // If it's a string, decode it to Uint8Array
+        // First ensure it's a proper string
+        const idStr = String(credentialID);
+        try {
+          // Decode base64url string to Buffer, then to Uint8Array
+          const decodedBuffer = Buffer.from(idStr, 'base64url');
+          credentialIDForOptions = new Uint8Array(decodedBuffer);
+        } catch (e) {
+          // If base64url fails, try base64
+          try {
+            const decodedBuffer = Buffer.from(idStr, 'base64');
+            credentialIDForOptions = new Uint8Array(decodedBuffer);
+          } catch (e2) {
+            // Last resort: treat as UTF-8
+            const decodedBuffer = Buffer.from(idStr, 'utf8');
+            credentialIDForOptions = new Uint8Array(decodedBuffer);
+          }
+        }
       }
 
       return {
