@@ -309,7 +309,13 @@ async function verifyRegistration(options, response, expectedOrigin) {
           credentialIDBuffer = Buffer.from(credentialID, 'utf8');
         }
       } else {
-        credentialIDBuffer = Buffer.from(credentialID);
+        // Convert to string first, then to buffer
+        const idString = String(credentialID);
+        try {
+          credentialIDBuffer = Buffer.from(idString, 'base64url');
+        } catch (e) {
+          credentialIDBuffer = Buffer.from(idString, 'utf8');
+        }
       }
 
       // Convert credentialPublicKey to Buffer if needed
@@ -386,40 +392,52 @@ async function generateAuthenticationOptionsForUser(userId, credentials = [], or
       });
       
       // cred.id should be a base64url string, convert to Buffer
+      // Handle all possible formats defensively
       let credentialID;
+      
       if (Buffer.isBuffer(cred.id)) {
         credentialID = cred.id;
-      } else if (typeof cred.id === 'string') {
-        // Ensure it's actually a string and not null/undefined
-        const idString = String(cred.id).trim();
-        if (!idString) {
-          throw new Error(`Credential at index ${index} has empty id string`);
-        }
-        try {
-          // Try base64url first (standard format)
-          // Buffer.from with 'base64url' expects a string, so we need to ensure it's a string
-          credentialID = Buffer.from(idString, 'base64url');
-        } catch (e) {
-          console.warn(`Failed to parse credential ID as base64url, trying base64:`, e.message);
-          // If base64url fails, try regular base64
-          try {
-            credentialID = Buffer.from(idString, 'base64');
-          } catch (e2) {
-            console.warn(`Failed to parse credential ID as base64, trying utf8:`, e2.message);
-            // If both fail, try as raw string (shouldn't happen, but handle it)
-            credentialID = Buffer.from(idString, 'utf8');
-          }
-        }
       } else if (cred.id === null || cred.id === undefined) {
         throw new Error(`Credential at index ${index} has null/undefined id`);
       } else {
-        // Try to convert to string first
-        try {
-          const idString = String(cred.id);
-          credentialID = Buffer.from(idString, 'base64url');
-        } catch (e) {
-          throw new Error(`Credential at index ${index} has invalid id type: ${typeof cred.id}, value: ${JSON.stringify(cred.id)}`);
+        // Convert to string first, ensuring we have a valid string
+        let idString;
+        if (typeof cred.id === 'string') {
+          idString = cred.id.trim();
+        } else if (Array.isArray(cred.id)) {
+          // If it's an array (like [1,2,3]), convert to Buffer directly
+          credentialID = Buffer.from(cred.id);
+        } else if (typeof cred.id === 'object' && cred.id !== null) {
+          // If it's an object, try to stringify it
+          idString = JSON.stringify(cred.id);
+        } else {
+          // For numbers, booleans, etc., convert to string
+          idString = String(cred.id);
         }
+        
+        if (idString !== undefined) {
+          if (!idString) {
+            throw new Error(`Credential at index ${index} has empty id string`);
+          }
+          try {
+            // Try base64url first (standard format)
+            credentialID = Buffer.from(idString, 'base64url');
+          } catch (e) {
+            console.warn(`Failed to parse credential ID as base64url, trying base64:`, e.message);
+            // If base64url fails, try regular base64
+            try {
+              credentialID = Buffer.from(idString, 'base64');
+            } catch (e2) {
+              console.warn(`Failed to parse credential ID as base64, trying utf8:`, e2.message);
+              // If both fail, try as raw string
+              credentialID = Buffer.from(idString, 'utf8');
+            }
+          }
+        }
+      }
+      
+      if (!credentialID) {
+        throw new Error(`Credential at index ${index} could not be converted to Buffer. Type: ${typeof cred.id}, Value: ${JSON.stringify(cred.id)}`);
       }
 
       return {
