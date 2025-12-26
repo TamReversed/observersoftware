@@ -255,6 +255,12 @@ async function verifyRegistration(options, response, expectedOrigin) {
         credentialID = response.id;
       }
 
+      // Try to get publicKey from response if missing from registrationInfo
+      if (!credentialPublicKey && response?.response?.publicKey) {
+        console.log('credentialPublicKey not in registrationInfo, using response.response.publicKey');
+        credentialPublicKey = response.response.publicKey;
+      }
+
       // Validate that we have the required data
       if (!credentialID) {
         console.error('credentialID is missing from both registrationInfo and response:', {
@@ -265,7 +271,15 @@ async function verifyRegistration(options, response, expectedOrigin) {
         throw new Error('Registration verification failed: credentialID is missing');
       }
       if (!credentialPublicKey) {
-        console.error('credentialPublicKey is missing from registrationInfo:', registrationInfo);
+        console.error('credentialPublicKey is missing from both registrationInfo and response:', {
+          registrationInfoKeys: Object.keys(registrationInfo),
+          registrationInfoValues: Object.keys(registrationInfo).reduce((acc, key) => {
+            acc[key] = typeof registrationInfo[key];
+            return acc;
+          }, {}),
+          responseKeys: response ? Object.keys(response) : [],
+          responseResponseKeys: response?.response ? Object.keys(response.response) : []
+        });
         throw new Error('Registration verification failed: credentialPublicKey is missing');
       }
 
