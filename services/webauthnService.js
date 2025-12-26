@@ -196,6 +196,10 @@ async function verifyAuthentication(options, response, credential, expectedOrigi
   if (!expectedOrigin) {
     expectedOrigin = config.webauthn.origin;
   }
+  
+  // Use rpID from options (which should be set from the origin)
+  const rpID = options.rpID || getRpIDFromOrigin(expectedOrigin);
+  
   const credentialPublicKey = Buffer.from(credential.publicKey, 'base64url');
   const credentialID = Buffer.from(credential.id, 'base64url');
 
