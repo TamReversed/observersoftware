@@ -14,26 +14,18 @@ const config = {
       sameSite: 'lax'
     }
   },
-  paths: {
+  paths: (() => {
     // Use persistent volume path on Railway, or default to ./data
     // Railway persistent volumes are mounted at /data by default
-    dataDir: (() => {
-      const dataDir = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
-      return dataDir;
-    })(),
-    get usersFile() {
-      return path.join(this.dataDir, 'users.json');
-    },
-    get postsFile() {
-      return path.join(this.dataDir, 'posts.json');
-    },
-    get workFile() {
-      return path.join(this.dataDir, 'work.json');
-    },
-    get capabilitiesFile() {
-      return path.join(this.dataDir, 'capabilities.json');
-    }
-  },
+    const dataDir = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
+    return {
+      dataDir,
+      usersFile: path.join(dataDir, 'users.json'),
+      postsFile: path.join(dataDir, 'posts.json'),
+      workFile: path.join(dataDir, 'work.json'),
+      capabilitiesFile: path.join(dataDir, 'capabilities.json')
+    };
+  })(),
   admin: {
     defaultUsername: process.env.ADMIN_USERNAME || 'admin',
     defaultPassword: process.env.ADMIN_PASSWORD || 'changeme123'
