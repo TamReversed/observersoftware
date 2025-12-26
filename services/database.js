@@ -144,21 +144,41 @@ async function initializeSchema() {
           const errCode = err.code;
           const errMsg = err.message.toLowerCase();
           
-          // Ignore "already exists" errors (idempotent)
+          // Check error type
+          const isCreateTable = statement.toUpperCase().includes('CREATE TABLE');
+          const isCreateTrigger = statement.toUpperCase().includes('CREATE TRIGGER');
+          const isCreateIndex = statement.toUpperCase().includes('CREATE INDEX');
+          const isCreateFunction = statement.toUpperCase().includes('CREATE FUNCTION') || 
+                                   statement.toUpperCase().includes('CREATE OR REPLACE FUNCTION');
+          
+          // Ignore "already exists" errors (idempotent) - but only for certain operations
           if (errCode === '42P07' || // relation already exists
               errCode === '42710' || // duplicate object
               errCode === '42P16' || // invalid table definition
               errCode === '42723' || // function already exists
               errCode === '42P17' || // cannot drop trigger (already exists)
+              (errCode === '42P01' && isCreateIndex) || // index on non-existent table (might be ok if table doesn't exist yet)
               errMsg.includes('already exists') ||
               errMsg.includes('duplicate')) {
-            // Silently continue
+            // For CREATE TABLE IF NOT EXISTS, 42P07 is expected if table exists
+            if (isCreateTable && errCode === '42P07') {
+              continue; // Table already exists, that's fine
+            }
+            // For CREATE INDEX IF NOT EXISTS, 42P07 is expected
+            if (isCreateIndex && errCode === '42P07') {
+              continue; // Index already exists, that's fine
+            }
+            // For CREATE OR REPLACE FUNCTION, 42723 is expected
+            if (isCreateFunction && errCode === '42723') {
+              continue; // Function already exists, that's fine
+            }
+            // For other "already exists" cases, continue
             continue;
           }
           
           // For relation does not exist errors on CREATE TRIGGER, 
           // it means the table wasn't created - this is a real error
-          if (errCode === '42P01' && statement.toUpperCase().includes('CREATE TRIGGER')) {
+          if (errCode === '42P01' && isCreateTrigger) {
             console.error(`✗ Cannot create trigger - table does not exist`);
             console.error(`  Statement: ${preview}...`);
             console.error(`  Error: ${err.message}`);
@@ -169,12 +189,21 @@ async function initializeSchema() {
           }
           
           // For relation does not exist on CREATE TABLE, that's a real error
-          if (errCode === '42P01' && statement.toUpperCase().includes('CREATE TABLE')) {
+          if (errCode === '42P01' && isCreateTable) {
             console.error(`✗ Cannot create table`);
             console.error(`  Statement: ${preview}...`);
             console.error(`  Error: ${err.message}`);
             await client.query('ROLLBACK');
             throw new Error(`Schema initialization failed: ${err.message}`);
+          }
+          
+          // For relation does not exist on CREATE INDEX, log but continue
+          // (index might be created before table in some edge cases)
+          if (errCode === '42P01' && isCreateIndex) {
+            console.warn(`Warning: Cannot create index - table does not exist yet`);
+            console.warn(`  Statement: ${preview}...`);
+            console.warn(`  This might be a timing issue, continuing...`);
+            continue;
           }
           
           // For other errors, log the details but continue
