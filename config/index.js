@@ -17,11 +17,22 @@ const config = {
   paths: {
     // Use persistent volume path on Railway, or default to ./data
     // Railway persistent volumes are mounted at /data by default
-    dataDir: process.env.DATA_DIR || path.join(__dirname, '..', 'data'),
-    usersFile: path.join(process.env.DATA_DIR || path.join(__dirname, '..', 'data'), 'users.json'),
-    postsFile: path.join(process.env.DATA_DIR || path.join(__dirname, '..', 'data'), 'posts.json'),
-    workFile: path.join(process.env.DATA_DIR || path.join(__dirname, '..', 'data'), 'work.json'),
-    capabilitiesFile: path.join(process.env.DATA_DIR || path.join(__dirname, '..', 'data'), 'capabilities.json')
+    dataDir: (() => {
+      const dataDir = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
+      return dataDir;
+    })(),
+    get usersFile() {
+      return path.join(this.dataDir, 'users.json');
+    },
+    get postsFile() {
+      return path.join(this.dataDir, 'posts.json');
+    },
+    get workFile() {
+      return path.join(this.dataDir, 'work.json');
+    },
+    get capabilitiesFile() {
+      return path.join(this.dataDir, 'capabilities.json');
+    }
   },
   admin: {
     defaultUsername: process.env.ADMIN_USERNAME || 'admin',
