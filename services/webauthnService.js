@@ -94,14 +94,15 @@ async function generateRegistrationOptionsForUser(userId, username, existingCred
       attestationType: 'none',
       excludeCredentials,
       authenticatorSelection: {
-        // Don't restrict to cross-platform only - allow both platform and roaming authenticators
-        // This is important for password managers like Dashlane
-        authenticatorAttachment: undefined, // Allow both platform and cross-platform
-        // Use 'discouraged' for password managers - they provide their own security
-        // This avoids requiring additional verification steps (PIN, fingerprint, etc.)
-        userVerification: 'discouraged',
+        // Don't restrict authenticator type - allow both platform and cross-platform
+        // undefined = allow any authenticator (enables QR code/cross-device flow)
+        // This allows users to use their phone (with Face ID) via QR code
+        authenticatorAttachment: undefined,
+        // Use 'preferred' to allow Face ID/Touch ID on phones via cross-device
+        // 'discouraged' might prevent some authenticators from working
+        userVerification: 'preferred',
         // requireResidentKey: true allows passkeys to be stored on the authenticator
-        // This is required for password managers to save the passkey
+        // This is required for password managers and cross-device authenticators
         requireResidentKey: true
       },
       supportedAlgorithmIDs: [-7, -257] // ES256 and RS256
