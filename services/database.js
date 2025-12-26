@@ -57,91 +57,89 @@ async function initializeSchema() {
     try {
       await client.query('BEGIN');
       
-      // Use a simpler approach: execute the entire schema file
-      // PostgreSQL can handle multiple statements in one query
-      // But we need to handle dollar-quoted function bodies
+      // Execute schema statements in correct order
+      // Split by semicolons, handling dollar-quoted function bodies
+      const statements = [];
+      let current = '';
+      let inDollarQuote = false;
+      let dollarTag = '';
       
-      // First, let's try executing the whole thing
-      // If that fails, fall back to statement-by-statement
-      try {
-        await client.query(schema);
-        console.log('✓ Schema executed as single query');
-      } catch (err) {
-        // If that fails, try statement by statement
-        console.log('Executing schema statements individually...');
+      // Remove single-line comments
+      let cleaned = schema.replace(/--.*$/gm, '');
+      
+      for (let i = 0; i < cleaned.length; i++) {
+        const char = cleaned[i];
         
-        // Remove comments
-        let cleanedSchema = schema.replace(/--.*$/gm, '');
-        
-        // Split by semicolon, but be smarter about it
-        // Use a regex that respects dollar-quoted strings
-        const statements = [];
-        let current = '';
-        let depth = 0;
-        let inDollarQuote = false;
-        let dollarTag = '';
-        
-        for (let i = 0; i < cleanedSchema.length; i++) {
-          const char = cleanedSchema[i];
-          const nextChar = cleanedSchema[i + 1] || '';
-          
-          // Handle dollar-quoted strings
-          if (char === '$' && !inDollarQuote) {
-            // Find the closing $
-            let tagEnd = i + 1;
-            while (tagEnd < cleanedSchema.length && cleanedSchema[tagEnd] !== '$') {
-              tagEnd++;
-            }
-            if (tagEnd < cleanedSchema.length) {
-              dollarTag = cleanedSchema.substring(i, tagEnd + 1);
-              inDollarQuote = true;
-              current += dollarTag;
-              i = tagEnd;
-              continue;
-            }
-          } else if (inDollarQuote && cleanedSchema.substring(i, i + dollarTag.length) === dollarTag) {
-            inDollarQuote = false;
-            current += dollarTag;
-            i += dollarTag.length - 1;
-            continue;
+        // Check for dollar-quote start
+        if (char === '$' && !inDollarQuote) {
+          let j = i + 1;
+          while (j < cleaned.length && cleaned[j] !== '$') {
+            j++;
           }
-          
-          current += char;
-          
-          // End statement on semicolon (if not in dollar quote)
-          if (char === ';' && !inDollarQuote) {
-            const trimmed = current.trim();
-            if (trimmed.length > 0 && !trimmed.match(/^\s*$/)) {
-              statements.push(trimmed);
-            }
-            current = '';
+          if (j < cleaned.length) {
+            dollarTag = cleaned.substring(i, j + 1);
+            inDollarQuote = true;
+            current += dollarTag;
+            i = j;
+            continue;
           }
         }
         
-        // Execute statements one by one
-        for (const statement of statements) {
-          const trimmed = statement.trim();
+        // Check for dollar-quote end
+        if (inDollarQuote && cleaned.substring(i, i + dollarTag.length) === dollarTag) {
+          inDollarQuote = false;
+          current += dollarTag;
+          i += dollarTag.length - 1;
+          continue;
+        }
+        
+        current += char;
+        
+        // End statement on semicolon (if not in dollar quote)
+        if (char === ';' && !inDollarQuote) {
+          const trimmed = current.trim();
           if (trimmed.length > 0) {
-            try {
-              await client.query(trimmed);
-            } catch (err) {
-              // Ignore "already exists" errors
-              const errCode = err.code;
-              const errMsg = err.message.toLowerCase();
-              
-              if (errCode === '42P07' || // relation already exists
-                  errCode === '42710' || // duplicate object
-                  errCode === '42P16' || // invalid table definition
-                  errMsg.includes('already exists') ||
-                  errMsg.includes('duplicate')) {
-                continue; // Skip
-              }
-              
-              // Log other errors but continue
-              console.warn(`SQL warning: ${err.message} (code: ${errCode})`);
-              console.warn(`Statement: ${trimmed.substring(0, 100)}...`);
-            }
+            statements.push(trimmed);
           }
+          current = '';
+        }
+      }
+      
+      // Add final statement if any
+      if (current.trim().length > 0) {
+        statements.push(current.trim());
+      }
+      
+      // Execute each statement
+      for (let i = 0; i < statements.length; i++) {
+        const statement = statements[i].trim();
+        if (statement.length === 0) continue;
+        
+        try {
+          await client.query(statement);
+        } catch (err) {
+          const errCode = err.code;
+          const errMsg = err.message.toLowerCase();
+          
+          // Ignore "already exists" errors (idempotent)
+          if (errCode === '42P07' || // relation already exists
+              errCode === '42710' || // duplicate object
+              errCode === '42P16' || // invalid table definition
+              errCode === '42723' || // function already exists
+              errMsg.includes('already exists') ||
+              errMsg.includes('duplicate')) {
+            // Silently continue
+            continue;
+          }
+          
+          // For other errors, log the details
+          console.error(`Error executing statement ${i + 1}/${statements.length}:`);
+          console.error(`  Code: ${errCode}`);
+          console.error(`  Message: ${err.message}`);
+          console.error(`  Statement: ${statement.substring(0, 200)}...`);
+          
+          // Don't throw - continue with other statements
+          // Some statements might fail if dependencies aren't ready yet
         }
       }
       
