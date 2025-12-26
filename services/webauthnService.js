@@ -25,9 +25,6 @@ function getRpIDFromOrigin(originUrl) {
   }
 }
 
-// Export helper function for use in controllers
-module.exports.getRpIDFromOrigin = getRpIDFromOrigin;
-
 // Helper to get origin from request
 function getOriginFromRequest(req) {
   // Check for Railway's public domain env var first
