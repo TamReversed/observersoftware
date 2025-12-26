@@ -704,7 +704,8 @@
 
         if (!startRes.ok) {
           const error = await startRes.json();
-          throw new Error(error.error || 'Failed to start authentication');
+          console.error('Authentication start error:', error);
+          throw new Error(error.details || error.error || 'Failed to start authentication');
         }
 
         const options = await startRes.json();

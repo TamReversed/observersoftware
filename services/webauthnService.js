@@ -377,7 +377,19 @@ async function generateAuthenticationOptionsForUser(userId, credentials = [], or
       if (Buffer.isBuffer(cred.id)) {
         credentialID = cred.id;
       } else if (typeof cred.id === 'string') {
-        credentialID = Buffer.from(cred.id, 'base64url');
+        try {
+          // Try base64url first (standard format)
+          credentialID = Buffer.from(cred.id, 'base64url');
+        } catch (e) {
+          // If base64url fails, try regular base64
+          try {
+            credentialID = Buffer.from(cred.id, 'base64');
+          } catch (e2) {
+            // If both fail, try as raw string (shouldn't happen, but handle it)
+            console.warn(`Credential ID at index ${index} is not valid base64url or base64, treating as raw string`);
+            credentialID = Buffer.from(cred.id, 'utf8');
+          }
+        }
       } else {
         throw new Error(`Credential at index ${index} has invalid id type: ${typeof cred.id}`);
       }
