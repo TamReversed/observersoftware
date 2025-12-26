@@ -7,16 +7,42 @@ const {
 const { v4: uuidv4 } = require('uuid');
 const config = require('../config');
 
-const { rpID, rpName, origin } = config.webauthn;
+const { rpName } = config.webauthn;
+
+// Helper to get rpID from origin
+function getRpIDFromOrigin(originUrl) {
+  try {
+    const url = new URL(originUrl);
+    return url.hostname;
+  } catch (e) {
+    return config.webauthn.rpID || 'localhost';
+  }
+}
+
+// Helper to get origin from request
+function getOriginFromRequest(req) {
+  // Check for Railway's public domain env var first
+  if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+    return process.env.RAILWAY_PUBLIC_DOMAIN.startsWith('http') 
+      ? process.env.RAILWAY_PUBLIC_DOMAIN 
+      : `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
+  }
+  
+  // Fall back to request origin
+  const protocol = req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
+  const host = req.headers.host || req.get('host');
+  return `${protocol}://${host}`;
+}
 
 /**
  * Generate registration options for a new passkey
  * @param {string} userId - User ID
  * @param {string} username - Username
  * @param {Array} existingCredentials - Existing WebAuthn credentials for this user
+ * @param {string} origin - Origin URL for the request
  * @returns {Promise<Object>} Registration options
  */
-async function generateRegistrationOptionsForUser(userId, username, existingCredentials = []) {
+async function generateRegistrationOptionsForUser(userId, username, existingCredentials = [], origin) {
   try {
     // Convert userId string to Buffer
     // If userId is a UUID string, we need to convert it properly
@@ -50,6 +76,9 @@ async function generateRegistrationOptionsForUser(userId, username, existingCred
       }
     }).filter(Boolean); // Remove any null entries
 
+    // Get rpID from origin
+    const rpID = getRpIDFromOrigin(origin || config.webauthn.origin);
+
     const options = await generateRegistrationOptions({
       rpName,
       rpID,
@@ -80,7 +109,10 @@ async function generateRegistrationOptionsForUser(userId, username, existingCred
  * @param {string} expectedOrigin - Expected origin
  * @returns {Promise<Object>} Verification result with credential info
  */
-async function verifyRegistration(options, response, expectedOrigin = origin) {
+async function verifyRegistration(options, response, expectedOrigin) {
+  if (!expectedOrigin) {
+    expectedOrigin = config.webauthn.origin;
+  }
   const verification = await verifyRegistrationResponse({
     response,
     expectedChallenge: options.challenge,
@@ -110,12 +142,16 @@ async function verifyRegistration(options, response, expectedOrigin = origin) {
  * Generate authentication options for login
  * @param {string} userId - User ID
  * @param {Array} credentials - User's registered credentials
+ * @param {string} origin - Origin URL for the request
  * @returns {Promise<Object>} Authentication options
  */
-async function generateAuthenticationOptionsForUser(userId, credentials = []) {
+async function generateAuthenticationOptionsForUser(userId, credentials = [], origin) {
   if (credentials.length === 0) {
     throw new Error('No credentials found for user');
   }
+
+  // Get rpID from origin
+  const rpID = getRpIDFromOrigin(origin || config.webauthn.origin);
 
   const options = await generateAuthenticationOptions({
     rpID,
@@ -139,7 +175,10 @@ async function generateAuthenticationOptionsForUser(userId, credentials = []) {
  * @param {string} expectedOrigin - Expected origin
  * @returns {Promise<Object>} Verification result with updated counter
  */
-async function verifyAuthentication(options, response, credential, expectedOrigin = origin) {
+async function verifyAuthentication(options, response, credential, expectedOrigin) {
+  if (!expectedOrigin) {
+    expectedOrigin = config.webauthn.origin;
+  }
   const credentialPublicKey = Buffer.from(credential.publicKey, 'base64url');
   const credentialID = Buffer.from(credential.id, 'base64url');
 

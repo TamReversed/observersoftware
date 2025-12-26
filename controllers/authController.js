@@ -87,10 +87,13 @@ async function startWebAuthnRegistration(req, res, next) {
     const existingCredentials = user.webauthnCredentials;
     
     try {
+      // Get origin from request
+      const origin = req.protocol + '://' + req.get('host');
       const options = await webauthnService.generateRegistrationOptionsForUser(
         user.id,
         user.username,
-        existingCredentials
+        existingCredentials,
+        origin
       );
 
       // Store challenge in session
@@ -137,14 +140,17 @@ async function finishWebAuthnRegistration(req, res, next) {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    // Get origin from request
+    const origin = req.protocol + '://' + req.get('host');
+    
     // Create options object with stored challenge
     const options = {
       challenge: req.session.webauthnChallenge,
       rpID: config.webauthn.rpID,
-      origin: config.webauthn.origin
+      origin: origin
     };
 
-    const verification = await webauthnService.verifyRegistration(options, response);
+    const verification = await webauthnService.verifyRegistration(options, response, origin);
 
     if (!verification.verified) {
       return res.status(400).json({ error: 'Registration verification failed' });
@@ -190,9 +196,12 @@ async function startWebAuthnLogin(req, res, next) {
       return res.status(400).json({ error: 'No passkey registered for this user' });
     }
 
+    // Get origin from request
+    const origin = req.protocol + '://' + req.get('host');
     const options = await webauthnService.generateAuthenticationOptionsForUser(
       user.id,
-      user.webauthnCredentials
+      user.webauthnCredentials,
+      origin
     );
 
     // Store challenge and user info in session
@@ -244,17 +253,21 @@ async function finishWebAuthnLogin(req, res, next) {
       return res.status(400).json({ error: 'Credential not found. Please register a new passkey.' });
     }
 
+    // Get origin from request
+    const origin = req.protocol + '://' + req.get('host');
+    
     // Create options object with stored challenge
     const options = {
       challenge: req.session.webauthnChallenge,
       rpID: config.webauthn.rpID,
-      origin: config.webauthn.origin
+      origin: origin
     };
 
     const verification = await webauthnService.verifyAuthentication(
       options,
       response,
-      credential
+      credential,
+      origin
     );
 
     if (!verification.verified) {
