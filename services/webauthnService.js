@@ -410,20 +410,33 @@ async function generateAuthenticationOptionsForUser(userId, credentials = [], or
           throw new Error(`Credential at index ${index} has empty id string`);
         }
         // base64url encoding requires a string, and Buffer.from will call .replace() internally
-        // So we must ensure it's actually a string primitive, not a String object
-        // Double-check it's a string and not a String object
-        const cleanString = typeof idString === 'string' ? idString : String(idString);
-        if (typeof cleanString !== 'string') {
-          throw new Error(`Credential ID could not be converted to string. Type: ${typeof cleanString}`);
+        // Ensure we have a primitive string, not a String object
+        let cleanString;
+        if (Object.prototype.toString.call(idString) === '[object String]' && typeof idString === 'object') {
+          // It's a String object, convert to primitive
+          cleanString = String(idString);
+        } else {
+          cleanString = idString;
         }
+        
+        // Final safety check - must be a string primitive
+        if (typeof cleanString !== 'string') {
+          throw new Error(`Credential ID is not a string primitive. Type: ${typeof cleanString}, Constructor: ${cleanString?.constructor?.name}`);
+        }
+        
+        // Verify it has the replace method (sanity check)
+        if (typeof cleanString.replace !== 'function') {
+          throw new Error(`Credential ID string does not have replace method. Type: ${typeof cleanString}`);
+        }
+        
         try {
           credentialID = Buffer.from(cleanString, 'base64url');
         } catch (e) {
-          console.warn(`Failed to parse credential ID as base64url, trying base64:`, e.message);
+          console.warn(`Failed to parse credential ID as base64url:`, e.message);
           try {
             credentialID = Buffer.from(cleanString, 'base64');
           } catch (e2) {
-            console.warn(`Failed to parse credential ID as base64, trying utf8:`, e2.message);
+            console.warn(`Failed to parse credential ID as base64:`, e2.message);
             credentialID = Buffer.from(cleanString, 'utf8');
           }
         }
