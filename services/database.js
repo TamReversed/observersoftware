@@ -70,9 +70,19 @@ async function initializeSchema() {
       for (let i = 0; i < cleaned.length; i++) {
         const char = cleaned[i];
         
-        // Check for dollar-quote start
+        // Check for dollar-quote start ($$ or $tag$)
         if (char === '$' && !inDollarQuote) {
+          // Look for the matching closing $
           let j = i + 1;
+          // Check if it's $$ (simple case)
+          if (j < cleaned.length && cleaned[j] === '$') {
+            dollarTag = '$$';
+            inDollarQuote = true;
+            current += dollarTag;
+            i = j;
+            continue;
+          }
+          // Otherwise look for $tag$ pattern
           while (j < cleaned.length && cleaned[j] !== '$') {
             j++;
           }
@@ -86,11 +96,17 @@ async function initializeSchema() {
         }
         
         // Check for dollar-quote end
-        if (inDollarQuote && cleaned.substring(i, i + dollarTag.length) === dollarTag) {
-          inDollarQuote = false;
-          current += dollarTag;
-          i += dollarTag.length - 1;
-          continue;
+        if (inDollarQuote) {
+          // Check if we've reached the closing dollar tag
+          if (i + dollarTag.length <= cleaned.length) {
+            const potentialEnd = cleaned.substring(i, i + dollarTag.length);
+            if (potentialEnd === dollarTag) {
+              inDollarQuote = false;
+              current += dollarTag;
+              i += dollarTag.length - 1;
+              continue;
+            }
+          }
         }
         
         current += char;
@@ -146,8 +162,19 @@ async function initializeSchema() {
             console.error(`✗ Cannot create trigger - table does not exist`);
             console.error(`  Statement: ${preview}...`);
             console.error(`  Error: ${err.message}`);
-            // Continue anyway - might be a timing issue
-            continue;
+            console.error(`  This usually means the CREATE TABLE statement failed earlier`);
+            // Rollback the transaction since we have a real error
+            await client.query('ROLLBACK');
+            throw new Error(`Schema initialization failed: ${err.message}. Table creation may have failed.`);
+          }
+          
+          // For relation does not exist on CREATE TABLE, that's a real error
+          if (errCode === '42P01' && statement.toUpperCase().includes('CREATE TABLE')) {
+            console.error(`✗ Cannot create table`);
+            console.error(`  Statement: ${preview}...`);
+            console.error(`  Error: ${err.message}`);
+            await client.query('ROLLBACK');
+            throw new Error(`Schema initialization failed: ${err.message}`);
           }
           
           // For other errors, log the details but continue
