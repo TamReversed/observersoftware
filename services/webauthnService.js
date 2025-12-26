@@ -205,35 +205,59 @@ async function verifyRegistration(options, response, expectedOrigin) {
     console.log('Verification result:', {
       verified: verification.verified,
       hasRegistrationInfo: !!verification.registrationInfo,
-      registrationInfoKeys: verification.registrationInfo ? Object.keys(verification.registrationInfo) : []
+      registrationInfoKeys: verification.registrationInfo ? Object.keys(verification.registrationInfo) : [],
+      registrationInfo: verification.registrationInfo ? JSON.stringify(verification.registrationInfo, (key, value) => {
+        // Convert Buffers to readable format for logging
+        if (value instanceof Buffer || (value && value.type === 'Buffer')) {
+          return `<Buffer: ${value.length} bytes>`;
+        }
+        return value;
+      }) : null
     });
 
     if (verification.verified && verification.registrationInfo) {
-      const { credentialID, credentialPublicKey, counter } = verification.registrationInfo;
+      const registrationInfo = verification.registrationInfo;
+      
+      // SimpleWebAuthn returns credentialID and credentialPublicKey as Buffers
+      // But they might be in different formats, so let's handle both
+      let credentialID = registrationInfo.credentialID;
+      let credentialPublicKey = registrationInfo.credentialPublicKey;
 
       // Validate that we have the required data
       if (!credentialID) {
+        console.error('credentialID is missing from registrationInfo:', registrationInfo);
         throw new Error('Registration verification failed: credentialID is missing');
       }
       if (!credentialPublicKey) {
+        console.error('credentialPublicKey is missing from registrationInfo:', registrationInfo);
         throw new Error('Registration verification failed: credentialPublicKey is missing');
       }
 
       console.log('Registration info received:', {
         hasCredentialID: !!credentialID,
         credentialIDType: credentialID?.constructor?.name,
+        credentialIDIsBuffer: Buffer.isBuffer(credentialID),
         credentialIDLength: credentialID?.length,
         hasCredentialPublicKey: !!credentialPublicKey,
         credentialPublicKeyType: credentialPublicKey?.constructor?.name,
+        credentialPublicKeyIsBuffer: Buffer.isBuffer(credentialPublicKey),
         credentialPublicKeyLength: credentialPublicKey?.length
       });
+
+      // Convert to Buffer if not already
+      const credentialIDBuffer = Buffer.isBuffer(credentialID) 
+        ? credentialID 
+        : Buffer.from(credentialID);
+      const credentialPublicKeyBuffer = Buffer.isBuffer(credentialPublicKey)
+        ? credentialPublicKey
+        : Buffer.from(credentialPublicKey);
 
       return {
         verified: true,
         credential: {
-          id: Buffer.from(credentialID).toString('base64url'),
-          publicKey: Buffer.from(credentialPublicKey).toString('base64url'),
-          counter: counter || 0,
+          id: credentialIDBuffer.toString('base64url'),
+          publicKey: credentialPublicKeyBuffer.toString('base64url'),
+          counter: registrationInfo.counter || 0,
           deviceName: 'Passkey', // Default name, can be updated later
           registeredAt: new Date().toISOString()
         }
