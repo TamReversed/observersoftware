@@ -126,14 +126,25 @@ async function migrate() {
     }
     
     console.log('\n✓ Migration completed successfully!');
-    process.exit(0);
+    
+    // Only exit if run directly (not imported)
+    if (require.main === module) {
+      process.exit(0);
+    }
   } catch (error) {
     console.error('✗ Migration failed:', error);
-    process.exit(1);
+    
+    // Only exit if run directly (not imported)
+    if (require.main === module) {
+      process.exit(1);
+    } else {
+      // Re-throw if called from server startup
+      throw error;
+    }
   }
 }
 
-// Run migration
+// Run migration if called directly
 if (require.main === module) {
   migrate();
 }
