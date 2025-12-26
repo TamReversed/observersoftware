@@ -74,6 +74,11 @@ app.use('/api', apiLimiter);
 // CSRF protection - generate token for all requests
 app.use(generateCsrfToken);
 
+// Health check endpoint (for Railway/deployment monitoring)
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 // API routes (CSRF validation applied per route)
 app.use(routes);
 
