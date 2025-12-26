@@ -391,37 +391,35 @@ async function generateAuthenticationOptionsForUser(userId, credentials = [], or
       });
       
       // cred.id is stored as a base64url string (e.g., 'xtW6W7_XunrgRLRknlXEXQ')
-      // SimpleWebAuthn expects it as Uint8Array
+      // SimpleWebAuthn expects it as a Buffer (Node.js Buffer)
       let credentialIDForOptions;
       
       if (typeof cred.id === 'string') {
-        // Decode base64url string to Uint8Array
+        // Decode base64url string to Buffer
         const idStr = String(cred.id).trim();
         if (!idStr) {
           throw new Error(`Credential at index ${index} has empty id string`);
         }
         try {
-          // Decode base64url to Buffer, then to Uint8Array
-          const decodedBuffer = Buffer.from(idStr, 'base64url');
-          credentialIDForOptions = new Uint8Array(decodedBuffer);
+          // Decode base64url to Buffer
+          credentialIDForOptions = Buffer.from(idStr, 'base64url');
         } catch (e) {
           // If base64url fails, try base64
           try {
-            const decodedBuffer = Buffer.from(idStr, 'base64');
-            credentialIDForOptions = new Uint8Array(decodedBuffer);
+            credentialIDForOptions = Buffer.from(idStr, 'base64');
           } catch (e2) {
             throw new Error(`Credential at index ${index} has invalid base64url id: ${e.message}`);
           }
         }
       } else if (Buffer.isBuffer(cred.id)) {
-        // Already a Buffer, convert to Uint8Array
-        credentialIDForOptions = new Uint8Array(cred.id);
-      } else if (Array.isArray(cred.id)) {
-        // If it's an array (from JSON), convert directly to Uint8Array
-        credentialIDForOptions = new Uint8Array(cred.id);
-      } else if (cred.id instanceof Uint8Array) {
-        // Already a Uint8Array
+        // Already a Buffer
         credentialIDForOptions = cred.id;
+      } else if (Array.isArray(cred.id)) {
+        // If it's an array (from JSON), convert directly to Buffer
+        credentialIDForOptions = Buffer.from(cred.id);
+      } else if (cred.id instanceof Uint8Array) {
+        // Convert Uint8Array to Buffer
+        credentialIDForOptions = Buffer.from(cred.id);
       } else {
         throw new Error(`Credential at index ${index} has invalid id type: ${typeof cred.id}`);
       }
@@ -441,7 +439,13 @@ async function generateAuthenticationOptionsForUser(userId, credentials = [], or
   console.log('Generating authentication options:', {
     rpID,
     credentialCount: allowCredentials.length,
-    credentialIDs: allowCredentials.map(c => c.id.toString('base64url').substring(0, 20) + '...')
+    credentialIDs: allowCredentials.map(c => {
+      if (Buffer.isBuffer(c.id)) {
+        return c.id.toString('base64url').substring(0, 20) + '...';
+      } else {
+        return String(c.id).substring(0, 20) + '...';
+      }
+    })
   });
 
   const options = await generateAuthenticationOptions({
