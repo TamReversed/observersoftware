@@ -16,7 +16,8 @@ const routes = require('./routes');
 const { errorHandler } = require('./middleware/errorHandler');
 const { initializeData } = require('./services/initService');
 const { generateCsrfToken, validateCsrfToken } = require('./middleware/csrf');
-const { initializeSchema } = require('./services/database');
+const { initializeSchema, isDatabaseEmpty } = require('./services/database');
+const { migrate } = require('./scripts/migrate-to-postgres');
 
 // Validate environment variables
 validateEnv();
@@ -124,6 +125,33 @@ async function startServer() {
     if (config.database.useDatabase) {
       await initializeSchema();
       console.log('✓ Database initialized');
+      
+      // Auto-migrate JSON data to database if database is empty
+      const isEmpty = await isDatabaseEmpty();
+      if (isEmpty) {
+        console.log('Database is empty, checking for JSON data to migrate...');
+        const fs = require('fs');
+        const hasJsonData = 
+          fs.existsSync(config.paths.capabilitiesFile) ||
+          fs.existsSync(config.paths.workFile) ||
+          fs.existsSync(config.paths.postsFile) ||
+          fs.existsSync(config.paths.usersFile);
+        
+        if (hasJsonData) {
+          console.log('Found JSON data files, migrating to database...');
+          try {
+            await migrate();
+            console.log('✓ Data migration completed');
+          } catch (error) {
+            console.error('⚠ Migration failed, continuing with empty database:', error.message);
+            // Don't exit - continue with empty database
+          }
+        } else {
+          console.log('No JSON data files found, starting with empty database');
+        }
+      } else {
+        console.log('Database already contains data, skipping migration');
+      }
     }
     
     // Initialize data (creates default admin user, sample data if needed)

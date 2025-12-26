@@ -226,6 +226,36 @@ async function initializeSchema() {
   }
 }
 
+// Check if database tables are empty
+async function isDatabaseEmpty() {
+  if (!pool) {
+    return false;
+  }
+  
+  try {
+    // Check if any of the main tables have data
+    const capabilitiesCount = await pool.query('SELECT COUNT(*) FROM capabilities');
+    const workCount = await pool.query('SELECT COUNT(*) FROM work');
+    const postsCount = await pool.query('SELECT COUNT(*) FROM posts');
+    const usersCount = await pool.query('SELECT COUNT(*) FROM users');
+    
+    const totalCount = 
+      parseInt(capabilitiesCount.rows[0].count) +
+      parseInt(workCount.rows[0].count) +
+      parseInt(postsCount.rows[0].count) +
+      parseInt(usersCount.rows[0].count);
+    
+    return totalCount === 0;
+  } catch (error) {
+    // If tables don't exist yet, consider it empty
+    if (error.code === '42P01') {
+      return true;
+    }
+    console.warn('Error checking if database is empty:', error.message);
+    return false;
+  }
+}
+
 // Query helper
 async function query(text, params) {
   if (!pool) {
@@ -249,6 +279,7 @@ async function query(text, params) {
 module.exports = {
   pool,
   query,
-  initializeSchema
+  initializeSchema,
+  isDatabaseEmpty
 };
 
