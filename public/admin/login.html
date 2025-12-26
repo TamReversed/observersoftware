@@ -712,19 +712,7 @@
         // Get assertion from authenticator (SimpleWebAuthn handles base64url conversion)
         const assertion = await startAuthentication(options);
 
-        // Convert assertion for server (SimpleWebAuthn returns base64url strings)
-        const assertionResponse = {
-          id: assertion.id,
-          rawId: assertion.rawId,
-          response: {
-            authenticatorData: assertion.response.authenticatorData,
-            clientDataJSON: assertion.response.clientDataJSON,
-            signature: assertion.response.signature,
-            userHandle: assertion.response.userHandle || null
-          },
-          type: assertion.type
-        };
-
+        // SimpleWebAuthn returns the response in the correct format already
         // Finish authentication
         const finishRes = await fetch('/api/auth/webauthn/login/finish', {
           method: 'POST',
@@ -732,7 +720,7 @@
             'Content-Type': 'application/json',
             'X-CSRF-Token': csrfToken
           },
-          body: JSON.stringify({ response: assertionResponse, csrfToken })
+          body: JSON.stringify({ response: assertion, csrfToken })
         });
 
         const result = await finishRes.json();
@@ -790,17 +778,7 @@
         // Get credential from authenticator (SimpleWebAuthn handles base64url conversion)
         const credential = await startRegistration(options);
 
-        // Convert credential for server (SimpleWebAuthn returns base64url strings)
-        const registrationResponse = {
-          id: credential.id,
-          rawId: credential.rawId,
-          response: {
-            attestationObject: credential.response.attestationObject,
-            clientDataJSON: credential.response.clientDataJSON
-          },
-          type: credential.type
-        };
-
+        // SimpleWebAuthn returns the response in the correct format already
         // Finish registration
         const finishRes = await fetch('/api/auth/webauthn/register/finish', {
           method: 'POST',
@@ -808,7 +786,7 @@
             'Content-Type': 'application/json',
             'X-CSRF-Token': csrfToken
           },
-          body: JSON.stringify({ response: registrationResponse, csrfToken })
+          body: JSON.stringify({ response: credential, csrfToken })
         });
 
         const result = await finishRes.json();

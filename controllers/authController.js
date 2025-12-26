@@ -211,13 +211,18 @@ async function finishWebAuthnLogin(req, res, next) {
     }
 
     // Find the credential that matches the response
+    // SimpleWebAuthn returns id as base64url string
     const credentialId = response.id;
+    
+    // Try to find credential by matching the base64url ID
     const credential = user.webauthnCredentials.find(
       cred => cred.id === credentialId
     );
 
     if (!credential) {
-      return res.status(400).json({ error: 'Credential not found' });
+      console.error('Credential not found. Response ID:', credentialId);
+      console.error('Available credentials:', user.webauthnCredentials.map(c => c.id));
+      return res.status(400).json({ error: 'Credential not found. Please register a new passkey.' });
     }
 
     // Create options object with stored challenge
