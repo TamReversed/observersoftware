@@ -1522,7 +1522,14 @@
           body: data
         });
         const result = await res.json();
-        if (!res.ok) throw new Error(result.error);
+        if (!res.ok) {
+          // Show detailed validation errors if available
+          if (result.errors && Array.isArray(result.errors)) {
+            const errorMessages = result.errors.map(err => `${err.param}: ${err.msg}`).join(', ');
+            throw new Error(errorMessages || result.error || 'Validation failed');
+          }
+          throw new Error(result.error || 'Failed to save capability');
+        }
         
         showToast(isNewItem ? 'Capability created!' : 'Capability saved!');
         await loadItems('capabilities');

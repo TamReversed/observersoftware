@@ -29,16 +29,34 @@ const contentValidation = body('content')
   .isLength({ max: 50000 }).withMessage('Content must be less than 50000 characters');
 
 const longDescriptionValidation = body('longDescription')
-  .optional()
+  .optional({ checkFalsy: true })
   .trim()
   .isLength({ max: 10000 }).withMessage('Long description must be less than 10000 characters');
 
 const urlValidation = body('externalUrl')
-  .optional()
+  .optional({ checkFalsy: true })
   .trim()
-  .isURL({ protocols: ['http', 'https'], require_protocol: true })
-  .withMessage('External URL must be a valid HTTP/HTTPS URL')
-  .isLength({ max: 500 }).withMessage('URL must be less than 500 characters');
+  .custom((value) => {
+    if (!value || value === '') {
+      return true; // Allow empty strings
+    }
+    // Validate URL format
+    try {
+      const url = new URL(value);
+      if (!['http:', 'https:'].includes(url.protocol)) {
+        throw new Error('External URL must use HTTP or HTTPS protocol');
+      }
+      if (value.length > 500) {
+        throw new Error('URL must be less than 500 characters');
+      }
+      return true;
+    } catch (e) {
+      if (e instanceof TypeError) {
+        throw new Error('External URL must be a valid HTTP/HTTPS URL');
+      }
+      throw e;
+    }
+  });
 
 const arrayValidation = (field, maxItems = 50) => 
   body(field)
@@ -77,10 +95,32 @@ const validateCapability = [
   stringArrayValidation('features', 100, 20),
   arrayValidation('screenshots', 10),
   body('screenshots.*')
-    .optional()
+    .optional({ checkFalsy: true })
     .trim()
-    .isURL({ protocols: ['http', 'https'], require_protocol: false })
-    .isLength({ max: 500 }),
+    .custom((value) => {
+      if (!value || value === '') {
+        return true; // Allow empty strings
+      }
+      // Validate URL format (allow relative URLs)
+      if (value.startsWith('/') || value.startsWith('./') || value.startsWith('../')) {
+        return value.length <= 500;
+      }
+      try {
+        const url = new URL(value);
+        if (!['http:', 'https:'].includes(url.protocol)) {
+          throw new Error('Screenshot URL must use HTTP or HTTPS protocol');
+        }
+        if (value.length > 500) {
+          throw new Error('Screenshot URL must be less than 500 characters');
+        }
+        return true;
+      } catch (e) {
+        if (e instanceof TypeError) {
+          throw new Error('Screenshot URL must be a valid URL or relative path');
+        }
+        throw e;
+      }
+    }),
   body('order').optional().isInt({ min: 0 }),
   body('published').optional().isBoolean(),
   handleValidationErrors
