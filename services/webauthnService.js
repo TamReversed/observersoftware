@@ -372,6 +372,19 @@ async function generateAuthenticationOptionsForUser(userId, credentials = [], or
         throw new Error(`Credential at index ${index} is missing id field`);
       }
       
+      // Log the credential ID format for debugging
+      console.log(`Processing credential at index ${index}:`, {
+        idType: typeof cred.id,
+        idIsBuffer: Buffer.isBuffer(cred.id),
+        idIsArray: Array.isArray(cred.id),
+        idValue: typeof cred.id === 'string' ? cred.id.substring(0, 20) + '...' : cred.id,
+        idLength: cred.id?.length,
+        fullCred: JSON.stringify(cred, (key, value) => {
+          if (Buffer.isBuffer(value)) return `<Buffer: ${value.length} bytes>`;
+          return value;
+        })
+      });
+      
       // cred.id should be a base64url string, convert to Buffer
       let credentialID;
       if (Buffer.isBuffer(cred.id)) {
