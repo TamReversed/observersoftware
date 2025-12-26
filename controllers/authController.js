@@ -232,6 +232,13 @@ async function finishWebAuthnRegistration(req, res, next) {
         errorName: error.name
       };
       
+      // Provide user-friendly message for user verification errors
+      if (error.message && error.message.includes('user could not be verified')) {
+        errorResponse.userMessage = 'User verification required. Please use your PIN, fingerprint, or face ID when prompted.';
+      } else if (error.message && error.message.includes('User verification was required')) {
+        errorResponse.userMessage = 'Your authenticator requires verification. Please complete the verification when prompted.';
+      }
+      
       // Include stack trace in development
       if (process.env.NODE_ENV !== 'production') {
         errorResponse.stack = error.stack;

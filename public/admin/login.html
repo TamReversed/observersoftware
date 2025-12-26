@@ -801,12 +801,18 @@
           }, 3000);
         } else {
           console.error('Registration finish error details:', result);
-          throw new Error(result.details || result.error || 'Registration failed');
+          // Use user-friendly message if available, otherwise fall back to details/error
+          const errorMessage = result.userMessage || result.details || result.error || 'Registration failed';
+          throw new Error(errorMessage);
         }
       } catch (error) {
         console.error('WebAuthn registration error:', error);
         if (error.name === 'NotAllowedError' || error.name === 'NotSupportedError') {
           showError('Passkey registration was cancelled or not supported');
+        } else if (error.message && error.message.includes('user could not be verified')) {
+          showError('User verification required. Please use your PIN, fingerprint, or face ID when prompted, then try again.');
+        } else if (error.message && error.message.includes('User verification was required')) {
+          showError('Your authenticator requires verification (PIN, fingerprint, or face ID). Please complete the verification when prompted.');
         } else {
           showError(error.message || 'Registration failed. Please try again.');
         }
