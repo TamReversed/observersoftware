@@ -1,5 +1,6 @@
 // Three.js particle field background with cursor interaction and black hole effect
 (function () {
+  
   // Check for reduced motion preference
   const prefersReducedMotion =
     window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -8,13 +9,25 @@
     return;
   }
 
-  let scene, camera, renderer, particles, lines, trailParticles;
+  let scene, camera, renderer, particles, lines, trailParticles, shootingStars;
   let mouseX = 0;
   let mouseY = 0;
   let targetX = 0;
   let targetY = 0;
   const particleCount = 250; // Increased for more visual density
   const particleData = [];
+  
+  // Shooting stars system
+  const shootingStarData = [];
+  const MAX_SHOOTING_STARS = 7;
+  const MIN_INTERVAL = 250; // 0.25 seconds in ms
+  const MAX_INTERVAL = 4000; // 4 seconds in ms
+  let lastShootingStarTime = 0;
+  let nextShootingStarDelay = 0;
+  
+  // Configuration variables
+  let starColors = null; // Will be initialized in init()
+  let speedMultiplier = 1.0;
   
   // Hold-to-activate state
   let isHolding = false;
@@ -31,7 +44,12 @@
   const BLACK_HOLE_DURATION = 5000; // 5 seconds in ms
   const RESET_DURATION = 800; // 0.8 seconds to reset
 
+  let isInitialized = false;
   function init() {
+    if (isInitialized) {
+      return;
+    }
+    
     const Three = window.THREE;
     if (!Three) {
       setTimeout(init, 100);
@@ -62,14 +80,12 @@
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.appendChild(renderer.domElement);
 
-    // Star colors - white, blue-white, yellow tints
-    const starColors = [
+    // Star colors - match login screen style
+    starColors = [
       new Three.Color(0xffffff), // Pure white
-      new Three.Color(0xcce5ff), // Blue-white
-      new Three.Color(0xaaccff), // Bluer
-      new Three.Color(0xfff4e6), // Warm white
-      new Three.Color(0xffe4b5), // Yellow tint
-      new Three.Color(0x99bbff), // Deep blue-white
+      new Three.Color(0xcce5ff), // Blue-white (#cce5ff)
+      new Three.Color(0xaaccff), // Bluer (#aaccff)
+      new Three.Color(0xfff4e6), // Warm white (#fff4e6)
     ];
 
     // Create star-like particles with enhanced visuals
@@ -78,23 +94,29 @@
     const sizes = new Float32Array(particleCount);
     const colors = new Float32Array(particleCount * 3);
     const brightness = new Float32Array(particleCount);
+    const twinkleSpeeds = new Float32Array(particleCount);
+    const twinklePhases = new Float32Array(particleCount);
 
     for (let i = 0; i < particleCount; i++) {
       positions[i * 3] = (Math.random() - 0.5) * 120;
       positions[i * 3 + 1] = (Math.random() - 0.5) * 120;
       positions[i * 3 + 2] = (Math.random() - 0.5) * 40;
       
-      // Larger, more visible sizes
-      sizes[i] = Math.random() * 4 + 2;
+      // Match login screen star sizes (slightly larger for visibility in 3D space)
+      sizes[i] = Math.random() * 2.5 + 1.0;
       
-      // Assign random star color
+      // Assign random star color (matching login screen palette)
       const starColor = starColors[Math.floor(Math.random() * starColors.length)];
       colors[i * 3] = starColor.r;
       colors[i * 3 + 1] = starColor.g;
       colors[i * 3 + 2] = starColor.b;
       
-      // Random brightness for twinkling effect
-      brightness[i] = Math.random() * 0.5 + 0.5;
+      // Per-star twinkling parameters (matching login screen)
+      twinkleSpeeds[i] = Math.random() * 0.02 + 0.005;
+      twinklePhases[i] = Math.random() * Math.PI * 2;
+      
+      // Base brightness (will be modulated by twinkling in shader)
+      brightness[i] = 1.0;
 
       particleData.push({
         baseX: positions[i * 3],
@@ -103,11 +125,12 @@
         baseSize: sizes[i],
         offsetX: 0,
         offsetY: 0,
-        speed: Math.random() * 0.5 + 0.2,
+        baseSpeed: Math.random() * 0.5 + 0.2,
+        speed: (Math.random() * 0.5 + 0.2),
         amplitude: Math.random() * 2 + 1,
         phase: Math.random() * Math.PI * 2,
-        twinkleSpeed: Math.random() * 2 + 1,
-        twinklePhase: Math.random() * Math.PI * 2,
+        twinkleSpeed: twinkleSpeeds[i], // Use per-star twinkle speed (matching login screen)
+        twinklePhase: twinklePhases[i], // Use per-star twinkle phase (matching login screen)
         // For black hole effect
         originalX: 0,
         originalY: 0,
@@ -128,6 +151,8 @@
     geometry.setAttribute("size", new Three.BufferAttribute(sizes, 1));
     geometry.setAttribute("color", new Three.BufferAttribute(colors, 3));
     geometry.setAttribute("brightness", new Three.BufferAttribute(brightness, 1));
+    geometry.setAttribute("twinkleSpeed", new Three.BufferAttribute(twinkleSpeeds, 1));
+    geometry.setAttribute("twinklePhase", new Three.BufferAttribute(twinklePhases, 1));
 
     // Enhanced shader for star-like glow
     const material = new Three.ShaderMaterial({
@@ -140,6 +165,8 @@
         attribute float size;
         attribute vec3 color;
         attribute float brightness;
+        attribute float twinkleSpeed;
+        attribute float twinklePhase;
         varying vec3 vColor;
         varying float vBrightness;
         varying float vSize;
@@ -150,18 +177,19 @@
           vColor = color;
           vSize = size;
           
-          // Twinkling effect
-          float twinkle = sin(time * 2.0 + position.x * 0.1 + position.y * 0.1) * 0.3 + 0.7;
-          vBrightness = brightness * twinkle;
+          // Per-star twinkling effect (matching login screen style)
+          float twinkle = sin(time * twinkleSpeed * 60.0 + twinklePhase) * 0.5 + 0.5;
+          float alpha = 0.5 + twinkle * 0.5; // Brighter base for visibility
+          vBrightness = brightness * alpha;
           
           // Increase brightness as particles approach black hole center
           vBrightness *= 1.0 + blackHoleProgress * 2.0;
           
           vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
           
-          // Larger point size with glow, grows during black hole effect
+          // Point size with glow, grows during black hole effect
           float sizeMultiplier = 1.0 + blackHoleProgress * 0.5;
-          gl_PointSize = size * sizeMultiplier * (400.0 / -mvPosition.z);
+          gl_PointSize = size * sizeMultiplier * (500.0 / -mvPosition.z); // Increased for visibility
           gl_Position = projectionMatrix * mvPosition;
         }
       `,
@@ -175,16 +203,22 @@
           float dist = length(gl_PointCoord - vec2(0.5));
           if (dist > 0.5) discard;
           
-          // Multi-layer glow for star effect
+          // Star shape with glow (matching login screen style)
           float core = smoothstep(0.5, 0.0, dist);
           float glow = smoothstep(0.5, 0.1, dist);
           float outerGlow = smoothstep(0.5, 0.3, dist) * 0.3;
           
           // Combine for bright core with soft glow
-          float intensity = core * 0.8 + glow * 0.5 + outerGlow;
-          intensity *= vBrightness;
+          float intensity = core * 0.9 + glow * 0.6 + outerGlow;
+          intensity *= vBrightness * 1.2; // Boost brightness for visibility
           
-          // Color shifts toward white/blue as particles accelerate
+          // Enhanced glow for larger stars (like login screen)
+          if (vSize > 1.5) {
+            float largeStarGlow = smoothstep(0.5, 0.4, dist) * 0.2;
+            intensity += largeStarGlow * vBrightness;
+          }
+          
+          // Color shifts toward white/blue as particles accelerate (keep for black hole effect)
           vec3 finalColor = mix(vColor, vec3(0.8, 0.9, 1.0), blackHoleProgress * 0.5);
           
           gl_FragColor = vec4(finalColor * intensity, intensity);
@@ -243,6 +277,192 @@
 
     trailParticles = new Three.Points(trailGeometry, trailMaterial);
     scene.add(trailParticles);
+
+    // Shooting stars system
+    let shootingStarGeometry = new Three.BufferGeometry();
+    const shootingStarPositions = new Float32Array(MAX_SHOOTING_STARS * 3);
+    const shootingStarOpacities = new Float32Array(MAX_SHOOTING_STARS);
+    
+    shootingStarGeometry.setAttribute("position", new Three.BufferAttribute(shootingStarPositions, 3));
+    shootingStarGeometry.setAttribute("opacity", new Three.BufferAttribute(shootingStarOpacities, 1));
+    
+    const shootingStarMaterial = new Three.ShaderMaterial({
+      uniforms: {
+        color: { value: new Three.Color(0xaaccff) } // Brighter blue-white to match login screen
+      },
+      vertexShader: `
+        attribute float opacity;
+        varying float vOpacity;
+        
+        void main() {
+          vOpacity = opacity;
+          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+          gl_PointSize = 8.0 * (600.0 / -mvPosition.z); // Much larger size for visibility (camera at z=50, stars at z=0-20)
+          gl_Position = projectionMatrix * mvPosition;
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 color;
+        varying float vOpacity;
+        
+        void main() {
+          float dist = length(gl_PointCoord - vec2(0.5));
+          if (dist > 0.5) discard;
+          float alpha = smoothstep(0.5, 0.0, dist) * vOpacity;
+          gl_FragColor = vec4(color, alpha);
+        }
+      `,
+      transparent: true,
+      depthWrite: false,
+      depthTest: true, // Enable depth testing but write after other elements
+      blending: Three.AdditiveBlending
+    });
+    
+    const shootingStarTailMaterial = new Three.LineBasicMaterial({
+      color: 0xaaccff,
+      transparent: true,
+      opacity: 0.6,
+      blending: Three.AdditiveBlending,
+      linewidth: 1
+    });
+    
+    shootingStars = new Three.Points(shootingStarGeometry, shootingStarMaterial);
+    shootingStars.renderOrder = 1000; // Render on top of other elements
+    scene.add(shootingStars);
+    
+    // Create tail lines for each shooting star
+    let tailLines = [];
+    for (let i = 0; i < MAX_SHOOTING_STARS; i++) {
+      const tailGeometry = new Three.BufferGeometry();
+      const tailPositions = new Float32Array(20 * 3);
+      tailGeometry.setAttribute("position", new Three.BufferAttribute(tailPositions, 3));
+      const tailLine = new Three.Line(tailGeometry, shootingStarTailMaterial);
+      tailLine.visible = false;
+      tailLine.renderOrder = 1000; // Render on top of other elements
+      scene.add(tailLine);
+      tailLines.push(tailLine);
+    }
+    
+    // Initialize shooting star data
+    for (let i = 0; i < MAX_SHOOTING_STARS; i++) {
+      shootingStarData.push({
+        active: false,
+        startX: 0,
+        startY: 0,
+        startZ: -1000, // Start off-screen
+        velocityX: 0,
+        velocityY: 0,
+        velocityZ: 0,
+        life: 0,
+        maxLife: 0,
+        tail: []
+      });
+      // Initialize positions off-screen
+      shootingStarPositions[i * 3] = 0;
+      shootingStarPositions[i * 3 + 1] = 0;
+      shootingStarPositions[i * 3 + 2] = -1000;
+      shootingStarOpacities[i] = 0; // Start invisible
+    }
+    
+    shootingStarGeometry.attributes.position.needsUpdate = true;
+    shootingStarGeometry.attributes.opacity.needsUpdate = true;
+    
+    // Function to create a new shooting star
+    function createShootingStar() {
+      // Find inactive slot
+      let slot = -1;
+      for (let i = 0; i < MAX_SHOOTING_STARS; i++) {
+        if (!shootingStarData[i].active) {
+          slot = i;
+          break;
+        }
+      }
+      
+      if (slot === -1) {
+        return; // All slots full
+      }
+      
+      const data = shootingStarData[slot];
+      
+      // Random start position (off-screen edge)
+      const edge = Math.floor(Math.random() * 4); // 0=top, 1=right, 2=bottom, 3=left
+      const aspect = window.innerWidth / window.innerHeight;
+      const worldWidth = 120;
+      const worldHeight = 120 / aspect;
+      
+      let startX, startY, endX, endY;
+      
+      if (edge === 0) { // Top
+        startX = (Math.random() - 0.5) * worldWidth;
+        startY = worldHeight * 0.6;
+        endX = (Math.random() - 0.5) * worldWidth;
+        endY = -worldHeight * 0.6;
+      } else if (edge === 1) { // Right
+        startX = worldWidth * 0.6;
+        startY = (Math.random() - 0.5) * worldHeight;
+        endX = -worldWidth * 0.6;
+        endY = (Math.random() - 0.5) * worldHeight;
+      } else if (edge === 2) { // Bottom
+        startX = (Math.random() - 0.5) * worldWidth;
+        startY = -worldHeight * 0.6;
+        endX = (Math.random() - 0.5) * worldWidth;
+        endY = worldHeight * 0.6;
+      } else { // Left
+        startX = -worldWidth * 0.6;
+        startY = (Math.random() - 0.5) * worldHeight;
+        endX = worldWidth * 0.6;
+        endY = (Math.random() - 0.5) * worldHeight;
+      }
+      
+      // Calculate velocity
+      const dx = endX - startX;
+      const dy = endY - startY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      const speed = 0.3 + Math.random() * 0.2; // Speed in units per frame
+      const duration = distance / speed;
+      
+      data.startX = startX;
+      data.startY = startY;
+      data.startZ = (Math.random() - 0.5) * 20 + 10; // Position in front of regular particles (z: 0 to 20)
+      data.velocityX = (dx / distance) * speed;
+      data.velocityY = (dy / distance) * speed;
+      data.velocityZ = (Math.random() - 0.5) * 0.05;
+      data.life = 0;
+      data.maxLife = duration;
+      data.active = true;
+      data.tail = [];
+      
+      // Initialize tail
+      for (let i = 0; i < 20; i++) {
+        data.tail.push({
+          x: startX,
+          y: startY,
+          z: data.startZ
+        });
+      }
+      
+      // Immediately set position and opacity in geometry
+      const positions = shootingStarGeometry.attributes.position.array;
+      const opacities = shootingStarGeometry.attributes.opacity.array;
+      positions[slot * 3] = startX;
+      positions[slot * 3 + 1] = startY;
+      positions[slot * 3 + 2] = data.startZ;
+      opacities[slot] = 0.8; // Start highly visible
+      
+      // Mark geometry for update
+      shootingStarGeometry.attributes.position.needsUpdate = true;
+      shootingStarGeometry.attributes.opacity.needsUpdate = true;
+      
+      tailLines[slot].visible = true;
+    }
+    
+    // Schedule next shooting star
+    function scheduleNextShootingStar() {
+      nextShootingStarDelay = MIN_INTERVAL + Math.random() * (MAX_INTERVAL - MIN_INTERVAL);
+      lastShootingStarTime = performance.now();
+    }
+    
+    scheduleNextShootingStar();
 
     // Connection lines (subtle)
     const lineGeometry = new Three.BufferGeometry();
@@ -382,7 +602,7 @@
           document.body.style.transform = '';
           whiteFlash.style.opacity = '1';
           setTimeout(() => {
-            window.location.href = '/admin/login.html';
+            window.location.href = '/admin/login';
           }, 150);
         }
       }
@@ -517,6 +737,97 @@
       // Smooth mouse interpolation
       mouseX += (targetX - mouseX) * 0.05;
       mouseY += (targetY - mouseY) * 0.05;
+      
+      // Shooting stars system
+      const currentTime = performance.now();
+      const timeSinceLast = currentTime - lastShootingStarTime;
+      const activeCount = shootingStarData.filter(s => s.active).length;
+      
+      // Check if we should create a new shooting star
+      if (timeSinceLast >= nextShootingStarDelay) {
+        if (activeCount < MAX_SHOOTING_STARS) {
+          createShootingStar();
+        }
+        scheduleNextShootingStar();
+      }
+      
+      // Update shooting stars
+      const shootingStarPositions = shootingStarGeometry.attributes.position.array;
+      const shootingStarOpacities = shootingStarGeometry.attributes.opacity.array;
+      
+      for (let i = 0; i < MAX_SHOOTING_STARS; i++) {
+        const data = shootingStarData[i];
+        const tailLine = tailLines[i];
+        
+        if (!data.active) {
+          shootingStarPositions[i * 3] = 0;
+          shootingStarPositions[i * 3 + 1] = 0;
+          shootingStarPositions[i * 3 + 2] = -1000; // Hide off-screen
+          shootingStarOpacities[i] = 0; // Make invisible
+          tailLine.visible = false;
+          continue;
+        }
+        
+        // Update life
+        data.life += 1;
+        
+        // Update position
+        data.startX += data.velocityX;
+        data.startY += data.velocityY;
+        data.startZ += data.velocityZ;
+        
+        // Update tail (add current position, remove oldest)
+        data.tail.push({
+          x: data.startX,
+          y: data.startY,
+          z: data.startZ
+        });
+        if (data.tail.length > 20) {
+          data.tail.shift();
+        }
+        
+        // Update shooting star position
+        shootingStarPositions[i * 3] = data.startX;
+        shootingStarPositions[i * 3 + 1] = data.startY;
+        shootingStarPositions[i * 3 + 2] = data.startZ;
+        
+        // Update opacity based on progress (fade in/out)
+        const progress = data.life / data.maxLife;
+        // Ensure minimum opacity for visibility - stars should be visible throughout most of their life
+        shootingStarOpacities[i] = Math.max(0.3, Math.min(1.0, progress < 0.1 ? progress * 10 : (1.0 - progress * 0.5)));
+        
+        // Update tail line
+        const tailPositions = tailLine.geometry.attributes.position.array;
+        const tailCount = Math.min(data.tail.length, 20);
+        
+        for (let j = 0; j < tailCount; j++) {
+          const tailPoint = data.tail[data.tail.length - tailCount + j];
+          tailPositions[j * 3] = tailPoint.x;
+          tailPositions[j * 3 + 1] = tailPoint.y;
+          tailPositions[j * 3 + 2] = tailPoint.z;
+        }
+        
+        // Set remaining positions to zero if tail is shorter
+        for (let j = tailCount; j < 20; j++) {
+          tailPositions[j * 3] = 0;
+          tailPositions[j * 3 + 1] = 0;
+          tailPositions[j * 3 + 2] = -1000;
+        }
+        
+        // Update tail line opacity based on progress (reuse progress from above)
+        tailLine.material.opacity = (1 - progress * 0.3) * 0.8;
+        
+        // Check if shooting star is done
+        if (progress >= 1) {
+          data.active = false;
+          tailLine.visible = false;
+        } else {
+          tailLine.geometry.attributes.position.needsUpdate = true;
+        }
+        
+        shootingStarGeometry.attributes.position.needsUpdate = true;
+        shootingStarGeometry.attributes.opacity.needsUpdate = true;
+      }
 
       const positions = particles.geometry.attributes.position.array;
       const sizes = particles.geometry.attributes.size.array;
@@ -636,8 +947,8 @@
           }
         }
         
-        // Fade connection lines
-        lines.material.opacity = 0.04 * (1 - eased);
+        // Hide connection lines completely during black hole
+        lines.visible = false;
         
         // Trigger supernova at the end
         if (blackHoleProgress >= 1) {
@@ -645,13 +956,16 @@
           createSupernova();
         }
       } else if (blackHoleState === 'charging' && isHolding) {
+        // Hide connection lines during charging
+        lines.visible = false;
+        
         // Subtle drift toward cursor during charging phase
         const driftStrength = chargingProgress * 0.02;
         
         for (let i = 0; i < particleCount; i++) {
           const data = particleData[i];
-          const floatX = Math.sin(time * data.speed + data.phase) * data.amplitude;
-          const floatY = Math.cos(time * data.speed * 0.8 + data.phase) * data.amplitude;
+          const floatX = Math.sin(time * data.speed * speedMultiplier + data.phase) * data.amplitude;
+          const floatY = Math.cos(time * data.speed * speedMultiplier * 0.8 + data.phase) * data.amplitude;
           
           const baseX = data.baseX + floatX + data.offsetX;
           const baseY = data.baseY + floatY + data.offsetY;
@@ -679,8 +993,8 @@
         
         for (let i = 0; i < particleCount; i++) {
           const data = particleData[i];
-          const floatX = Math.sin(time * data.speed + data.phase) * data.amplitude;
-          const floatY = Math.cos(time * data.speed * 0.8 + data.phase) * data.amplitude;
+          const floatX = Math.sin(time * data.speed * speedMultiplier + data.phase) * data.amplitude;
+          const floatY = Math.cos(time * data.speed * speedMultiplier * 0.8 + data.phase) * data.amplitude;
           
           const targetX = data.baseX + floatX + data.offsetX;
           const targetY = data.baseY + floatY + data.offsetY;
@@ -698,7 +1012,8 @@
           trailOpacities[i] *= 0.9;
         }
         
-        // Restore line opacity
+        // Restore line visibility and opacity
+        lines.visible = true;
         lines.material.opacity = 0.04 * eased;
         
         if (resetProgress >= 1) {
@@ -706,10 +1021,13 @@
         }
       } else {
         // Normal ambient animation (idle state)
+        // Ensure lines are visible in idle state
+        lines.visible = true;
+        lines.material.opacity = 0.04;
         for (let i = 0; i < particleCount; i++) {
           const data = particleData[i];
-          const floatX = Math.sin(time * data.speed + data.phase) * data.amplitude;
-          const floatY = Math.cos(time * data.speed * 0.8 + data.phase) * data.amplitude;
+          const floatX = Math.sin(time * data.speed * speedMultiplier + data.phase) * data.amplitude;
+          const floatY = Math.cos(time * data.speed * speedMultiplier * 0.8 + data.phase) * data.amplitude;
 
           const dx = (data.baseX + floatX) - mouseX * 50;
           const dy = (data.baseY + floatY) - mouseY * 50;
@@ -729,8 +1047,8 @@
           positions[i * 3 + 1] = data.baseY + floatY + data.offsetY;
           positions[i * 3 + 2] = data.baseZ + Math.sin(time * 0.5 + data.phase) * 2;
           
-          // Twinkling size variation
-          const twinkle = Math.sin(time * data.twinkleSpeed + data.twinklePhase) * 0.3 + 1;
+          // Twinkling size variation (matching login screen style)
+          const twinkle = Math.sin(time * data.twinkleSpeed * 60 + data.twinklePhase) * 0.4 + 0.8;
           sizes[i] = data.baseSize * twinkle;
         }
         
@@ -773,6 +1091,7 @@
       trailParticles.geometry.attributes.size.needsUpdate = true;
       trailParticles.geometry.attributes.opacity.needsUpdate = true;
 
+
       // Subtle camera movement (disabled during black hole for stability)
       if (blackHoleState === 'idle') {
         camera.position.x += (mouseX * 3 - camera.position.x) * 0.02;
@@ -783,6 +1102,7 @@
       renderer.render(scene, camera);
     }
 
+    isInitialized = true;
     animate();
 
     // Handle resize
@@ -804,20 +1124,42 @@
 
     updateColors();
     window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", updateColors);
-  }
+    
+  } // Close init()
 
   // Initialize when ready
+  let startInitCalled = false;
   function startInit() {
-    if (document.readyState === "complete" && window.THREE) {
-      init();
-    } else {
-      window.addEventListener("load", init);
+    if (startInitCalled && isInitialized) {
+      return;
     }
+    startInitCalled = true;
+    
+    function tryInit() {
+      if (isInitialized) return;
+      
+      if (window.THREE) {
+        init();
+      } else {
+        setTimeout(tryInit, 100);
+      }
+    }
+    
+    tryInit();
   }
 
+  // Listen for THREE.js load event
+  window.addEventListener('threejs-loaded', startInit);
+  
   if (document.readyState === "complete") {
     startInit();
   } else {
     document.addEventListener("DOMContentLoaded", startInit);
+    // Also try after load event in case THREE loads late
+    window.addEventListener("load", startInit);
   }
+  
+  // Fallback: try after a delay to ensure everything is loaded
+  setTimeout(startInit, 500);
+  
 })();

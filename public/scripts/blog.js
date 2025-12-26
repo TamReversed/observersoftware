@@ -9,6 +9,14 @@ function formatDate(dateString) {
     });
 }
 
+// Escape HTML to prevent XSS
+function escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
 // State
 let currentPage = 1;
 let currentCategory = '';
@@ -36,9 +44,10 @@ async function loadCategories() {
 
 // Render categories
 function renderCategories() {
+    if (!categoriesContainer) return;
     const allBtn = `<button class="blog-category ${!currentCategory ? 'active' : ''}" data-category="">All</button>`;
     const categoryBtns = categories.map(cat => 
-        `<button class="blog-category ${currentCategory === cat.slug ? 'active' : ''}" data-category="${cat.slug}">${cat.name}</button>`
+        `<button class="blog-category ${currentCategory === cat.slug ? 'active' : ''}" data-category="${escapeHtml(cat.slug)}">${escapeHtml(cat.name)}</button>`
     ).join('');
     categoriesContainer.innerHTML = allBtn + categoryBtns;
 
@@ -99,16 +108,16 @@ function renderPosts(posts) {
     }
 
     postsGrid.innerHTML = posts.map(post => `
-        <a href="/blog/${post.slug}" class="blog-post-card">
+        <a href="/blog/${escapeHtml(post.slug)}" class="blog-post-card">
             <div class="blog-post-card__meta">
-                <span class="blog-post-card__category">${post.categoryName || 'Insights'}</span>
+                <span class="blog-post-card__category">${escapeHtml(post.categoryName || 'Insights')}</span>
                 <span class="blog-post-card__dot"></span>
-                <span class="blog-post-card__date">${formatDate(post.publishedAt)}</span>
+                <span class="blog-post-card__date">${escapeHtml(formatDate(post.publishedAt))}</span>
             </div>
-            <h2 class="blog-post-card__title">${post.title}</h2>
-            <p class="blog-post-card__excerpt">${post.excerpt}</p>
+            <h2 class="blog-post-card__title">${escapeHtml(post.title)}</h2>
+            <p class="blog-post-card__excerpt">${escapeHtml(post.excerpt)}</p>
             <div class="blog-post-card__footer">
-                <span class="blog-post-card__read-time">${post.readTime} min read</span>
+                <span class="blog-post-card__read-time">${escapeHtml(String(post.readTime || 0))} min read</span>
                 <svg class="blog-post-card__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M5 12h14M12 5l7 7-7 7"/>
                 </svg>

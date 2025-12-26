@@ -1050,6 +1050,48 @@
     const toast = document.getElementById('toast');
     const adminUser = document.getElementById('adminUser');
 
+    // CSRF token management
+    let csrfToken = null;
+    async function getCsrfToken() {
+      if (!csrfToken) {
+        try {
+          const res = await fetch('/api/auth/csrf-token');
+          const data = await res.json();
+          csrfToken = data.csrfToken;
+        } catch (e) {
+          console.error('Failed to get CSRF token:', e);
+        }
+      }
+      return csrfToken;
+    }
+
+    // Helper function for authenticated fetch with CSRF
+    async function authenticatedFetch(url, options = {}) {
+      const token = await getCsrfToken();
+      const headers = {
+        ...options.headers,
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': token || ''
+      };
+      
+      if (options.body && typeof options.body === 'object') {
+        options.body = JSON.stringify({ ...options.body, csrfToken: token });
+      } else if (options.body && typeof options.body === 'string') {
+        try {
+          const bodyObj = JSON.parse(options.body);
+          options.body = JSON.stringify({ ...bodyObj, csrfToken: token });
+        } catch {
+          // If body is not JSON, add token as header only
+        }
+      }
+      
+      return fetch(url, {
+        ...options,
+        headers,
+        credentials: 'same-origin'
+      });
+    }
+
     // Check auth
     async function checkAuth() {
       try {
@@ -1060,6 +1102,8 @@
           return false;
         }
         adminUser.textContent = data.username;
+        // Get CSRF token on auth check
+        await getCsrfToken();
         return true;
       } catch {
         window.location.href = '/admin/login';
@@ -1378,10 +1422,9 @@
 
       try {
         const url = isNewItem ? '/api/admin/posts' : `/api/admin/posts/${currentItem.slug}`;
-        const res = await fetch(url, {
+        const res = await authenticatedFetch(url, {
           method: isNewItem ? 'POST' : 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
+          body: data
         });
         const result = await res.json();
         if (!res.ok) throw new Error(result.error);
@@ -1422,10 +1465,9 @@
 
       try {
         const url = isNewItem ? '/api/admin/work' : `/api/admin/work/${currentItem.id}`;
-        const res = await fetch(url, {
+        const res = await authenticatedFetch(url, {
           method: isNewItem ? 'POST' : 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
+          body: data
         });
         const result = await res.json();
         if (!res.ok) throw new Error(result.error);
@@ -1475,10 +1517,9 @@
 
       try {
         const url = isNewItem ? '/api/admin/capabilities' : `/api/admin/capabilities/${currentItem.id}`;
-        const res = await fetch(url, {
+        const res = await authenticatedFetch(url, {
           method: isNewItem ? 'POST' : 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
+          body: data
         });
         const result = await res.json();
         if (!res.ok) throw new Error(result.error);
@@ -1501,7 +1542,7 @@
 
       try {
         const endpoint = type === 'posts' ? `/api/admin/posts/${id}` : `/api/admin/${type}/${id}`;
-        const res = await fetch(endpoint, { method: 'DELETE' });
+        const res = await authenticatedFetch(endpoint, { method: 'DELETE' });
         if (!res.ok) throw new Error('Failed to delete');
         
         showToast('Deleted successfully');
@@ -1573,6 +1614,12 @@
     async function uploadScreenshot(file) {
       const formData = new FormData();
       formData.append('screenshot', file);
+      
+      // Add CSRF token
+      const token = await getCsrfToken();
+      if (token) {
+        formData.append('csrfToken', token);
+      }
 
       const uploadZone = document.getElementById('screenshotUploadZone');
       uploadZone.classList.add('uploading');
@@ -1580,6 +1627,9 @@
       try {
         const res = await fetch('/api/upload/screenshot', {
           method: 'POST',
+          headers: {
+            'X-CSRF-Token': token || ''
+          },
           body: formData
         });
 

@@ -430,38 +430,42 @@
 
     // Fetch and render content
     async function loadContent() {
-        // Load work items
+        // Load work items (limited to 4 on main page)
         try {
             const workRes = await fetch('/api/work');
             if (workRes.ok) {
                 const work = await workRes.json();
                 if (work.length > 0) {
-                    renderWork(work);
+                    // Limit to first 4 items on main page
+                    const limitedWork = work.slice(0, 4);
+                    renderWork(limitedWork);
                 } else {
-                    renderWork(fallbackWork);
+                    renderWork(fallbackWork.slice(0, 4));
                 }
             } else {
-                renderWork(fallbackWork);
+                renderWork(fallbackWork.slice(0, 4));
             }
         } catch (e) {
-            renderWork(fallbackWork);
+            renderWork(fallbackWork.slice(0, 4));
         }
 
-        // Load capabilities
+        // Load capabilities (limited to 4 on main page)
         try {
             const capRes = await fetch('/api/capabilities');
             if (capRes.ok) {
                 const capabilities = await capRes.json();
                 if (capabilities.length > 0) {
-                    renderCapabilities(capabilities);
+                    // Limit to first 4 items on main page
+                    const limitedCapabilities = capabilities.slice(0, 4);
+                    renderCapabilities(limitedCapabilities);
                 } else {
-                    renderCapabilities(fallbackCapabilities);
+                    renderCapabilities(fallbackCapabilities.slice(0, 4));
                 }
             } else {
-                renderCapabilities(fallbackCapabilities);
+                renderCapabilities(fallbackCapabilities.slice(0, 4));
             }
         } catch (e) {
-            renderCapabilities(fallbackCapabilities);
+            renderCapabilities(fallbackCapabilities.slice(0, 4));
         }
     }
 

@@ -3,6 +3,13 @@
     padding: calc(var(--space-3xl) + 80px) 0 var(--space-2xl);
     text-align: center;
     position: relative;
+    background: rgba(14, 16, 23, 0.85); /* Semi-transparent to show stars */
+}
+
+@media (prefers-color-scheme: light) {
+    .blog-hero {
+        background: rgba(255, 255, 255, 0.85);
+    }
 }
 
 .blog-hero::before {
@@ -338,6 +345,7 @@
         justify-content: center;
     }
 }
+
 
 
 

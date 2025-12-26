@@ -37,8 +37,8 @@ async function loadPost() {
         renderPost(post);
     } catch (error) {
         console.error('Failed to load post:', error);
-        loadingState.style.display = 'none';
-        errorState.style.display = 'flex';
+        if (loadingState) loadingState.style.display = 'none';
+        if (errorState) errorState.style.display = 'flex';
     }
 }
 
@@ -47,15 +47,20 @@ function renderPost(post) {
     // Update page title
     document.title = `${post.title} — Observer`;
 
-    // Update meta
-    document.getElementById('postCategory').textContent = post.categoryName || 'Insights';
-    document.getElementById('postDate').textContent = formatDate(post.publishedAt);
-    document.getElementById('postReadTime').textContent = `${post.readTime} min read`;
-
-    // Update content
-    document.getElementById('postTitle').textContent = post.title;
-    document.getElementById('postExcerpt').textContent = post.excerpt;
-    document.getElementById('postBody').innerHTML = post.htmlContent;
+    // Update meta with null checks
+    const postCategory = document.getElementById('postCategory');
+    const postDate = document.getElementById('postDate');
+    const postReadTime = document.getElementById('postReadTime');
+    const postTitle = document.getElementById('postTitle');
+    const postExcerpt = document.getElementById('postExcerpt');
+    const postBody = document.getElementById('postBody');
+    
+    if (postCategory) postCategory.textContent = post.categoryName || 'Insights';
+    if (postDate) postDate.textContent = formatDate(post.publishedAt);
+    if (postReadTime) postReadTime.textContent = `${post.readTime} min read`;
+    if (postTitle) postTitle.textContent = post.title;
+    if (postExcerpt) postExcerpt.textContent = post.excerpt;
+    if (postBody) postBody.innerHTML = post.htmlContent; // Safe - sanitized on backend
 
     // Render related posts
     if (post.relatedPosts && post.relatedPosts.length > 0) {
@@ -63,19 +68,29 @@ function renderPost(post) {
     }
 
     // Show content
-    loadingState.style.display = 'none';
-    postContent.style.display = 'block';
+    if (loadingState) loadingState.style.display = 'none';
+    if (postContent) postContent.style.display = 'block';
+}
+
+// Escape HTML to prevent XSS
+function escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
 }
 
 // Render related posts
 function renderRelatedPosts(posts) {
     const relatedGrid = document.getElementById('relatedGrid');
     const relatedSection = document.getElementById('relatedPosts');
+    
+    if (!relatedGrid || !relatedSection) return;
 
     relatedGrid.innerHTML = posts.map(post => `
-        <a href="/blog/${post.slug}" class="related-post-card">
-            <h3 class="related-post-card__title">${post.title}</h3>
-            <p class="related-post-card__meta">${post.readTime} min read</p>
+        <a href="/blog/${escapeHtml(post.slug)}" class="related-post-card">
+            <h3 class="related-post-card__title">${escapeHtml(post.title)}</h3>
+            <p class="related-post-card__meta">${escapeHtml(String(post.readTime || 0))} min read</p>
         </a>
     `).join('');
 
@@ -84,6 +99,7 @@ function renderRelatedPosts(posts) {
 
 // Nav scroll effect
 function handleScroll() {
+    if (!nav) return;
     if (window.scrollY > 50) {
         nav.classList.add('scrolled');
     } else {
@@ -95,6 +111,7 @@ window.addEventListener('scroll', handleScroll, { passive: true });
 
 // Initialize
 loadPost();
+
 
 
 

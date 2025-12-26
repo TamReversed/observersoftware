@@ -18,7 +18,8 @@ async function initializeData() {
     const adminUser = {
       id: uuidv4(),
       username: config.admin.defaultUsername,
-      password: hashedPassword,
+      password: hashedPassword, // Keep for fallback during transition
+      webauthnCredentials: [], // Initialize empty array for passkeys
       createdAt: new Date().toISOString()
     };
     usersService.create(adminUser);
@@ -216,6 +217,7 @@ The patterns people create organically are the real requirements. Our job is to 
 }
 
 module.exports = { initializeData };
+
 
 
 

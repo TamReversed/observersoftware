@@ -3,15 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Loading... — Observer</title>
-    <meta name="description" content="Insights on software, design, and building systems that work the way people actually do.">
+    <title>Our Experience — Observer</title>
+    <meta name="description" content="A collection of work where Observer has simplified complex workflows and removed unnecessary steps.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👁</text></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/styles/styles.css">
-    <link rel="stylesheet" href="/styles/post.css">
+    <link rel="stylesheet" href="./styles/styles.css">
+    <link rel="stylesheet" href="./styles/blog.css">
+    <script async src="https://cdn.jsdelivr.net/npm/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+    <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js"}}</script>
+    <script type="module">
+        import * as THREE from 'three';
+        window.THREE = THREE;
+        window.dispatchEvent(new CustomEvent('threejs-loaded'));
+    </script>
 </head>
 <body>
+    <div id="mesh-background" aria-hidden="true"></div>
     <a class="skip-link" href="#main">Skip to content</a>
 
     <!-- Navigation -->
@@ -94,7 +103,6 @@
                                     </g>
                                 </g>
                             </g>
-                            <!-- Text hidden for nav logo (too small) -->
                         </g>
                     </svg>
                     <span class="nav__brand">Observer</span>
@@ -103,7 +111,7 @@
                 <ul class="nav__links">
                     <li><a href="/#work" class="nav__link">Work</a></li>
                     <li><a href="/#capabilities" class="nav__link">Products</a></li>
-                    <li><a href="/blog" class="nav__link">Blog</a></li>
+                    <li><a href="./blog.html" class="nav__link">Blog</a></li>
                     <li><a href="/#about" class="nav__link">About</a></li>
                     <li><a href="/#contact" class="nav__link">Contact</a></li>
                 </ul>
@@ -112,87 +120,48 @@
     </nav>
 
     <main id="main">
-        <!-- Loading state -->
-        <div class="post-loading" id="loadingState">
-            <p>Loading post...</p>
-        </div>
+        <!-- Hero -->
+        <section class="blog-hero">
+            <div class="container">
+                <h1 class="blog-hero__title">Our Experience</h1>
+                <p class="blog-hero__subtitle">A collection of work where Observer has simplified complex workflows and removed unnecessary steps.</p>
+            </div>
+        </section>
 
-        <!-- Error state -->
-        <div class="post-error" id="errorState" style="display: none;">
-            <svg class="post-error__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <circle cx="12" cy="12" r="10"/>
-                <path d="M12 8v4M12 16h.01"/>
-            </svg>
-            <h1 class="post-error__title">Post not found</h1>
-            <p class="post-error__text">The post you're looking for doesn't exist or has been removed.</p>
-            <a href="/blog" class="post-error__btn">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M19 12H5M12 19l-7-7 7-7"/>
-                </svg>
-                Back to blog
-            </a>
-        </div>
-
-        <!-- Post content (hidden until loaded) -->
-        <article id="postContent" style="display: none;">
-            <!-- Hero -->
-            <header class="post-hero">
-                <div class="container">
-                    <a href="/blog" class="post-hero__back">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M19 12H5M12 19l-7-7 7-7"/>
+        <!-- Work Grid -->
+        <section class="work work--listing">
+            <div class="container">
+                <div class="work__grid" id="workGrid">
+                    <!-- Work items loaded dynamically -->
+                </div>
+                <div class="work__back">
+                    <a href="/" class="work__back-button">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M10 12L6 8l4-4"/>
                         </svg>
-                        Back to blog
+                        Back to Observer homepage
                     </a>
-                    <div class="post-hero__meta">
-                        <span class="post-hero__category" id="postCategory"></span>
-                        <span class="post-hero__dot"></span>
-                        <span class="post-hero__date" id="postDate"></span>
-                        <span class="post-hero__dot"></span>
-                        <span class="post-hero__read-time" id="postReadTime"></span>
-                    </div>
-                    <h1 class="post-hero__title" id="postTitle"></h1>
-                    <p class="post-hero__excerpt" id="postExcerpt"></p>
                 </div>
-            </header>
-
-            <!-- Content -->
-            <section class="post-content">
-                <div class="container">
-                    <div class="post-content__inner">
-                        <div class="post-content__body" id="postBody"></div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Related posts -->
-            <section class="related-posts" id="relatedPosts" style="display: none;">
-                <div class="container">
-                    <header class="related-posts__header">
-                        <h2 class="related-posts__title">Related posts</h2>
-                    </header>
-                    <div class="related-posts__grid" id="relatedGrid"></div>
-                </div>
-            </section>
-        </article>
+            </div>
+        </section>
     </main>
 
-    <!-- Footer -->
+    <!-- Footer / Contact -->
     <footer class="footer" id="contact">
         <div class="container">
             <div class="footer__main">
-                <div class="footer__cta-group">
+                <div class="footer__cta-group reveal">
                     <h2 class="footer__cta-title">A clearer way through the work</h2>
                     <p class="footer__cta-subtitle">Send a short note with the workflow, the constraints, and where people get stuck. Observer will respond with a simple next step.</p>
                     <a href="mailto:INFO@techademy.io" class="footer__email">INFO@techademy.io</a>
                 </div>
-                <nav class="footer__nav" aria-label="Footer">
+                <nav class="footer__nav reveal" aria-label="Footer">
                     <div class="footer__nav-group">
                         <h4>Navigation</h4>
                         <ul>
                             <li><a href="/#work">Work</a></li>
                             <li><a href="/#capabilities">Products</a></li>
-                            <li><a href="/blog">Blog</a></li>
+                            <li><a href="./blog.html">Blog</a></li>
                             <li><a href="/#about">About</a></li>
                         </ul>
                     </div>
@@ -215,7 +184,10 @@
         </div>
     </footer>
 
-    <script src="/scripts/logo.js" defer></script>
-    <script src="/scripts/post.js" defer></script>
+    <script src="./scripts/main.js" defer></script>
+    <script src="./scripts/mesh-background.js" defer></script>
+    <script src="./scripts/logo.js" defer></script>
+    <script src="./scripts/work.js" defer></script>
 </body>
 </html>
+

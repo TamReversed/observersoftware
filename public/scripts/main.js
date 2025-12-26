@@ -12,6 +12,7 @@ window.addEventListener("scroll", () => {
 });
 
 // Scroll reveal
+(function() {
 const prefersReducedMotion =
   window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -84,3 +85,4 @@ document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
   });
 });
 
+})(); // Close IIFE

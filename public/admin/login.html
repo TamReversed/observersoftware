@@ -28,18 +28,97 @@
 
     body {
       font-family: var(--font-sans);
-      background: var(--color-bg);
+      background: #030308;
       color: var(--color-text);
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Galaxy Canvas */
+    #galaxy {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+
+    /* Nebula overlay */
+    .nebula {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+      background: 
+        radial-gradient(ellipse at 20% 80%, rgba(88, 28, 135, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(30, 64, 175, 0.12) 0%, transparent 45%),
+        radial-gradient(ellipse at 50% 50%, rgba(67, 56, 202, 0.08) 0%, transparent 60%);
+      animation: nebulaPulse 12s ease-in-out infinite alternate;
+    }
+
+    @keyframes nebulaPulse {
+      0% { opacity: 0.6; }
+      100% { opacity: 1; }
+    }
+
+    /* Floating orbs */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 2;
+      filter: blur(60px);
+      animation: float 20s ease-in-out infinite;
+    }
+
+    .orb-1 {
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(124, 155, 221, 0.2) 0%, transparent 70%);
+      top: -10%;
+      right: -5%;
+      animation-delay: 0s;
+    }
+
+    .orb-2 {
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%);
+      bottom: -5%;
+      left: -5%;
+      animation-delay: -7s;
+    }
+
+    .orb-3 {
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.12) 0%, transparent 70%);
+      top: 40%;
+      left: 20%;
+      animation-delay: -14s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      25% { transform: translate(30px, -30px) scale(1.05); }
+      50% { transform: translate(-20px, 20px) scale(0.95); }
+      75% { transform: translate(20px, 30px) scale(1.02); }
     }
 
     .login-container {
       width: 100%;
       max-width: 400px;
+      position: relative;
+      z-index: 10;
     }
 
     .login-header {
@@ -47,18 +126,17 @@
       margin-bottom: 3rem;
     }
 
-    .login-symbols {
+    .login-logo {
       display: flex;
       justify-content: center;
-      gap: 2rem;
       margin-bottom: 2rem;
     }
 
-    .login-symbol {
-      width: 48px;
-      height: 58px;
-      color: var(--color-text);
-      opacity: 0.8;
+    .login-logo svg {
+      width: 200px;
+      height: 250px;
+      max-width: 100%;
+      height: auto;
     }
 
     .login-title {
@@ -171,23 +249,97 @@
   </style>
 </head>
 <body>
+  <canvas id="galaxy"></canvas>
+  <div class="nebula"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+  
   <div class="login-container">
     <div class="login-header">
-      <div class="login-symbols">
-        <!-- Seek: Triangle with circle at top -->
-        <svg class="login-symbol" viewBox="0 0 100 120" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="50" cy="15" r="10"/>
-          <path d="M50 35 L80 90 L20 90 Z"/>
-        </svg>
-        <!-- Learn: Triangle with circle in center -->
-        <svg class="login-symbol" viewBox="0 0 100 120" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M50 25 L80 90 L20 90 Z"/>
-          <circle cx="50" cy="65" r="12"/>
-        </svg>
-        <!-- Integrate: Overlapping triangles -->
-        <svg class="login-symbol" viewBox="0 0 100 120" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M50 20 L80 75 L20 75 Z"/>
-          <path d="M50 95 L20 40 L80 40 Z"/>
+      <div class="login-logo">
+        <svg class="observer-logo-interactive" viewBox="0 0 200 250" width="200" height="250" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" aria-label="Observer logo">
+          <defs>
+            <linearGradient id="loginHexGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#4facfe">
+                <animate attributeName="stop-color" values="#4facfe;#43e97b;#667eea;#4facfe" dur="4s" repeatCount="indefinite"/>
+              </stop>
+              <stop offset="50%" style="stop-color:#00f2fe">
+                <animate attributeName="stop-color" values="#00f2fe;#4facfe;#00d2ff;#00f2fe" dur="4s" repeatCount="indefinite"/>
+              </stop>
+              <stop offset="100%" style="stop-color:#43e97b">
+                <animate attributeName="stop-color" values="#43e97b;#764ba2;#4facfe;#43e97b" dur="4s" repeatCount="indefinite"/>
+              </stop>
+            </linearGradient>
+            <radialGradient id="loginNodeGradient" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" style="stop-color:#00f2fe"/>
+              <stop offset="100%" style="stop-color:#4facfe"/>
+            </radialGradient>
+            <linearGradient id="loginEyeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#667eea"/>
+              <stop offset="100%" style="stop-color:#764ba2"/>
+            </linearGradient>
+            <linearGradient id="loginIrisGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#00d2ff"/>
+              <stop offset="100%" style="stop-color:#3a7bd5"/>
+            </linearGradient>
+            <radialGradient id="loginPupilGradient" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" style="stop-color:#1a1a2e"/>
+              <stop offset="100%" style="stop-color:#0f0f23"/>
+            </radialGradient>
+            <linearGradient id="loginTextGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#667eea"/>
+              <stop offset="50%" style="stop-color:#4facfe"/>
+              <stop offset="100%" style="stop-color:#43e97b"/>
+            </linearGradient>
+            <filter id="loginGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+            <mask id="loginCrescentMask" maskUnits="userSpaceOnUse">
+              <circle cx="0" cy="0" r="17.5" fill="white"/>
+              <circle cx="0" cy="-10" r="14" fill="black"/>
+            </mask>
+            <clipPath id="loginEyeClip">
+              <path d="M 40 95 C 64.54 56.33 131.46 56.33 156 95 C 131.46 133.67 64.54 133.67 40 95"/>
+            </clipPath>
+          </defs>
+          <g transform="translate(5, 10)">
+            <g>
+              <path fill="none" stroke="url(#loginHexGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
+                    d="M 54.5 11 L 141.5 11 L 185 95.1 L 141.5 179.2 L 54.5 179.2 L 11 95.1 Z"/>
+              <path fill="none" stroke="url(#loginHexGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
+                    d="M 51 3 L 145 3 L 192 94.4 L 145 185.8 L 51 185.8 L 4 94.4 Z"/>
+              <path fill="none" stroke="url(#loginHexGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M 147 11 L 185 89"/>
+              <path fill="none" stroke="url(#loginHexGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M 186 101 L 146 177"/>
+              <path fill="none" stroke="url(#loginHexGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M 138 183 L 57 183"/>
+              <path fill="none" stroke="url(#loginHexGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M 49 177 L 9 99"/>
+              <path fill="none" stroke="url(#loginHexGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M 9 89 L 50 12"/>
+              <path fill="none" stroke="url(#loginHexGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M 60 9 L 137 5"/>
+              <circle fill="url(#loginNodeGradient)" filter="url(#loginGlow)" cx="54" cy="7" r="7"/>
+              <circle fill="url(#loginNodeGradient)" filter="url(#loginGlow)" cx="143" cy="7" r="7"/>
+              <circle fill="url(#loginNodeGradient)" filter="url(#loginGlow)" cx="188" cy="95" r="7"/>
+              <circle fill="url(#loginNodeGradient)" filter="url(#loginGlow)" cx="144" cy="182" r="7"/>
+              <circle fill="url(#loginNodeGradient)" filter="url(#loginGlow)" cx="52" cy="182" r="7"/>
+              <circle fill="url(#loginNodeGradient)" filter="url(#loginGlow)" cx="7" cy="94" r="7"/>
+            </g>
+            <g>
+              <path fill="none" stroke="url(#loginEyeGradient)" stroke-width="2.5" 
+                    d="M 40 95 C 64.54 56.33 131.46 56.33 156 95 C 131.46 133.67 64.54 133.67 40 95"/>
+              <g clip-path="url(#loginEyeClip)">
+                <g class="eye-inner" transform="translate(99, 95)">
+                  <circle fill="none" stroke="url(#loginIrisGradient)" stroke-width="2" cx="0" cy="0" r="30"/>
+                  <circle fill="none" stroke="url(#loginEyeGradient)" stroke-width="4" cx="0" cy="0" r="21"/>
+                  <circle fill="url(#loginEyeGradient)" cx="9" cy="-15" r="3"/>
+                  <circle fill="url(#loginPupilGradient)" cx="0" cy="0" r="17.5" mask="url(#loginCrescentMask)"/>
+                </g>
+              </g>
+            </g>
+            <text x="32" y="235" font-family="Helvetica, Arial, sans-serif" font-size="30" fill="url(#loginTextGradient)" letter-spacing="0.5">Observer</text>
+          </g>
         </svg>
       </div>
       <h1 class="login-title">Admin Login</h1>
@@ -197,12 +349,13 @@
     <div class="login-card">
       <div class="error-message" id="errorMessage"></div>
 
-      <form id="loginForm">
+      <!-- WebAuthn Primary UI -->
+      <div id="webauthnSection">
         <div class="form-group">
-          <label class="form-label" for="username">Username</label>
+          <label class="form-label" for="webauthnUsername">Username</label>
           <input
             type="text"
-            id="username"
+            id="webauthnUsername"
             name="username"
             class="form-input"
             placeholder="Enter your username"
@@ -211,29 +364,275 @@
           >
         </div>
 
-        <div class="form-group">
-          <label class="form-label" for="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            class="form-input"
-            placeholder="Enter your password"
-            required
-            autocomplete="current-password"
-          >
+        <button type="button" class="login-button" id="passkeyButton" style="margin-bottom: 1rem;">
+          <svg style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 0.5rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="M9 12l2 2 4-4"/>
+          </svg>
+          <span id="passkeyButtonText">Sign in with Passkey</span>
+        </button>
+
+        <div style="text-align: center; margin: 1rem 0; color: var(--color-text-muted); font-size: 0.875rem;">
+          or
         </div>
 
-        <button type="submit" class="login-button" id="loginButton">
-          Sign In
+        <button type="button" class="login-button" id="registerPasskeyButton" style="background: transparent; border: 1px solid var(--color-border); color: var(--color-text); margin-bottom: 1rem;">
+          Register Passkey
         </button>
-      </form>
+
+        <details style="margin-top: 1rem;">
+          <summary style="cursor: pointer; color: var(--color-text-muted); font-size: 0.875rem; text-align: center;">
+            Use password (legacy)
+          </summary>
+          <form id="passwordForm" style="margin-top: 1rem;">
+            <div class="form-group">
+              <label class="form-label" for="passwordUsername">Username</label>
+              <input
+                type="text"
+                id="passwordUsername"
+                name="username"
+                class="form-input"
+                placeholder="Enter your username"
+                required
+                autocomplete="username"
+              >
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="password">Password</label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                class="form-input"
+                placeholder="Enter your password"
+                required
+                autocomplete="current-password"
+              >
+            </div>
+
+            <button type="submit" class="login-button" id="passwordLoginButton" style="background: var(--color-text-muted);">
+              Sign In with Password
+            </button>
+          </form>
+        </details>
+      </div>
     </div>
 
     <a href="/" class="back-link">&larr; Back to site</a>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@9.0.1/dist/bundle/index.umd.min.js"></script>
   <script>
+    // Galaxy starfield background (from coming-soon page)
+    (function() {
+      const canvas = document.getElementById('galaxy');
+      const ctx = canvas.getContext('2d');
+      
+      let width, height;
+      const stars = [];
+      const shootingStars = [];
+      const numStars = 400;
+      
+      function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      }
+      
+      resize();
+      window.addEventListener('resize', resize);
+      
+      // Create stars
+      for (let i = 0; i < numStars; i++) {
+        stars.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          size: Math.random() * 2 + 0.5,
+          twinkleSpeed: Math.random() * 0.02 + 0.005,
+          twinklePhase: Math.random() * Math.PI * 2,
+          color: ['#ffffff', '#cce5ff', '#aaccff', '#fff4e6'][Math.floor(Math.random() * 4)]
+        });
+      }
+      
+      // Shooting star class
+      class ShootingStar {
+        constructor() {
+          this.reset();
+        }
+        
+        reset() {
+          this.x = Math.random() * width * 1.5;
+          this.y = Math.random() * height * 0.5;
+          this.length = Math.random() * 80 + 40;
+          this.speed = Math.random() * 15 + 10;
+          this.angle = Math.PI / 4 + (Math.random() - 0.5) * 0.3;
+          this.opacity = 1;
+          this.active = true;
+        }
+        
+        update() {
+          this.x += Math.cos(this.angle) * this.speed;
+          this.y += Math.sin(this.angle) * this.speed;
+          this.opacity -= 0.015;
+          
+          if (this.opacity <= 0 || this.x > width + 100 || this.y > height + 100) {
+            this.active = false;
+          }
+        }
+        
+        draw() {
+          if (!this.active) return;
+          
+          const tailX = this.x - Math.cos(this.angle) * this.length;
+          const tailY = this.y - Math.sin(this.angle) * this.length;
+          
+          const gradient = ctx.createLinearGradient(tailX, tailY, this.x, this.y);
+          gradient.addColorStop(0, 'transparent');
+          gradient.addColorStop(1, `rgba(255, 255, 255, ${this.opacity})`);
+          
+          ctx.beginPath();
+          ctx.moveTo(tailX, tailY);
+          ctx.lineTo(this.x, this.y);
+          ctx.strokeStyle = gradient;
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          
+          // Head glow
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+          ctx.fill();
+        }
+      }
+      
+      // Spawn shooting stars occasionally
+      setInterval(() => {
+        if (Math.random() < 0.3) {
+          const star = shootingStars.find(s => !s.active);
+          if (star) {
+            star.reset();
+          } else if (shootingStars.length < 5) {
+            shootingStars.push(new ShootingStar());
+          }
+        }
+      }, 2000);
+      
+      let time = 0;
+      
+      function animate() {
+        ctx.clearRect(0, 0, width, height);
+        time += 0.016;
+        
+        // Draw stars with twinkling
+        stars.forEach(star => {
+          const twinkle = Math.sin(time * star.twinkleSpeed * 60 + star.twinklePhase) * 0.5 + 0.5;
+          const alpha = 0.3 + twinkle * 0.7;
+          
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.size * (0.8 + twinkle * 0.4), 0, Math.PI * 2);
+          
+          // Parse hex color
+          if (star.color.startsWith('#')) {
+            const hex = star.color.slice(1);
+            const r = parseInt(hex.slice(0, 2), 16);
+            const g = parseInt(hex.slice(2, 4), 16);
+            const b = parseInt(hex.slice(4, 6), 16);
+            ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+          }
+          
+          ctx.fill();
+          
+          // Glow for larger stars
+          if (star.size > 1.5) {
+            ctx.beginPath();
+            ctx.arc(star.x, star.y, star.size * 3, 0, Math.PI * 2);
+            const glowAlpha = alpha * 0.15;
+            if (star.color.startsWith('#')) {
+              const hex = star.color.slice(1);
+              const r = parseInt(hex.slice(0, 2), 16);
+              const g = parseInt(hex.slice(2, 4), 16);
+              const b = parseInt(hex.slice(4, 6), 16);
+              ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${glowAlpha})`;
+            }
+            ctx.fill();
+          }
+        });
+        
+        // Update and draw shooting stars
+        shootingStars.forEach(star => {
+          star.update();
+          star.draw();
+        });
+        
+        requestAnimationFrame(animate);
+      }
+      
+      animate();
+      
+      // Parallax on orbs
+      document.addEventListener('mousemove', (e) => {
+        const x = (e.clientX / width - 0.5) * 2;
+        const y = (e.clientY / height - 0.5) * 2;
+        
+        document.querySelectorAll('.orb').forEach((orb, i) => {
+          const speed = (i + 1) * 15;
+          orb.style.transform = `translate(${x * speed}px, ${y * speed}px)`;
+        });
+      });
+    })();
+    
+    // Custom logo eye tracking - follows cursor anywhere on page
+    document.addEventListener('DOMContentLoaded', () => {
+      const logo = document.querySelector('.observer-logo-interactive');
+      if (!logo) return;
+      
+      const eyeInner = logo.querySelector('.eye-inner');
+      if (!eyeInner) return;
+      
+      const eyeCenterX = 99 + 5;
+      const eyeCenterY = 95 + 10;
+      const maxMove = 8;
+      
+      let targetX = 0, targetY = 0;
+      let currentX = 0, currentY = 0;
+      
+      function animate() {
+        currentX += (targetX - currentX) * 0.15;
+        currentY += (targetY - currentY) * 0.15;
+        eyeInner.setAttribute('transform', `translate(${99 + currentX}, ${95 + currentY})`);
+        requestAnimationFrame(animate);
+      }
+      animate();
+      
+      // Track mouse anywhere on the page
+      document.addEventListener('mousemove', (e) => {
+        const rect = logo.getBoundingClientRect();
+        const scaleX = 200 / rect.width;
+        const scaleY = 250 / rect.height;
+        
+        // Calculate mouse position relative to the SVG
+        const mouseX = (e.clientX - rect.left) * scaleX;
+        const mouseY = (e.clientY - rect.top) * scaleY;
+        
+        const dx = mouseX - eyeCenterX;
+        const dy = mouseY - eyeCenterY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx);
+        
+        const moveDistance = Math.min(distance / 20, maxMove);
+        targetX = Math.cos(angle) * moveDistance;
+        targetY = Math.sin(angle) * moveDistance;
+      });
+      
+      // Reset when mouse leaves page
+      document.addEventListener('mouseleave', () => {
+        targetX = 0;
+        targetY = 0;
+      });
+    });
+    
+    const { startAuthentication, startRegistration } = SimpleWebAuthnBrowser;
+
     // Check if already authenticated
     fetch('/api/auth/status')
       .then(res => res.json())
@@ -243,27 +642,221 @@
         }
       });
 
-    const form = document.getElementById('loginForm');
     const errorMessage = document.getElementById('errorMessage');
-    const loginButton = document.getElementById('loginButton');
+    const passkeyButton = document.getElementById('passkeyButton');
+    const registerPasskeyButton = document.getElementById('registerPasskeyButton');
+    const passwordForm = document.getElementById('passwordForm');
+    const webauthnUsername = document.getElementById('webauthnUsername');
+    const passwordUsername = document.getElementById('passwordUsername');
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
+    // Check WebAuthn support
+    const isWebAuthnSupported = window.PublicKeyCredential !== undefined;
 
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
+    if (!isWebAuthnSupported) {
+      passkeyButton.disabled = true;
+      registerPasskeyButton.disabled = true;
+      passkeyButton.textContent = 'Passkeys not supported in this browser';
+      registerPasskeyButton.textContent = 'Passkeys not supported';
+    }
 
-      loginButton.disabled = true;
-      loginButton.textContent = 'Signing in...';
+    // Helper function to get CSRF token
+    async function getCsrfToken() {
+      const res = await fetch('/api/auth/csrf-token');
+      const data = await res.json();
+      return data.csrfToken;
+    }
+
+    // Helper function to show error
+    function showError(message) {
+      errorMessage.textContent = message;
+      errorMessage.classList.add('visible');
+    }
+
+    // Helper function to clear error
+    function clearError() {
       errorMessage.classList.remove('visible');
+    }
+
+    // WebAuthn Authentication (Login)
+    passkeyButton.addEventListener('click', async () => {
+      const username = webauthnUsername.value.trim();
+      if (!username) {
+        showError('Please enter your username');
+        return;
+      }
+
+      clearError();
+      passkeyButton.disabled = true;
+      passkeyButton.querySelector('span').textContent = 'Authenticating...';
 
       try {
+        const csrfToken = await getCsrfToken();
+
+        // Start authentication
+        const startRes = await fetch('/api/auth/webauthn/login/start', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': csrfToken
+          },
+          body: JSON.stringify({ username, csrfToken })
+        });
+
+        if (!startRes.ok) {
+          const error = await startRes.json();
+          throw new Error(error.error || 'Failed to start authentication');
+        }
+
+        const options = await startRes.json();
+
+        // Get assertion from authenticator (SimpleWebAuthn handles base64url conversion)
+        const assertion = await startAuthentication(options);
+
+        // Convert assertion for server (SimpleWebAuthn returns base64url strings)
+        const assertionResponse = {
+          id: assertion.id,
+          rawId: assertion.rawId,
+          response: {
+            authenticatorData: assertion.response.authenticatorData,
+            clientDataJSON: assertion.response.clientDataJSON,
+            signature: assertion.response.signature,
+            userHandle: assertion.response.userHandle || null
+          },
+          type: assertion.type
+        };
+
+        // Finish authentication
+        const finishRes = await fetch('/api/auth/webauthn/login/finish', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': csrfToken
+          },
+          body: JSON.stringify({ response: assertionResponse, csrfToken })
+        });
+
+        const result = await finishRes.json();
+
+        if (finishRes.ok && result.success) {
+          window.location.href = '/admin';
+        } else {
+          throw new Error(result.error || 'Authentication failed');
+        }
+      } catch (error) {
+        console.error('WebAuthn authentication error:', error);
+        if (error.name === 'NotAllowedError' || error.name === 'NotSupportedError') {
+          showError('Passkey authentication was cancelled or not supported');
+        } else {
+          showError(error.message || 'Authentication failed. Please try again.');
+        }
+      } finally {
+        passkeyButton.disabled = false;
+        passkeyButton.querySelector('span').textContent = 'Sign in with Passkey';
+      }
+    });
+
+    // WebAuthn Registration
+    registerPasskeyButton.addEventListener('click', async () => {
+      const username = webauthnUsername.value.trim();
+      if (!username) {
+        showError('Please enter your username');
+        return;
+      }
+
+      clearError();
+      registerPasskeyButton.disabled = true;
+      registerPasskeyButton.textContent = 'Registering...';
+
+      try {
+        const csrfToken = await getCsrfToken();
+
+        // Start registration
+        const startRes = await fetch('/api/auth/webauthn/register/start', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': csrfToken
+          },
+          body: JSON.stringify({ username, csrfToken })
+        });
+
+        if (!startRes.ok) {
+          const error = await startRes.json();
+          throw new Error(error.error || 'Failed to start registration');
+        }
+
+        const options = await startRes.json();
+
+        // Get credential from authenticator (SimpleWebAuthn handles base64url conversion)
+        const credential = await startRegistration(options);
+
+        // Convert credential for server (SimpleWebAuthn returns base64url strings)
+        const registrationResponse = {
+          id: credential.id,
+          rawId: credential.rawId,
+          response: {
+            attestationObject: credential.response.attestationObject,
+            clientDataJSON: credential.response.clientDataJSON
+          },
+          type: credential.type
+        };
+
+        // Finish registration
+        const finishRes = await fetch('/api/auth/webauthn/register/finish', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': csrfToken
+          },
+          body: JSON.stringify({ response: registrationResponse, csrfToken })
+        });
+
+        const result = await finishRes.json();
+
+        if (finishRes.ok && result.success) {
+          showError('Passkey registered successfully! You can now sign in with your passkey.');
+          registerPasskeyButton.textContent = 'Passkey Registered ✓';
+          setTimeout(() => {
+            registerPasskeyButton.textContent = 'Register Passkey';
+            registerPasskeyButton.disabled = false;
+          }, 3000);
+        } else {
+          throw new Error(result.error || 'Registration failed');
+        }
+      } catch (error) {
+        console.error('WebAuthn registration error:', error);
+        if (error.name === 'NotAllowedError' || error.name === 'NotSupportedError') {
+          showError('Passkey registration was cancelled or not supported');
+        } else {
+          showError(error.message || 'Registration failed. Please try again.');
+        }
+        registerPasskeyButton.disabled = false;
+        registerPasskeyButton.textContent = 'Register Passkey';
+      }
+    });
+
+    // Password login (legacy fallback)
+    passwordForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const username = passwordUsername.value;
+      const password = document.getElementById('password').value;
+      const passwordLoginButton = document.getElementById('passwordLoginButton');
+
+      passwordLoginButton.disabled = true;
+      passwordLoginButton.textContent = 'Signing in...';
+      clearError();
+
+      try {
+        const csrfToken = await getCsrfToken();
+
         const response = await fetch('/api/auth/login', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': csrfToken
           },
-          body: JSON.stringify({ username, password })
+          body: JSON.stringify({ username, password, csrfToken })
         });
 
         const data = await response.json();
@@ -271,16 +864,23 @@
         if (response.ok && data.success) {
           window.location.href = '/admin';
         } else {
-          errorMessage.textContent = data.error || 'Invalid credentials';
-          errorMessage.classList.add('visible');
+          showError(data.error || 'Invalid credentials');
         }
       } catch (error) {
-        errorMessage.textContent = 'Connection error. Please try again.';
-        errorMessage.classList.add('visible');
+        showError('Connection error. Please try again.');
       } finally {
-        loginButton.disabled = false;
-        loginButton.textContent = 'Sign In';
+        passwordLoginButton.disabled = false;
+        passwordLoginButton.textContent = 'Sign In with Password';
       }
+    });
+
+    // Sync username fields
+    webauthnUsername.addEventListener('input', (e) => {
+      passwordUsername.value = e.target.value;
+    });
+
+    passwordUsername.addEventListener('input', (e) => {
+      webauthnUsername.value = e.target.value;
     });
   </script>
 </body>

@@ -24,10 +24,16 @@ const config = {
   admin: {
     defaultUsername: process.env.ADMIN_USERNAME || 'admin',
     defaultPassword: process.env.ADMIN_PASSWORD || 'changeme123'
+  },
+  webauthn: {
+    rpID: process.env.WEBAUTHN_RP_ID || (isProduction ? 'observersoftware.io' : 'localhost'),
+    rpName: process.env.WEBAUTHN_RP_NAME || 'Observer',
+    origin: process.env.WEBAUTHN_ORIGIN || (isProduction ? 'https://observersoftware.io' : 'http://localhost:3000')
   }
 };
 
 module.exports = config;
+
 
 
 
