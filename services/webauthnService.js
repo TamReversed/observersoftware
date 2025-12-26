@@ -205,7 +205,16 @@ async function verifyRegistration(options, response, expectedOrigin) {
     console.log('Verification result:', {
       verified: verification.verified,
       hasRegistrationInfo: !!verification.registrationInfo,
-      registrationInfoKeys: verification.registrationInfo ? Object.keys(verification.registrationInfo) : []
+      registrationInfoKeys: verification.registrationInfo ? Object.keys(verification.registrationInfo) : [],
+      fullVerification: JSON.stringify(verification, (key, value) => {
+        if (value instanceof Buffer) {
+          return `<Buffer: ${value.length} bytes>`;
+        }
+        if (value && typeof value === 'object' && value.type === 'Buffer') {
+          return `<Buffer: ${value.data?.length || 0} bytes>`;
+        }
+        return value;
+      }, 2)
     });
 
     // Log the actual structure of registrationInfo (handling Buffers)
@@ -217,8 +226,19 @@ async function verifyRegistration(options, response, expectedOrigin) {
         credentialPublicKey: info.credentialPublicKey ? (Buffer.isBuffer(info.credentialPublicKey) ? `<Buffer: ${info.credentialPublicKey.length} bytes>` : typeof info.credentialPublicKey) : 'MISSING',
         counter: info.counter,
         fmt: info.fmt,
-        aaguid: info.aaguid
+        aaguid: info.aaguid,
+        allValues: Object.keys(info).reduce((acc, key) => {
+          const val = info[key];
+          if (Buffer.isBuffer(val)) {
+            acc[key] = `<Buffer: ${val.length} bytes>`;
+          } else {
+            acc[key] = typeof val;
+          }
+          return acc;
+        }, {})
       });
+    } else {
+      console.error('registrationInfo is missing even though verified is true!');
     }
 
     if (verification.verified && verification.registrationInfo) {
