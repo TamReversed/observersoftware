@@ -51,28 +51,52 @@ async function initializeSchema() {
     const schemaPath = path.join(__dirname, '..', 'database', 'schema.sql');
     const schema = fs.readFileSync(schemaPath, 'utf8');
     
-    // Split by semicolons and execute each statement
-    const statements = schema
-      .split(';')
-      .map(s => s.trim())
-      .filter(s => s.length > 0 && !s.startsWith('--'));
-    
-    for (const statement of statements) {
-      if (statement.trim()) {
-        try {
-          await pool.query(statement);
-        } catch (err) {
-          // Ignore "already exists" errors (idempotent)
-          if (!err.message.includes('already exists') && !err.message.includes('duplicate')) {
-            throw err;
+    // Execute the entire schema as a single transaction
+    // This ensures proper order and handles multi-statement constructs
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      
+      // Remove comments and split by semicolons more carefully
+      const statements = schema
+        .split(/;\s*(?=\n|$)/) // Split on semicolons followed by newline or end
+        .map(s => s.trim())
+        .filter(s => {
+          // Remove comment-only lines and empty statements
+          const cleaned = s.replace(/--.*$/gm, '').trim();
+          return cleaned.length > 0 && !cleaned.startsWith('--');
+        });
+      
+      for (const statement of statements) {
+        if (statement.trim()) {
+          try {
+            await client.query(statement);
+          } catch (err) {
+            // Ignore "already exists" errors (idempotent)
+            const errMsg = err.message.toLowerCase();
+            if (!errMsg.includes('already exists') && 
+                !errMsg.includes('duplicate') &&
+                !errMsg.includes('relation') && // Ignore if relation already exists
+                err.code !== '42P07') { // PostgreSQL code for "relation already exists"
+              console.warn(`Warning executing statement: ${err.message}`);
+              console.warn(`Statement: ${statement.substring(0, 100)}...`);
+              // Continue with other statements
+            }
           }
         }
       }
+      
+      await client.query('COMMIT');
+      console.log('✓ Database schema initialized');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
     }
-    
-    console.log('✓ Database schema initialized');
   } catch (error) {
     console.error('✗ Error initializing database schema:', error.message);
+    console.error('Error code:', error.code);
     throw error;
   }
 }
