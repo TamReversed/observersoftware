@@ -383,12 +383,9 @@ async function generateAuthenticationOptionsForUser(userId, credentials = [], or
         idType: typeof cred.id,
         idIsBuffer: Buffer.isBuffer(cred.id),
         idIsArray: Array.isArray(cred.id),
-        idValue: typeof cred.id === 'string' ? cred.id.substring(0, 20) + '...' : cred.id,
+        idValue: typeof cred.id === 'string' ? cred.id.substring(0, 20) + '...' : (Array.isArray(cred.id) ? `[Array: ${cred.id.length} items]` : String(cred.id).substring(0, 20)),
         idLength: cred.id?.length,
-        fullCred: JSON.stringify(cred, (key, value) => {
-          if (Buffer.isBuffer(value)) return `<Buffer: ${value.length} bytes>`;
-          return value;
-        })
+        idConstructor: cred.id?.constructor?.name
       });
       
       // cred.id should be a base64url string, convert to Buffer
@@ -397,59 +394,44 @@ async function generateAuthenticationOptionsForUser(userId, credentials = [], or
       
       if (Buffer.isBuffer(cred.id)) {
         credentialID = cred.id;
-      } else if (cred.id === null || cred.id === undefined) {
-        throw new Error(`Credential at index ${index} has null/undefined id`);
       } else if (Array.isArray(cred.id)) {
         // If it's an array (like [1,2,3] from JSON), convert to Buffer directly
         // This happens when JSON serializes a Buffer as an array
         credentialID = Buffer.from(cred.id);
       } else if (typeof cred.id === 'string') {
-        // It's a string - ensure it's a valid string before using base64url
-        const idString = cred.id.trim();
-        if (!idString) {
+        // It's a string - convert to Buffer
+        // Use a helper function to safely convert to base64url Buffer
+        const idStr = String(cred.id).trim();
+        if (!idStr) {
           throw new Error(`Credential at index ${index} has empty id string`);
         }
-        // base64url encoding requires a string, and Buffer.from will call .replace() internally
-        // Ensure we have a primitive string, not a String object
-        let cleanString;
-        if (Object.prototype.toString.call(idString) === '[object String]' && typeof idString === 'object') {
-          // It's a String object, convert to primitive
-          cleanString = String(idString);
-        } else {
-          cleanString = idString;
-        }
         
-        // Final safety check - must be a string primitive
-        if (typeof cleanString !== 'string') {
-          throw new Error(`Credential ID is not a string primitive. Type: ${typeof cleanString}, Constructor: ${cleanString?.constructor?.name}`);
-        }
-        
-        // Verify it has the replace method (sanity check)
-        if (typeof cleanString.replace !== 'function') {
-          throw new Error(`Credential ID string does not have replace method. Type: ${typeof cleanString}`);
-        }
-        
+        // Try to decode as base64url, but catch any errors
         try {
-          credentialID = Buffer.from(cleanString, 'base64url');
+          // Manually validate it's a string with replace method
+          if (typeof idStr.replace !== 'function') {
+            throw new Error('String does not have replace method');
+          }
+          credentialID = Buffer.from(idStr, 'base64url');
         } catch (e) {
-          console.warn(`Failed to parse credential ID as base64url:`, e.message);
+          // If base64url fails, try base64
           try {
-            credentialID = Buffer.from(cleanString, 'base64');
+            credentialID = Buffer.from(idStr, 'base64');
           } catch (e2) {
-            console.warn(`Failed to parse credential ID as base64:`, e2.message);
-            credentialID = Buffer.from(cleanString, 'utf8');
+            // Last resort: treat as raw bytes
+            credentialID = Buffer.from(idStr, 'utf8');
           }
         }
       } else {
-        // For other types (object, number, etc.), convert to string first
-        const idString = String(cred.id);
+        // For other types, try to convert to string first, then to Buffer
+        const idStr = String(cred.id);
         try {
-          credentialID = Buffer.from(idString, 'base64url');
+          credentialID = Buffer.from(idStr, 'base64url');
         } catch (e) {
           try {
-            credentialID = Buffer.from(idString, 'base64');
+            credentialID = Buffer.from(idStr, 'base64');
           } catch (e2) {
-            credentialID = Buffer.from(idString, 'utf8');
+            credentialID = Buffer.from(idStr, 'utf8');
           }
         }
       }
