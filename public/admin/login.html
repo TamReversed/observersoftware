@@ -818,9 +818,9 @@
         if (error.name === 'NotAllowedError' || error.name === 'NotSupportedError') {
           showError('Passkey registration was cancelled or not supported');
         } else if (error.message && error.message.includes('user could not be verified')) {
-          showError('User verification required. Please use your PIN, fingerprint, or face ID when prompted, then try again.');
+          showError('Dashlane requires verification. Please unlock Dashlane or complete any verification prompts (PIN, fingerprint, face ID) when Dashlane asks, then try registering again.');
         } else if (error.message && error.message.includes('User verification was required')) {
-          showError('Your authenticator requires verification (PIN, fingerprint, or face ID). Please complete the verification when prompted.');
+          showError('Dashlane requires verification. Please unlock Dashlane or complete any verification prompts when asked, then try registering again.');
         } else {
           showError(error.message || 'Registration failed. Please try again.');
         }

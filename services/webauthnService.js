@@ -174,6 +174,27 @@ async function verifyRegistration(options, response, expectedOrigin) {
   });
   
   try {
+    // Log response details for debugging
+    if (response?.response?.authenticatorData) {
+      // Decode authenticator data to check flags
+      try {
+        const authData = Buffer.from(response.response.authenticatorData, 'base64url');
+        // The flags byte is at position 32 (after rpIdHash)
+        if (authData.length >= 33) {
+          const flags = authData[32];
+          const userPresent = !!(flags & 0x01);
+          const userVerified = !!(flags & 0x04);
+          console.log('Authenticator data flags:', {
+            userPresent,
+            userVerified,
+            flags: flags.toString(2).padStart(8, '0')
+          });
+        }
+      } catch (e) {
+        console.log('Could not parse authenticator data:', e.message);
+      }
+    }
+    
     const verification = await verifyRegistrationResponse({
       response,
       expectedChallenge: options.challenge,

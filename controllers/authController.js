@@ -234,9 +234,9 @@ async function finishWebAuthnRegistration(req, res, next) {
       
       // Provide user-friendly message for user verification errors
       if (error.message && error.message.includes('user could not be verified')) {
-        errorResponse.userMessage = 'User verification required. Please use your PIN, fingerprint, or face ID when prompted.';
+        errorResponse.userMessage = 'Dashlane requires verification. Please unlock Dashlane or complete any verification prompts (PIN, fingerprint, face ID) when Dashlane asks, then try registering again.';
       } else if (error.message && error.message.includes('User verification was required')) {
-        errorResponse.userMessage = 'Your authenticator requires verification. Please complete the verification when prompted.';
+        errorResponse.userMessage = 'Dashlane requires verification. Please unlock Dashlane or complete any verification prompts when asked, then try registering again.';
       }
       
       // Include stack trace in development
