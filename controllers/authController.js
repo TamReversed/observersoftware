@@ -128,6 +128,29 @@ async function finishWebAuthnRegistration(req, res, next) {
     if (!response) {
       return res.status(400).json({ error: 'Registration response is required' });
     }
+    
+    // Validate response structure before proceeding
+    if (!response.id) {
+      return res.status(400).json({ error: 'Registration response missing id field' });
+    }
+    
+    if (!response.type || response.type !== 'public-key') {
+      return res.status(400).json({ 
+        error: `Invalid response type: ${response.type || 'missing'}. Expected 'public-key'` 
+      });
+    }
+    
+    if (!response.response) {
+      return res.status(400).json({ error: 'Registration response missing response object' });
+    }
+    
+    if (!response.response.clientDataJSON) {
+      return res.status(400).json({ error: 'Registration response missing clientDataJSON' });
+    }
+    
+    if (!response.response.attestationObject) {
+      return res.status(400).json({ error: 'Registration response missing attestationObject' });
+    }
 
     // Verify session state
     if (!req.session.webauthnChallenge || 

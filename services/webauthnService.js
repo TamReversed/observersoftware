@@ -127,6 +127,35 @@ async function verifyRegistration(options, response, expectedOrigin) {
   // Use rpID from options (which should be set from the origin)
   const rpID = options.rpID || getRpIDFromOrigin(expectedOrigin);
   
+  // Validate response structure
+  if (!response) {
+    throw new Error('Registration response is required');
+  }
+  
+  if (!response.id) {
+    throw new Error('Registration response missing id field');
+  }
+  
+  if (!response.type || response.type !== 'public-key') {
+    throw new Error(`Invalid response type: ${response.type || 'missing'}. Expected 'public-key'`);
+  }
+  
+  if (!response.response) {
+    throw new Error('Registration response missing response object');
+  }
+  
+  if (!response.response.clientDataJSON) {
+    throw new Error('Registration response missing clientDataJSON');
+  }
+  
+  if (!response.response.attestationObject) {
+    throw new Error('Registration response missing attestationObject');
+  }
+  
+  if (!options.challenge) {
+    throw new Error('Challenge is required for verification');
+  }
+  
   console.log('Verifying registration:', {
     rpID,
     expectedOrigin,
@@ -136,7 +165,10 @@ async function verifyRegistration(options, response, expectedOrigin) {
     responseId: response?.id,
     responseType: response?.type,
     hasResponse: !!response,
-    responseKeys: response ? Object.keys(response) : []
+    hasClientDataJSON: !!response?.response?.clientDataJSON,
+    hasAttestationObject: !!response?.response?.attestationObject,
+    responseKeys: response ? Object.keys(response) : [],
+    responseResponseKeys: response?.response ? Object.keys(response.response) : []
   });
   
   try {
