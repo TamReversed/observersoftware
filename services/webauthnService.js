@@ -211,6 +211,23 @@ async function verifyRegistration(options, response, expectedOrigin) {
     if (verification.verified && verification.registrationInfo) {
       const { credentialID, credentialPublicKey, counter } = verification.registrationInfo;
 
+      // Validate that we have the required data
+      if (!credentialID) {
+        throw new Error('Registration verification failed: credentialID is missing');
+      }
+      if (!credentialPublicKey) {
+        throw new Error('Registration verification failed: credentialPublicKey is missing');
+      }
+
+      console.log('Registration info received:', {
+        hasCredentialID: !!credentialID,
+        credentialIDType: credentialID?.constructor?.name,
+        credentialIDLength: credentialID?.length,
+        hasCredentialPublicKey: !!credentialPublicKey,
+        credentialPublicKeyType: credentialPublicKey?.constructor?.name,
+        credentialPublicKeyLength: credentialPublicKey?.length
+      });
+
       return {
         verified: true,
         credential: {
