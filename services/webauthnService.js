@@ -449,8 +449,23 @@ async function generateAuthenticationOptionsForUser(userId, credentials = [], or
         throw new Error(`Credential at index ${index} could not be converted to Buffer. Type: ${typeof cred.id}, IsArray: ${Array.isArray(cred.id)}, Value: ${JSON.stringify(cred.id)}`);
       }
 
+      // SimpleWebAuthn expects credential ID as a Uint8Array or Buffer
+      // But it validates it as a string first, so we need to ensure it's the right format
+      // Convert Buffer to Uint8Array if needed, or keep as Buffer
+      let credentialIDForOptions;
+      if (Buffer.isBuffer(credentialID)) {
+        // Convert Buffer to Uint8Array (which SimpleWebAuthn can handle)
+        credentialIDForOptions = new Uint8Array(credentialID);
+      } else if (credentialID instanceof Uint8Array) {
+        credentialIDForOptions = credentialID;
+      } else {
+        // If it's still a string, convert to Uint8Array via Buffer
+        const tempBuffer = Buffer.from(String(credentialID), 'base64url');
+        credentialIDForOptions = new Uint8Array(tempBuffer);
+      }
+
       return {
-        id: credentialID,
+        id: credentialIDForOptions,
         type: 'public-key',
         transports: cred.transports || []
       };
