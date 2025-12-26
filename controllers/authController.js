@@ -87,8 +87,10 @@ async function startWebAuthnRegistration(req, res, next) {
     const existingCredentials = user.webauthnCredentials;
     
     try {
-      // Get origin from request
-      const origin = req.protocol + '://' + req.get('host');
+      // Get origin from request (handle Railway proxy)
+      const protocol = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
+      const host = req.headers.host || req.get('host');
+      const origin = `${protocol}://${host}`;
       const options = await webauthnService.generateRegistrationOptionsForUser(
         user.id,
         user.username,
@@ -196,8 +198,10 @@ async function startWebAuthnLogin(req, res, next) {
       return res.status(400).json({ error: 'No passkey registered for this user' });
     }
 
-    // Get origin from request
-    const origin = req.protocol + '://' + req.get('host');
+    // Get origin from request (handle Railway proxy)
+    const protocol = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
+    const host = req.headers.host || req.get('host');
+    const origin = `${protocol}://${host}`;
     const options = await webauthnService.generateAuthenticationOptionsForUser(
       user.id,
       user.webauthnCredentials,
@@ -253,8 +257,10 @@ async function finishWebAuthnLogin(req, res, next) {
       return res.status(400).json({ error: 'Credential not found. Please register a new passkey.' });
     }
 
-    // Get origin from request
-    const origin = req.protocol + '://' + req.get('host');
+    // Get origin from request (handle Railway proxy)
+    const protocol = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
+    const host = req.headers.host || req.get('host');
+    const origin = `${protocol}://${host}`;
     
     // Create options object with stored challenge
     const options = {
