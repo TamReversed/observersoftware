@@ -758,6 +758,9 @@
       clearError();
       registerPasskeyButton.disabled = true;
       registerPasskeyButton.textContent = 'Registering...';
+      
+      // Note: If Dashlane intercepts and you want to use QR code/phone instead,
+      // you may need to temporarily disable Dashlane for this site or use an incognito window
 
       try {
         const csrfToken = await getCsrfToken();

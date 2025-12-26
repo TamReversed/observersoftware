@@ -94,15 +94,14 @@ async function generateRegistrationOptionsForUser(userId, username, existingCred
       attestationType: 'none',
       excludeCredentials,
       authenticatorSelection: {
-        // Don't restrict authenticator type - allow both platform and cross-platform
-        // undefined = allow any authenticator (enables QR code/cross-device flow)
-        // This allows users to use their phone (with Face ID) via QR code
-        authenticatorAttachment: undefined,
+        // Try 'cross-platform' first to explicitly request QR code/cross-device flow
+        // This should show QR code option for phone authentication
+        // If this doesn't work, the browser will fall back to platform authenticators
+        authenticatorAttachment: 'cross-platform',
         // Use 'preferred' to allow Face ID/Touch ID on phones via cross-device
-        // 'discouraged' might prevent some authenticators from working
         userVerification: 'preferred',
         // requireResidentKey: true allows passkeys to be stored on the authenticator
-        // This is required for password managers and cross-device authenticators
+        // This is required for cross-device authenticators
         requireResidentKey: true
       },
       supportedAlgorithmIDs: [-7, -257] // ES256 and RS256
