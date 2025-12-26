@@ -365,14 +365,45 @@ async function generateAuthenticationOptionsForUser(userId, credentials = [], or
   // Get rpID from origin
   const rpID = getRpIDFromOrigin(origin || config.webauthn.origin);
 
+  // Map credentials, handling potential format issues
+  const allowCredentials = credentials.map((cred, index) => {
+    try {
+      if (!cred.id) {
+        throw new Error(`Credential at index ${index} is missing id field`);
+      }
+      
+      // cred.id should be a base64url string, convert to Buffer
+      let credentialID;
+      if (Buffer.isBuffer(cred.id)) {
+        credentialID = cred.id;
+      } else if (typeof cred.id === 'string') {
+        credentialID = Buffer.from(cred.id, 'base64url');
+      } else {
+        throw new Error(`Credential at index ${index} has invalid id type: ${typeof cred.id}`);
+      }
+
+      return {
+        id: credentialID,
+        type: 'public-key',
+        transports: cred.transports || []
+      };
+    } catch (error) {
+      console.error(`Error processing credential at index ${index}:`, error);
+      console.error('Credential data:', cred);
+      throw error;
+    }
+  });
+
+  console.log('Generating authentication options:', {
+    rpID,
+    credentialCount: allowCredentials.length,
+    credentialIDs: allowCredentials.map(c => c.id.toString('base64url').substring(0, 20) + '...')
+  });
+
   const options = await generateAuthenticationOptions({
     rpID,
     timeout: 60000,
-    allowCredentials: credentials.map(cred => ({
-      id: Buffer.from(cred.id, 'base64url'),
-      type: 'public-key',
-      transports: cred.transports || []
-    })),
+    allowCredentials,
     // Use 'preferred' to allow Face ID/Touch ID on phones via cross-device
     userVerification: 'preferred'
   });

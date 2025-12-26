@@ -282,19 +282,35 @@ async function startWebAuthnLogin(req, res, next) {
     const protocol = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
     const host = req.headers.host || req.get('host');
     const origin = `${protocol}://${host}`;
-    const options = await webauthnService.generateAuthenticationOptionsForUser(
-      user.id,
-      user.webauthnCredentials,
-      origin
-    );
+    try {
+      const options = await webauthnService.generateAuthenticationOptionsForUser(
+        user.id,
+        user.webauthnCredentials,
+        origin
+      );
 
-    // Store challenge and user info in session
-    req.session.webauthnChallenge = options.challenge;
-    req.session.webauthnUserId = user.id;
-    req.session.webauthnType = 'authentication';
+      // Store challenge and user info in session
+      req.session.webauthnChallenge = options.challenge;
+      req.session.webauthnUserId = user.id;
+      req.session.webauthnType = 'authentication';
 
-    res.json(options);
+      res.json(options);
+    } catch (error) {
+      console.error('Error in startWebAuthnLogin:', error);
+      console.error('Error stack:', error.stack);
+      console.error('User credentials:', user.webauthnCredentials?.map(c => ({
+        id: c.id,
+        idType: typeof c.id,
+        idLength: c.id?.length
+      })));
+      return res.status(500).json({
+        error: 'Failed to generate authentication options',
+        details: error.message,
+        stack: process.env.NODE_ENV !== 'production' ? error.stack : undefined
+      });
+    }
   } catch (error) {
+    console.error('Error in startWebAuthnLogin (outer):', error);
     next(error);
   }
 }
