@@ -297,6 +297,7 @@ module.exports = {
   verifyRegistration,
   generateAuthenticationOptionsForUser,
   verifyAuthentication,
-  getRpIDFromOrigin
+  getRpIDFromOrigin,
+  getOriginFromRequest
 };
 
