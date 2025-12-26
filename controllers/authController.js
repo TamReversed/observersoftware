@@ -101,9 +101,11 @@ async function startWebAuthnRegistration(req, res, next) {
       res.json(options);
     } catch (error) {
       console.error('Error in startWebAuthnRegistration:', error);
+      console.error('Error stack:', error.stack);
       return res.status(500).json({ 
         error: 'Failed to generate registration options',
-        details: process.env.NODE_ENV !== 'production' ? error.message : undefined
+        details: error.message,
+        stack: process.env.NODE_ENV !== 'production' ? error.stack : undefined
       });
     }
   } catch (error) {

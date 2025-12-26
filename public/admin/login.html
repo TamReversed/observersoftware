@@ -770,7 +770,8 @@
 
         if (!startRes.ok) {
           const error = await startRes.json();
-          throw new Error(error.error || 'Failed to start registration');
+          console.error('Registration start error:', error);
+          throw new Error(error.error || error.details || 'Failed to start registration');
         }
 
         const options = await startRes.json();
