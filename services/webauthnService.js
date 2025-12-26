@@ -230,6 +230,7 @@ module.exports = {
   generateRegistrationOptionsForUser,
   verifyRegistration,
   generateAuthenticationOptionsForUser,
-  verifyAuthentication
+  verifyAuthentication,
+  getRpIDFromOrigin
 };
 
