@@ -391,35 +391,26 @@ async function generateAuthenticationOptionsForUser(userId, credentials = [], or
       });
       
       // cred.id is stored as a base64url string (e.g., 'xtW6W7_XunrgRLRknlXEXQ')
-      // SimpleWebAuthn expects it as a Buffer (Node.js Buffer)
+      // SimpleWebAuthn's generateAuthenticationOptions validates credential IDs as base64url strings
+      // It will convert them to Buffers internally, so we should pass the string directly
       let credentialIDForOptions;
       
       if (typeof cred.id === 'string') {
-        // Decode base64url string to Buffer
+        // Pass the base64url string directly - SimpleWebAuthn will handle conversion
         const idStr = String(cred.id).trim();
         if (!idStr) {
           throw new Error(`Credential at index ${index} has empty id string`);
         }
-        try {
-          // Decode base64url to Buffer
-          credentialIDForOptions = Buffer.from(idStr, 'base64url');
-        } catch (e) {
-          // If base64url fails, try base64
-          try {
-            credentialIDForOptions = Buffer.from(idStr, 'base64');
-          } catch (e2) {
-            throw new Error(`Credential at index ${index} has invalid base64url id: ${e.message}`);
-          }
-        }
+        credentialIDForOptions = idStr;
       } else if (Buffer.isBuffer(cred.id)) {
-        // Already a Buffer
-        credentialIDForOptions = cred.id;
+        // Convert Buffer to base64url string
+        credentialIDForOptions = cred.id.toString('base64url');
       } else if (Array.isArray(cred.id)) {
-        // If it's an array (from JSON), convert directly to Buffer
-        credentialIDForOptions = Buffer.from(cred.id);
+        // If it's an array (from JSON), convert to Buffer first, then to base64url string
+        credentialIDForOptions = Buffer.from(cred.id).toString('base64url');
       } else if (cred.id instanceof Uint8Array) {
-        // Convert Uint8Array to Buffer
-        credentialIDForOptions = Buffer.from(cred.id);
+        // Convert Uint8Array to Buffer, then to base64url string
+        credentialIDForOptions = Buffer.from(cred.id).toString('base64url');
       } else {
         throw new Error(`Credential at index ${index} has invalid id type: ${typeof cred.id}`);
       }
@@ -440,11 +431,8 @@ async function generateAuthenticationOptionsForUser(userId, credentials = [], or
     rpID,
     credentialCount: allowCredentials.length,
     credentialIDs: allowCredentials.map(c => {
-      if (Buffer.isBuffer(c.id)) {
-        return c.id.toString('base64url').substring(0, 20) + '...';
-      } else {
-        return String(c.id).substring(0, 20) + '...';
-      }
+      const idStr = typeof c.id === 'string' ? c.id : String(c.id);
+      return idStr.substring(0, 20) + '...';
     })
   });
 
