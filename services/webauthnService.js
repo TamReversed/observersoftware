@@ -17,36 +17,60 @@ const { rpID, rpName, origin } = config.webauthn;
  * @returns {Promise<Object>} Registration options
  */
 async function generateRegistrationOptionsForUser(userId, username, existingCredentials = []) {
-  const user = {
-    id: userId,
-    name: username,
-    displayName: username
-  };
+  try {
+    // Convert userId string to Buffer
+    // If userId is a UUID string, we need to convert it properly
+    let userIDBuffer;
+    try {
+      // Try to parse as UUID first (if it's a standard UUID format)
+      if (userId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+        // Remove dashes and convert hex to buffer
+        const hexString = userId.replace(/-/g, '');
+        userIDBuffer = Buffer.from(hexString, 'hex');
+      } else {
+        // Fallback to UTF-8 encoding
+        userIDBuffer = Buffer.from(userId, 'utf8');
+      }
+    } catch (e) {
+      // If all else fails, use UTF-8
+      userIDBuffer = Buffer.from(userId, 'utf8');
+    }
 
-  // Convert userId string to Buffer (UUID)
-  const userIDBuffer = Buffer.from(userId, 'utf8');
+    // Map existing credentials for exclusion
+    const excludeCredentials = existingCredentials.map(cred => {
+      try {
+        return {
+          id: Buffer.from(cred.id, 'base64url'),
+          type: 'public-key',
+          transports: cred.transports || []
+        };
+      } catch (e) {
+        console.error('Error mapping credential:', e);
+        return null;
+      }
+    }).filter(Boolean); // Remove any null entries
 
-  const options = await generateRegistrationOptions({
-    rpName,
-    rpID,
-    userID: userIDBuffer,
-    userName: username,
-    timeout: 60000,
-    attestationType: 'none',
-    excludeCredentials: existingCredentials.map(cred => ({
-      id: Buffer.from(cred.id, 'base64url'),
-      type: 'public-key',
-      transports: cred.transports || []
-    })),
-    authenticatorSelection: {
-      authenticatorAttachment: 'cross-platform',
-      userVerification: 'preferred',
-      requireResidentKey: false
-    },
-    supportedAlgorithmIDs: [-7, -257] // ES256 and RS256
-  });
+    const options = await generateRegistrationOptions({
+      rpName,
+      rpID,
+      userID: userIDBuffer,
+      userName: username,
+      timeout: 60000,
+      attestationType: 'none',
+      excludeCredentials,
+      authenticatorSelection: {
+        authenticatorAttachment: 'cross-platform',
+        userVerification: 'preferred',
+        requireResidentKey: false
+      },
+      supportedAlgorithmIDs: [-7, -257] // ES256 and RS256
+    });
 
-  return options;
+    return options;
+  } catch (error) {
+    console.error('Error generating registration options:', error);
+    throw error;
+  }
 }
 
 /**

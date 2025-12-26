@@ -78,19 +78,29 @@ async function startWebAuthnRegistration(req, res, next) {
     }
 
     const existingCredentials = user.webauthnCredentials || [];
-    const options = await webauthnService.generateRegistrationOptionsForUser(
-      user.id,
-      user.username,
-      existingCredentials
-    );
+    
+    try {
+      const options = await webauthnService.generateRegistrationOptionsForUser(
+        user.id,
+        user.username,
+        existingCredentials
+      );
 
-    // Store challenge in session
-    req.session.webauthnChallenge = options.challenge;
-    req.session.webauthnUserId = user.id;
-    req.session.webauthnType = 'registration';
+      // Store challenge in session
+      req.session.webauthnChallenge = options.challenge;
+      req.session.webauthnUserId = user.id;
+      req.session.webauthnType = 'registration';
 
-    res.json(options);
+      res.json(options);
+    } catch (error) {
+      console.error('Error in startWebAuthnRegistration:', error);
+      return res.status(500).json({ 
+        error: 'Failed to generate registration options',
+        details: process.env.NODE_ENV !== 'production' ? error.message : undefined
+      });
+    }
   } catch (error) {
+    console.error('Error in startWebAuthnRegistration:', error);
     next(error);
   }
 }
