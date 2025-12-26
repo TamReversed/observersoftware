@@ -800,7 +800,8 @@
             registerPasskeyButton.disabled = false;
           }, 3000);
         } else {
-          throw new Error(result.error || 'Registration failed');
+          console.error('Registration finish error details:', result);
+          throw new Error(result.details || result.error || 'Registration failed');
         }
       } catch (error) {
         console.error('WebAuthn registration error:', error);

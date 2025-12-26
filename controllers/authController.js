@@ -224,12 +224,25 @@ async function finishWebAuthnRegistration(req, res, next) {
       console.error('Error stack:', error.stack);
       console.error('Error name:', error.name);
       console.error('Error message:', error.message);
-      return res.status(500).json({ 
+      
+      // Return more detailed error information
+      const errorResponse = {
         error: 'Registration verification failed',
         details: error.message || 'Unknown error',
-        errorName: error.name,
-        stack: process.env.NODE_ENV !== 'production' ? error.stack : undefined
-      });
+        errorName: error.name
+      };
+      
+      // Include stack trace in development
+      if (process.env.NODE_ENV !== 'production') {
+        errorResponse.stack = error.stack;
+      }
+      
+      // Include additional context if available
+      if (error.cause) {
+        errorResponse.cause = error.cause;
+      }
+      
+      return res.status(500).json(errorResponse);
     }
   } catch (error) {
     console.error('Error in finishWebAuthnRegistration:', error);
