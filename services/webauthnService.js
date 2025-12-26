@@ -400,26 +400,35 @@ async function generateAuthenticationOptionsForUser(userId, credentials = [], or
         credentialID = Buffer.from(cred.id);
       } else if (typeof cred.id === 'string') {
         // It's a string - convert to Buffer
-        // Use a helper function to safely convert to base64url Buffer
         const idStr = String(cred.id).trim();
         if (!idStr) {
           throw new Error(`Credential at index ${index} has empty id string`);
         }
         
-        // Try to decode as base64url, but catch any errors
+        // Ensure it's a real string primitive with replace method
+        // Create a new string to ensure it's a primitive
+        const cleanId = '' + idStr;
+        
+        // Try to decode as base64url
+        // Use try-catch to handle any encoding issues
         try {
-          // Manually validate it's a string with replace method
-          if (typeof idStr.replace !== 'function') {
-            throw new Error('String does not have replace method');
+          // First try base64url (which requires .replace method)
+          // If that fails due to replace issue, fall back to manual decoding
+          if (typeof cleanId.replace === 'function') {
+            credentialID = Buffer.from(cleanId, 'base64url');
+          } else {
+            // Manual base64url decode
+            const base64 = cleanId.replace(/-/g, '+').replace(/_/g, '/');
+            const padding = '='.repeat((4 - base64.length % 4) % 4);
+            credentialID = Buffer.from(base64 + padding, 'base64');
           }
-          credentialID = Buffer.from(idStr, 'base64url');
         } catch (e) {
-          // If base64url fails, try base64
+          // If base64url fails, try regular base64
           try {
-            credentialID = Buffer.from(idStr, 'base64');
+            credentialID = Buffer.from(cleanId, 'base64');
           } catch (e2) {
             // Last resort: treat as raw bytes
-            credentialID = Buffer.from(idStr, 'utf8');
+            credentialID = Buffer.from(cleanId, 'utf8');
           }
         }
       } else {
