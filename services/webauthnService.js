@@ -268,8 +268,8 @@ async function generateAuthenticationOptionsForUser(userId, credentials = [], or
       type: 'public-key',
       transports: cred.transports || []
     })),
-    // Use 'discouraged' for password managers - they provide their own security
-    userVerification: 'discouraged'
+    // Use 'preferred' to allow Face ID/Touch ID on phones via cross-device
+    userVerification: 'preferred'
   });
 
   return options;
