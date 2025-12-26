@@ -246,7 +246,8 @@ async function generateAuthenticationOptionsForUser(userId, credentials = [], or
       type: 'public-key',
       transports: cred.transports || []
     })),
-    userVerification: 'preferred'
+    // Use 'discouraged' for password managers - they provide their own security
+    userVerification: 'discouraged'
   });
 
   return options;
