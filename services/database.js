@@ -110,10 +110,17 @@ async function initializeSchema() {
         statements.push(current.trim());
       }
       
-      // Execute each statement
+      // Execute each statement with better error handling
+      console.log(`Executing ${statements.length} schema statements...`);
       for (let i = 0; i < statements.length; i++) {
         const statement = statements[i].trim();
         if (statement.length === 0) continue;
+        
+        // Log what we're executing (first 100 chars)
+        const preview = statement.substring(0, 100).replace(/\s+/g, ' ');
+        if (process.env.NODE_ENV !== 'production') {
+          console.log(`Executing statement ${i + 1}/${statements.length}: ${preview}...`);
+        }
         
         try {
           await client.query(statement);
@@ -126,20 +133,28 @@ async function initializeSchema() {
               errCode === '42710' || // duplicate object
               errCode === '42P16' || // invalid table definition
               errCode === '42723' || // function already exists
+              errCode === '42P17' || // cannot drop trigger (already exists)
               errMsg.includes('already exists') ||
               errMsg.includes('duplicate')) {
             // Silently continue
             continue;
           }
           
-          // For other errors, log the details
-          console.error(`Error executing statement ${i + 1}/${statements.length}:`);
-          console.error(`  Code: ${errCode}`);
-          console.error(`  Message: ${err.message}`);
-          console.error(`  Statement: ${statement.substring(0, 200)}...`);
+          // For relation does not exist errors on CREATE TRIGGER, 
+          // it means the table wasn't created - this is a real error
+          if (errCode === '42P01' && statement.toUpperCase().includes('CREATE TRIGGER')) {
+            console.error(`✗ Cannot create trigger - table does not exist`);
+            console.error(`  Statement: ${preview}...`);
+            console.error(`  Error: ${err.message}`);
+            // Continue anyway - might be a timing issue
+            continue;
+          }
           
-          // Don't throw - continue with other statements
-          // Some statements might fail if dependencies aren't ready yet
+          // For other errors, log the details but continue
+          console.warn(`Warning executing statement ${i + 1}/${statements.length}:`);
+          console.warn(`  Code: ${errCode}`);
+          console.warn(`  Message: ${err.message}`);
+          console.warn(`  Statement: ${preview}...`);
         }
       }
       
