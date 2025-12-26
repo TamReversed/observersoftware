@@ -229,9 +229,19 @@ async function verifyRegistration(options, response, expectedOrigin) {
       let credentialID = registrationInfo.credentialID || registrationInfo.credentialId;
       let credentialPublicKey = registrationInfo.credentialPublicKey || registrationInfo.publicKey;
 
+      // If credentialID is still missing, try to get it from the response object
+      if (!credentialID && response?.id) {
+        console.log('credentialID not in registrationInfo, using response.id');
+        credentialID = response.id;
+      }
+
       // Validate that we have the required data
       if (!credentialID) {
-        console.error('credentialID is missing from registrationInfo:', registrationInfo);
+        console.error('credentialID is missing from both registrationInfo and response:', {
+          registrationInfoKeys: Object.keys(registrationInfo),
+          responseId: response?.id,
+          responseKeys: response ? Object.keys(response) : []
+        });
         throw new Error('Registration verification failed: credentialID is missing');
       }
       if (!credentialPublicKey) {
@@ -250,10 +260,25 @@ async function verifyRegistration(options, response, expectedOrigin) {
         credentialPublicKeyLength: credentialPublicKey?.length
       });
 
-      // Convert to Buffer if not already
-      const credentialIDBuffer = Buffer.isBuffer(credentialID) 
-        ? credentialID 
-        : Buffer.from(credentialID);
+      // Convert credentialID to Buffer if needed
+      // If it came from response.id, it's already base64url, so we need to decode it first
+      let credentialIDBuffer;
+      if (Buffer.isBuffer(credentialID)) {
+        credentialIDBuffer = credentialID;
+      } else if (typeof credentialID === 'string') {
+        // If it's a string, it might be base64url (from response.id) or need to be converted
+        // Try to decode as base64url first, if that fails, treat as raw string
+        try {
+          credentialIDBuffer = Buffer.from(credentialID, 'base64url');
+        } catch (e) {
+          // If base64url decode fails, try as UTF-8
+          credentialIDBuffer = Buffer.from(credentialID, 'utf8');
+        }
+      } else {
+        credentialIDBuffer = Buffer.from(credentialID);
+      }
+
+      // Convert credentialPublicKey to Buffer if needed
       const credentialPublicKeyBuffer = Buffer.isBuffer(credentialPublicKey)
         ? credentialPublicKey
         : Buffer.from(credentialPublicKey);
