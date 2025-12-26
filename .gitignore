@@ -7,7 +7,10 @@ node_modules/
 .env.production
 
 # Data files (user-generated content)
-data/
+# Exclude most data files, but allow capabilities.json and work.json to be tracked
+data/*
+!data/capabilities.json
+!data/work.json
 
 # OS files
 .DS_Store
