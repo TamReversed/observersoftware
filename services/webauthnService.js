@@ -97,9 +97,9 @@ async function generateRegistrationOptionsForUser(userId, username, existingCred
         // Don't restrict to cross-platform only - allow both platform and roaming authenticators
         // This is important for password managers like Dashlane
         authenticatorAttachment: undefined, // Allow both platform and cross-platform
-        // Use 'preferred' to allow authenticators to choose, but don't require it
-        // Some authenticators (like FIDO keys) may still require user verification
-        userVerification: 'preferred',
+        // Use 'discouraged' for password managers - they provide their own security
+        // This avoids requiring additional verification steps (PIN, fingerprint, etc.)
+        userVerification: 'discouraged',
         // requireResidentKey: true allows passkeys to be stored on the authenticator
         // This is required for password managers to save the passkey
         requireResidentKey: true
