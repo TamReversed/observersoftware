@@ -411,15 +411,20 @@ async function generateAuthenticationOptionsForUser(userId, credentials = [], or
         }
         // base64url encoding requires a string, and Buffer.from will call .replace() internally
         // So we must ensure it's actually a string primitive, not a String object
+        // Double-check it's a string and not a String object
+        const cleanString = typeof idString === 'string' ? idString : String(idString);
+        if (typeof cleanString !== 'string') {
+          throw new Error(`Credential ID could not be converted to string. Type: ${typeof cleanString}`);
+        }
         try {
-          credentialID = Buffer.from(String(idString), 'base64url');
+          credentialID = Buffer.from(cleanString, 'base64url');
         } catch (e) {
           console.warn(`Failed to parse credential ID as base64url, trying base64:`, e.message);
           try {
-            credentialID = Buffer.from(String(idString), 'base64');
+            credentialID = Buffer.from(cleanString, 'base64');
           } catch (e2) {
             console.warn(`Failed to parse credential ID as base64, trying utf8:`, e2.message);
-            credentialID = Buffer.from(String(idString), 'utf8');
+            credentialID = Buffer.from(cleanString, 'utf8');
           }
         }
       } else {
