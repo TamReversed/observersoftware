@@ -94,9 +94,13 @@ async function generateRegistrationOptionsForUser(userId, username, existingCred
       attestationType: 'none',
       excludeCredentials,
       authenticatorSelection: {
-        authenticatorAttachment: 'cross-platform',
+        // Don't restrict to cross-platform only - allow both platform and roaming authenticators
+        // This is important for password managers like Dashlane
+        authenticatorAttachment: undefined, // Allow both platform and cross-platform
         userVerification: 'preferred',
-        requireResidentKey: false
+        // requireResidentKey: true allows passkeys to be stored on the authenticator
+        // This is required for password managers to save the passkey
+        requireResidentKey: true
       },
       supportedAlgorithmIDs: [-7, -257] // ES256 and RS256
     });
