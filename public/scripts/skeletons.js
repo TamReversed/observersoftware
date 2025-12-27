@@ -1,10 +1,41 @@
 // Loading Skeletons
 // Utility functions to create skeleton placeholders
 
+// Helper to check if we're in development mode
+const isDevelopment = () => {
+    if (typeof window === 'undefined') return false;
+    const hostname = window.location.hostname;
+    return hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.');
+};
+
+// Helper for debug logging (only in development)
+const debugLog = (location, message, data) => {
+    if (!isDevelopment()) return;
+    try {
+        fetch('http://127.0.0.1:7242/ingest/29c99047-e168-4827-8051-3605d09418af', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                location,
+                message,
+                data,
+                timestamp: Date.now(),
+                sessionId: 'debug-session',
+                runId: 'run1',
+                hypothesisId: 'A'
+            })
+        }).catch(() => {});
+    } catch (e) {
+        // Silently fail in production
+    }
+};
+
 // #region agent log
 (function() {
-    console.log('[DEBUG] skeletons.js file loaded', new Date().getTime());
-    console.trace('[DEBUG] skeletons.js call stack');
+    if (isDevelopment()) {
+        console.log('[DEBUG] skeletons.js file loaded', new Date().getTime());
+        console.trace('[DEBUG] skeletons.js call stack');
+    }
 })();
 // #endregion
 
@@ -81,8 +112,13 @@ function removeSkeletons(container) {
 
 // Export functions
 // #region agent log
-console.log('[DEBUG] skeletons.js creating SkeletonUtils', {readyState: document.readyState});
-fetch('http://127.0.0.1:7242/ingest/29c99047-e168-4827-8051-3605d09418af',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'skeletons.js:80',message:'Creating SkeletonUtils',data:{hasWindow:typeof window!=='undefined',readyState:document.readyState},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+if (isDevelopment()) {
+    console.log('[DEBUG] skeletons.js creating SkeletonUtils', {readyState: document.readyState});
+    debugLog('skeletons.js:80', 'Creating SkeletonUtils', {
+        hasWindow: typeof window !== 'undefined',
+        readyState: document.readyState
+    });
+}
 // #endregion
 window.SkeletonUtils = {
     createBlogPostSkeleton,
@@ -92,7 +128,12 @@ window.SkeletonUtils = {
     removeSkeletons
 };
 // #region agent log
-console.log('[DEBUG] SkeletonUtils assigned', {hasSkeletonUtils: typeof window.SkeletonUtils !== 'undefined', hasCreateGrid: typeof window.SkeletonUtils?.createSkeletonGrid === 'function'});
-fetch('http://127.0.0.1:7242/ingest/29c99047-e168-4827-8051-3605d09418af',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'skeletons.js:87',message:'SkeletonUtils assigned',data:{hasSkeletonUtils:typeof window.SkeletonUtils!=='undefined',hasCreateGrid:typeof window.SkeletonUtils?.createSkeletonGrid==='function'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+if (isDevelopment()) {
+    console.log('[DEBUG] SkeletonUtils assigned', {hasSkeletonUtils: typeof window.SkeletonUtils !== 'undefined', hasCreateGrid: typeof window.SkeletonUtils?.createSkeletonGrid === 'function'});
+    debugLog('skeletons.js:87', 'SkeletonUtils assigned', {
+        hasSkeletonUtils: typeof window.SkeletonUtils !== 'undefined',
+        hasCreateGrid: typeof window.SkeletonUtils?.createSkeletonGrid === 'function'
+    });
+}
 // #endregion
 

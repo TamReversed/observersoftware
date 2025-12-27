@@ -1,8 +1,40 @@
 // Blog page functionality
+
+// Helper to check if we're in development mode
+const isDevelopment = () => {
+    if (typeof window === 'undefined') return false;
+    const hostname = window.location.hostname;
+    return hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.');
+};
+
+// Helper for debug logging (only in development)
+const debugLog = (location, message, data) => {
+    if (!isDevelopment()) return;
+    try {
+        fetch('http://127.0.0.1:7242/ingest/29c99047-e168-4827-8051-3605d09418af', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                location,
+                message,
+                data,
+                timestamp: Date.now(),
+                sessionId: 'debug-session',
+                runId: 'run1',
+                hypothesisId: 'A'
+            })
+        }).catch(() => {});
+    } catch (e) {
+        // Silently fail in production
+    }
+};
+
 // #region agent log
 (function() {
-    console.log('[DEBUG] blog.js file loaded', new Date().getTime());
-    console.trace('[DEBUG] blog.js call stack');
+    if (isDevelopment()) {
+        console.log('[DEBUG] blog.js file loaded', new Date().getTime());
+        console.trace('[DEBUG] blog.js call stack');
+    }
 })();
 // #endregion
 
@@ -82,28 +114,44 @@ function showInitialLoading() {
     // Show skeletons immediately - don't wait
     if (window.SkeletonUtils) {
         // #region agent log
-        console.log('[DEBUG] SkeletonUtils available - creating grid');
-        fetch('http://127.0.0.1:7242/ingest/29c99047-e168-4827-8051-3605d09418af',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'blog.js:46',message:'SkeletonUtils available - creating grid',data:{hasCreateGrid:typeof window.SkeletonUtils.createSkeletonGrid==='function'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        if (isDevelopment()) {
+            console.log('[DEBUG] SkeletonUtils available - creating grid');
+            debugLog('blog.js:46', 'SkeletonUtils available - creating grid', {
+                hasCreateGrid: typeof window.SkeletonUtils.createSkeletonGrid === 'function'
+            });
+        }
         // #endregion
         try {
             const skeletonHTML = window.SkeletonUtils.createSkeletonGrid('blog', 6);
             postsGrid.innerHTML = skeletonHTML;
             // #region agent log
-            console.log('[DEBUG] Skeleton grid created and inserted', {htmlLength: skeletonHTML.length, hasSkeletonGrid: postsGrid.querySelector('.skeleton-grid') !== null});
-            fetch('http://127.0.0.1:7242/ingest/29c99047-e168-4827-8051-3605d09418af',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'blog.js:50',message:'Skeleton grid created and inserted',data:{htmlLength:skeletonHTML.length,hasSkeletonGrid:postsGrid.querySelector('.skeleton-grid')!==null},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+            if (isDevelopment()) {
+                console.log('[DEBUG] Skeleton grid created and inserted', {htmlLength: skeletonHTML.length, hasSkeletonGrid: postsGrid.querySelector('.skeleton-grid') !== null});
+                debugLog('blog.js:50', 'Skeleton grid created and inserted', {
+                    htmlLength: skeletonHTML.length,
+                    hasSkeletonGrid: postsGrid.querySelector('.skeleton-grid') !== null
+                });
+            }
             // #endregion
         } catch (e) {
             // #region agent log
-            console.error('[DEBUG] Error creating skeleton grid', e);
-            fetch('http://127.0.0.1:7242/ingest/29c99047-e168-4827-8051-3605d09418af',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'blog.js:53',message:'Error creating skeleton grid',data:{error:e.message,stack:e.stack},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+            if (isDevelopment()) {
+                console.error('[DEBUG] Error creating skeleton grid', e);
+                debugLog('blog.js:53', 'Error creating skeleton grid', {
+                    error: e.message,
+                    stack: e.stack
+                });
+            }
             // #endregion
             console.error('Error creating skeleton grid:', e);
             postsGrid.innerHTML = '<div class="blog-loading" style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--color-text-tertiary);">Loading posts...</div>';
         }
     } else {
         // #region agent log
-        console.log('[DEBUG] SkeletonUtils NOT available - using fallback');
-        fetch('http://127.0.0.1:7242/ingest/29c99047-e168-4827-8051-3605d09418af',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'blog.js:58',message:'SkeletonUtils NOT available',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        if (isDevelopment()) {
+            console.log('[DEBUG] SkeletonUtils NOT available - using fallback');
+            debugLog('blog.js:58', 'SkeletonUtils NOT available', {});
+        }
         // #endregion
         // Fallback - show simple loading text
         postsGrid.innerHTML = '<div class="blog-loading" style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--color-text-tertiary);">Loading posts...</div>';
@@ -563,14 +611,22 @@ async function initialize() {
 
 if (document.readyState === 'loading') {
     // #region agent log
-    console.log('[DEBUG] Waiting for DOMContentLoaded', {hasSkeletonUtils: typeof window.SkeletonUtils !== 'undefined'});
-    fetch('http://127.0.0.1:7242/ingest/29c99047-e168-4827-8051-3605d09418af',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'blog.js:277',message:'Waiting for DOMContentLoaded',data:{hasSkeletonUtils:typeof window.SkeletonUtils!=='undefined'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    if (isDevelopment()) {
+        console.log('[DEBUG] Waiting for DOMContentLoaded', {hasSkeletonUtils: typeof window.SkeletonUtils !== 'undefined'});
+        debugLog('blog.js:277', 'Waiting for DOMContentLoaded', {
+            hasSkeletonUtils: typeof window.SkeletonUtils !== 'undefined'
+        });
+    }
     // #endregion
     document.addEventListener('DOMContentLoaded', initialize);
 } else {
     // #region agent log
-    console.log('[DEBUG] DOM already ready - calling initialize immediately', {hasSkeletonUtils: typeof window.SkeletonUtils !== 'undefined'});
-    fetch('http://127.0.0.1:7242/ingest/29c99047-e168-4827-8051-3605d09418af',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'blog.js:280',message:'DOM already ready - calling initialize immediately',data:{hasSkeletonUtils:typeof window.SkeletonUtils!=='undefined'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    if (isDevelopment()) {
+        console.log('[DEBUG] DOM already ready - calling initialize immediately', {hasSkeletonUtils: typeof window.SkeletonUtils !== 'undefined'});
+        debugLog('blog.js:280', 'DOM already ready - calling initialize immediately', {
+            hasSkeletonUtils: typeof window.SkeletonUtils !== 'undefined'
+        });
+    }
     // #endregion
     initialize();
 }
