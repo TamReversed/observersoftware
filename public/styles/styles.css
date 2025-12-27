@@ -1376,6 +1376,8 @@ section {
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: var(--radius-md);
     transition: all 0.4s var(--ease-out);
+    cursor: pointer;
+    font: inherit;
 }
 
 .footer__email:hover {
