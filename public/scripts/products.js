@@ -240,20 +240,28 @@
             item.style.flexShrink = '0';
 
             const img = document.createElement('img');
-            // Ensure src is a full path (prepend / if it's a relative path)
-            img.src = screenshot.startsWith('/') ? screenshot : `/${screenshot}`;
+            // Normalize src path
+            let imageSrc = screenshot;
+            if (!imageSrc.startsWith('http://') && !imageSrc.startsWith('https://') && !imageSrc.startsWith('/')) {
+                imageSrc = '/' + imageSrc;
+            }
+            img.src = imageSrc;
             img.alt = `Screenshot ${index + 1}`;
             img.className = 'product-modal__screenshot';
             img.loading = 'lazy';
             
             // Handle image load errors
             img.onerror = function() {
-                console.error('Failed to load screenshot:', screenshot);
-                this.style.display = 'none';
+                console.error('Failed to load screenshot:', screenshot, 'Attempted URL:', this.src);
+                // Show error overlay
                 const errorMsg = document.createElement('div');
                 errorMsg.className = 'screenshot-error';
-                errorMsg.textContent = 'Image failed to load';
-                errorMsg.style.cssText = 'padding: 2rem; text-align: center; color: var(--color-text-secondary);';
+                errorMsg.textContent = `Image failed to load`;
+                errorMsg.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 1rem; text-align: center; color: var(--color-text-secondary); background: rgba(0,0,0,0.7); border-radius: 4px; font-size: 0.875rem; z-index: 10; white-space: nowrap;';
+                this.parentElement.style.position = 'relative';
+                // Remove any existing error message
+                const existingError = this.parentElement.querySelector('.screenshot-error');
+                if (existingError) existingError.remove();
                 this.parentElement.appendChild(errorMsg);
             };
 

@@ -766,7 +766,20 @@ function addScreenshot() {
   const input = document.getElementById('capabilityScreenshotInput');
   if (!input) return;
   
-  const url = input.value.trim();
+  let url = input.value.trim();
+  if (!url) return;
+  
+  // Normalize URL: ensure it starts with / for relative paths
+  // If it's already a full URL (http/https), keep it as is
+  if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('/')) {
+    url = '/' + url;
+  }
+  
+  // If it looks like just a filename, assume it's in /assets/products/
+  if (url.includes('.') && !url.includes('/')) {
+    url = `/assets/products/${url}`;
+  }
+  
   if (url && !capabilityScreenshots.includes(url)) {
     capabilityScreenshots.push(url);
     renderCapabilityScreenshots();
