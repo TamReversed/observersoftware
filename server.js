@@ -73,6 +73,16 @@ const loginLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Rate limiting for contact form (prevent spam)
+const contactFormLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 3, // 3 messages per 15 minutes
+  message: { error: 'Too many messages sent. Please wait a few minutes before sending another message.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: false, // Count all requests, even successful ones
+});
+
 // General API rate limiting (more lenient for public endpoints)
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -84,6 +94,7 @@ const apiLimiter = rateLimit({
 
 // Apply rate limiting
 app.use('/api/auth/login', loginLimiter);
+app.use('/api/messages', contactFormLimiter); // Stricter rate limit for contact form
 app.use('/api', apiLimiter);
 
 // CSRF protection - generate token for all requests

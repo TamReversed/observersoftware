@@ -29,9 +29,10 @@ class PageTransitions {
         return; // Skip anchors and special links
       }
 
-      // Skip page transitions for blog pages - let them do full page loads
+      // Skip page transitions for blog and contact pages - let them do full page loads
       // This prevents issues with scripts not loading properly
-      if (href.includes('/blog') || href.includes('blog.html')) {
+      if (href.includes('/blog') || href.includes('blog.html') || 
+          href.includes('/contact') || href.includes('contact.html')) {
         return; // Let browser handle normally
       }
 
