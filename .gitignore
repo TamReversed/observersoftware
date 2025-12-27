@@ -11,6 +11,10 @@ node_modules/
 data/*
 !data/capabilities.json
 !data/work.json
+# Exclude user-generated data files
+data/messages.json
+data/posts.json
+data/users.json
 
 # OS files
 .DS_Store

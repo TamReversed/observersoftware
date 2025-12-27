@@ -29,12 +29,18 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "blob:"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://opnform.com", "blob:"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       imgSrc: ["'self'", "data:", "https:"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      connectSrc: ["'self'"],
-      frameSrc: ["'none'"],
+      connectSrc: [
+        "'self'", 
+        "https://fonts.googleapis.com", 
+        "https://cdn.jsdelivr.net", 
+        "https://opnform.com",
+        ...(config.isProduction ? [] : ["http://127.0.0.1:7242", "http://localhost:7242"])
+      ],
+      frameSrc: ["'self'", "https://opnform.com"],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: config.isProduction ? [] : null
     }
@@ -118,6 +124,10 @@ app.get('/admin/login', (req, res) => {
 
 app.get('/coming-soon', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'coming-soon.html'));
+});
+
+app.get('/contact', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'contact.html'));
 });
 
 // Error handler

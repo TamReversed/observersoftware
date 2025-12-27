@@ -1,158 +1,170 @@
-// Galaxy starfield background (from coming-soon page)
+// Galaxy starfield background (exact copy from coming-soon page)
 (function() {
-  const canvas = document.getElementById('galaxy');
-  const ctx = canvas.getContext('2d');
-  
-  let width, height;
-  const stars = [];
-  const shootingStars = [];
-  const numStars = 400;
-  
-  function resize() {
-    width = canvas.width = window.innerWidth;
-    height = canvas.height = window.innerHeight;
-  }
-  
-  resize();
-  window.addEventListener('resize', resize);
-  
-  // Create stars
-  for (let i = 0; i < numStars; i++) {
-    stars.push({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      size: Math.random() * 2 + 0.5,
-      twinkleSpeed: Math.random() * 0.02 + 0.005,
-      twinklePhase: Math.random() * Math.PI * 2,
-      color: ['#ffffff', '#cce5ff', '#aaccff', '#fff4e6'][Math.floor(Math.random() * 4)]
-    });
-  }
-  
-  // Shooting star class
-  class ShootingStar {
-    constructor() {
-      this.reset();
+  function initGalaxy() {
+    const canvas = document.getElementById('galaxy');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    let width, height;
+    const stars = [];
+    const shootingStars = [];
+    const numStars = 400;
+    
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
     }
     
-    reset() {
-      this.x = Math.random() * width * 1.5;
-      this.y = Math.random() * height * 0.5;
-      this.length = Math.random() * 80 + 40;
-      this.speed = Math.random() * 15 + 10;
-      this.angle = Math.PI / 4 + (Math.random() - 0.5) * 0.3;
-      this.opacity = 1;
-      this.active = true;
+    resize();
+    window.addEventListener('resize', resize);
+    
+    // Create stars
+    for (let i = 0; i < numStars; i++) {
+      stars.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        size: Math.random() * 2 + 0.5,
+        twinkleSpeed: Math.random() * 0.02 + 0.005,
+        twinklePhase: Math.random() * Math.PI * 2,
+        color: ['#ffffff', '#cce5ff', '#aaccff', '#fff4e6'][Math.floor(Math.random() * 4)]
+      });
     }
     
-    update() {
-      this.x += Math.cos(this.angle) * this.speed;
-      this.y += Math.sin(this.angle) * this.speed;
-      this.opacity -= 0.015;
-      
-      if (this.opacity <= 0 || this.x > width + 100 || this.y > height + 100) {
-        this.active = false;
-      }
-    }
-    
-    draw() {
-      if (!this.active) return;
-      
-      const tailX = this.x - Math.cos(this.angle) * this.length;
-      const tailY = this.y - Math.sin(this.angle) * this.length;
-      
-      const gradient = ctx.createLinearGradient(tailX, tailY, this.x, this.y);
-      gradient.addColorStop(0, 'transparent');
-      gradient.addColorStop(1, `rgba(255, 255, 255, ${this.opacity})`);
-      
-      ctx.beginPath();
-      ctx.moveTo(tailX, tailY);
-      ctx.lineTo(this.x, this.y);
-      ctx.strokeStyle = gradient;
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      
-      // Head glow
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
-      ctx.fill();
-    }
-  }
-  
-  // Spawn shooting stars occasionally
-  setInterval(() => {
-    if (Math.random() < 0.3) {
-      const star = shootingStars.find(s => !s.active);
-      if (star) {
-        star.reset();
-      } else if (shootingStars.length < 5) {
-        shootingStars.push(new ShootingStar());
-      }
-    }
-  }, 2000);
-  
-  let time = 0;
-  
-  function animate() {
-    ctx.clearRect(0, 0, width, height);
-    time += 0.016;
-    
-    // Draw stars with twinkling
-    stars.forEach(star => {
-      const twinkle = Math.sin(time * star.twinkleSpeed * 60 + star.twinklePhase) * 0.5 + 0.5;
-      const alpha = 0.3 + twinkle * 0.7;
-      
-      ctx.beginPath();
-      ctx.arc(star.x, star.y, star.size * (0.8 + twinkle * 0.4), 0, Math.PI * 2);
-      
-      // Parse hex color
-      if (star.color.startsWith('#')) {
-        const hex = star.color.slice(1);
-        const r = parseInt(hex.slice(0, 2), 16);
-        const g = parseInt(hex.slice(2, 4), 16);
-        const b = parseInt(hex.slice(4, 6), 16);
-        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    // Shooting star class
+    class ShootingStar {
+      constructor() {
+        this.reset();
       }
       
-      ctx.fill();
+      reset() {
+        this.x = Math.random() * width * 1.5;
+        this.y = Math.random() * height * 0.5;
+        this.length = Math.random() * 80 + 40;
+        this.speed = Math.random() * 15 + 10;
+        this.angle = Math.PI / 4 + (Math.random() - 0.5) * 0.3;
+        this.opacity = 1;
+        this.active = true;
+      }
       
-      // Glow for larger stars
-      if (star.size > 1.5) {
+      update() {
+        this.x += Math.cos(this.angle) * this.speed;
+        this.y += Math.sin(this.angle) * this.speed;
+        this.opacity -= 0.015;
+        
+        if (this.opacity <= 0 || this.x > width + 100 || this.y > height + 100) {
+          this.active = false;
+        }
+      }
+      
+      draw() {
+        if (!this.active) return;
+        
+        const tailX = this.x - Math.cos(this.angle) * this.length;
+        const tailY = this.y - Math.sin(this.angle) * this.length;
+        
+        const gradient = ctx.createLinearGradient(tailX, tailY, this.x, this.y);
+        gradient.addColorStop(0, 'transparent');
+        gradient.addColorStop(1, `rgba(255, 255, 255, ${this.opacity})`);
+        
         ctx.beginPath();
-        ctx.arc(star.x, star.y, star.size * 3, 0, Math.PI * 2);
-        const glowAlpha = alpha * 0.15;
+        ctx.moveTo(tailX, tailY);
+        ctx.lineTo(this.x, this.y);
+        ctx.strokeStyle = gradient;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        // Head glow
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+        ctx.fill();
+      }
+    }
+    
+    // Spawn shooting stars occasionally
+    setInterval(() => {
+      if (Math.random() < 0.3) {
+        const star = shootingStars.find(s => !s.active);
+        if (star) {
+          star.reset();
+        } else if (shootingStars.length < 5) {
+          shootingStars.push(new ShootingStar());
+        }
+      }
+    }, 2000);
+    
+    let time = 0;
+    
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+      time += 0.016;
+      
+      // Draw stars with twinkling
+      stars.forEach(star => {
+        const twinkle = Math.sin(time * star.twinkleSpeed * 60 + star.twinklePhase) * 0.5 + 0.5;
+        const alpha = 0.3 + twinkle * 0.7;
+        
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.size * (0.8 + twinkle * 0.4), 0, Math.PI * 2);
+        
+        // Parse hex color
         if (star.color.startsWith('#')) {
           const hex = star.color.slice(1);
           const r = parseInt(hex.slice(0, 2), 16);
           const g = parseInt(hex.slice(2, 4), 16);
           const b = parseInt(hex.slice(4, 6), 16);
-          ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${glowAlpha})`;
+          ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
         }
+        
         ctx.fill();
-      }
-    });
+        
+        // Glow for larger stars
+        if (star.size > 1.5) {
+          ctx.beginPath();
+          ctx.arc(star.x, star.y, star.size * 3, 0, Math.PI * 2);
+          const glowAlpha = alpha * 0.15;
+          if (star.color.startsWith('#')) {
+            const hex = star.color.slice(1);
+            const r = parseInt(hex.slice(0, 2), 16);
+            const g = parseInt(hex.slice(2, 4), 16);
+            const b = parseInt(hex.slice(4, 6), 16);
+            ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${glowAlpha})`;
+          }
+          ctx.fill();
+        }
+      });
+      
+      // Update and draw shooting stars
+      shootingStars.forEach(star => {
+        star.update();
+        star.draw();
+      });
+      
+      requestAnimationFrame(animate);
+    }
     
-    // Update and draw shooting stars
-    shootingStars.forEach(star => {
-      star.update();
-      star.draw();
-    });
+    animate();
     
-    requestAnimationFrame(animate);
+    // Parallax on orbs
+    document.addEventListener('mousemove', (e) => {
+      const x = (e.clientX / width - 0.5) * 2;
+      const y = (e.clientY / height - 0.5) * 2;
+      
+      document.querySelectorAll('.orb').forEach((orb, i) => {
+        const speed = (i + 1) * 15;
+        orb.style.transform = `translate(${x * speed}px, ${y * speed}px)`;
+      });
+    });
   }
   
-  animate();
-  
-  // Parallax on orbs
-  document.addEventListener('mousemove', (e) => {
-    const x = (e.clientX / width - 0.5) * 2;
-    const y = (e.clientY / height - 0.5) * 2;
-    
-    document.querySelectorAll('.orb').forEach((orb, i) => {
-      const speed = (i + 1) * 15;
-      orb.style.transform = `translate(${x * speed}px, ${y * speed}px)`;
-    });
-  });
+  // Initialize
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initGalaxy);
+  } else {
+    initGalaxy();
+  }
 })();
 
 // Custom logo eye tracking - follows cursor anywhere on page
@@ -283,37 +295,48 @@ const { startAuthentication, startRegistration } = SimpleWebAuthnBrowser;
     let canvasWidth = window.innerWidth;
     let canvasHeight = window.innerHeight;
     
-    function resizeCanvas() {
-      canvasWidth = constellationCanvas.width = window.innerWidth;
-      canvasHeight = constellationCanvas.height = window.innerHeight;
-      drawConstellation();
-    }
-    
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-    
     // Pleiades star positions (relative to initial position)
-    // Pattern: 7 stars in a recognizable cluster
+    // Pattern: 7 stars in a recognizable cluster - made MUCH larger and brighter
     const pleiadesStars = [
-      { x: 0, y: 0, size: 3 },      // Center star
-      { x: -15, y: -10, size: 2.5 }, // Top-left
-      { x: 15, y: -8, size: 2.5 },   // Top-right
-      { x: -20, y: 8, size: 2 },     // Bottom-left
-      { x: 20, y: 10, size: 2 },      // Bottom-right
-      { x: -8, y: 15, size: 2 },     // Lower-left
-      { x: 12, y: 18, size: 2 }      // Lower-right
+      { x: 0, y: 0, size: 8 },      // Center star (much larger)
+      { x: -25, y: -18, size: 7 },  // Top-left
+      { x: 25, y: -15, size: 7 },   // Top-right
+      { x: -30, y: 15, size: 6 },   // Bottom-left
+      { x: 30, y: 18, size: 6 },    // Bottom-right
+      { x: -12, y: 25, size: 6 },   // Lower-left
+      { x: 18, y: 30, size: 6 }    // Lower-right
     ];
     
-    // Initial position (upper-right area)
-    let constellationX = canvasWidth * 0.8;
-    let constellationY = canvasHeight * 0.2;
+    // Initial position (upper-right area) - must be declared before functions
+    let constellationX = canvasWidth * 0.75;
+    let constellationY = canvasHeight * 0.25;
     
-    // Drag state
+    // Drag state - must be declared before functions
     let isDragging = false;
     let dragOffsetX = 0;
     let dragOffsetY = 0;
     let isOverLogo = false;
     let time = 0;
+    
+    function resizeCanvas() {
+      canvasWidth = constellationCanvas.width = window.innerWidth;
+      canvasHeight = constellationCanvas.height = window.innerHeight;
+      // Update constellation position on resize
+      constellationX = canvasWidth * 0.75;
+      constellationY = canvasHeight * 0.25;
+      // Ensure canvas is visible
+      constellationCanvas.style.display = 'block';
+      drawConstellation();
+    }
+    
+    // Initialize canvas immediately
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    
+    // Force initial draw
+    setTimeout(() => {
+      drawConstellation();
+    }, 100);
     
     // Logo bounds for collision detection (in canvas coordinates)
     function getLogoBounds() {
@@ -366,43 +389,80 @@ const { startAuthentication, startRegistration } = SimpleWebAuthnBrowser;
         }
       }
       
-      // Draw stars with twinkling
+      // Draw stars with twinkling - made MUCH more visible and brighter
       pleiadesStars.forEach((star, index) => {
-        const twinkle = Math.sin(time * 2 + index) * 0.3 + 0.7;
-        const alpha = isOverLogo ? 0.9 + twinkle * 0.1 : 0.6 + twinkle * 0.4;
-        const size = star.size * (isOverLogo ? 1.3 : 1);
+        const twinkle = Math.sin(time * 2 + index) * 0.2 + 0.8;
+        const alpha = 1.0; // Always fully opaque
+        const size = star.size * (isOverLogo ? 1.3 : 1.0); // Larger base size
         
-        // Star glow
-        const gradient = ctx.createRadialGradient(
+        // Large outer glow - very bright
+        const outerGradient = ctx.createRadialGradient(
           constellationX + star.x, 
           constellationY + star.y, 
           0,
           constellationX + star.x, 
           constellationY + star.y, 
-          size * 4
+          size * 12
         );
-        gradient.addColorStop(0, `rgba(255, 255, 255, ${alpha})`);
-        gradient.addColorStop(0.5, `rgba(200, 220, 255, ${alpha * 0.5})`);
-        gradient.addColorStop(1, 'rgba(124, 155, 221, 0)');
+        outerGradient.addColorStop(0, `rgba(255, 255, 255, ${alpha * 0.6})`);
+        outerGradient.addColorStop(0.4, `rgba(200, 220, 255, ${alpha * 0.4})`);
+        outerGradient.addColorStop(0.7, `rgba(150, 180, 255, ${alpha * 0.2})`);
+        outerGradient.addColorStop(1, 'rgba(124, 155, 221, 0)');
         
-        ctx.fillStyle = gradient;
+        ctx.fillStyle = outerGradient;
         ctx.beginPath();
         ctx.arc(
           constellationX + star.x, 
           constellationY + star.y, 
-          size * 4, 
+          size * 12, 
           0, 
           Math.PI * 2
         );
         ctx.fill();
         
-        // Star core
-        ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+        // Medium glow
+        const mediumGradient = ctx.createRadialGradient(
+          constellationX + star.x, 
+          constellationY + star.y, 
+          0,
+          constellationX + star.x, 
+          constellationY + star.y, 
+          size * 6
+        );
+        mediumGradient.addColorStop(0, `rgba(255, 255, 255, ${alpha * 0.8})`);
+        mediumGradient.addColorStop(0.5, `rgba(200, 220, 255, ${alpha * 0.5})`);
+        mediumGradient.addColorStop(1, 'rgba(150, 180, 255, 0)');
+        
+        ctx.fillStyle = mediumGradient;
         ctx.beginPath();
         ctx.arc(
           constellationX + star.x, 
           constellationY + star.y, 
-          size, 
+          size * 6, 
+          0, 
+          Math.PI * 2
+        );
+        ctx.fill();
+        
+        // Star core - very bright
+        ctx.fillStyle = `rgba(255, 255, 255, 1)`;
+        ctx.beginPath();
+        ctx.arc(
+          constellationX + star.x, 
+          constellationY + star.y, 
+          size * 1.5, 
+          0, 
+          Math.PI * 2
+        );
+        ctx.fill();
+        
+        // Bright center point
+        ctx.fillStyle = `rgba(255, 255, 255, 1)`;
+        ctx.beginPath();
+        ctx.arc(
+          constellationX + star.x, 
+          constellationY + star.y, 
+          size * 0.8, 
           0, 
           Math.PI * 2
         );
@@ -763,4 +823,3 @@ webauthnUsername.addEventListener('input', (e) => {
 passwordUsername.addEventListener('input', (e) => {
   webauthnUsername.value = e.target.value;
 });
-  </script>

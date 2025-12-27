@@ -242,6 +242,23 @@ body {
   background: var(--color-success);
 }
 
+.item-status.read::before {
+  background: var(--color-text-muted);
+}
+
+.item-status.unread::before {
+  background: var(--color-accent);
+}
+
+.list-item.unread {
+  border-left: 2px solid var(--color-accent);
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.list-item.unread:hover {
+  background: rgba(59, 130, 246, 0.1);
+}
+
 .empty-state {
   padding: 3rem 1.5rem;
   text-align: center;
@@ -329,6 +346,25 @@ body {
 
 .form-textarea.small {
   min-height: 80px;
+}
+
+.form-readonly {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  font-family: var(--font-sans);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  color: var(--color-text);
+  min-height: 2.75rem;
+  line-height: 1.6;
+}
+
+.form-readonly.form-textarea {
+  min-height: 200px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .form-row {

@@ -56,6 +56,18 @@ CREATE TABLE IF NOT EXISTS posts (
   published BOOLEAN DEFAULT false
 );
 
+-- Messages (Contact form submissions) table
+CREATE TABLE IF NOT EXISTS messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL,
+  subject VARCHAR(500),
+  message TEXT NOT NULL,
+  read BOOLEAN DEFAULT false,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Indexes for better query performance
 CREATE INDEX IF NOT EXISTS idx_capabilities_published ON capabilities(published);
 CREATE INDEX IF NOT EXISTS idx_capabilities_order ON capabilities("order");
@@ -65,6 +77,8 @@ CREATE INDEX IF NOT EXISTS idx_posts_published ON posts(published);
 CREATE INDEX IF NOT EXISTS idx_posts_slug ON posts(slug);
 CREATE INDEX IF NOT EXISTS idx_posts_published_at ON posts(published_at);
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+CREATE INDEX IF NOT EXISTS idx_messages_read ON messages(read);
+CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at);
 
 -- Function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -86,5 +100,9 @@ CREATE TRIGGER update_work_updated_at BEFORE UPDATE ON work
 
 DROP TRIGGER IF EXISTS update_posts_updated_at ON posts;
 CREATE TRIGGER update_posts_updated_at BEFORE UPDATE ON posts
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_messages_updated_at ON messages;
+CREATE TRIGGER update_messages_updated_at BEFORE UPDATE ON messages
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 

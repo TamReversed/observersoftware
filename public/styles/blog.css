@@ -6,11 +6,6 @@
     background: rgba(14, 16, 23, 0.85); /* Semi-transparent to show stars */
 }
 
-@media (prefers-color-scheme: light) {
-    .blog-hero {
-        background: rgba(255, 255, 255, 0.85);
-    }
-}
 
 .blog-hero::before {
     content: '';
@@ -96,10 +91,14 @@
     left: 1rem;
     top: 50%;
     transform: translateY(-50%);
-    width: 18px;
-    height: 18px;
+    width: 18px !important;
+    height: 18px !important;
+    max-width: 18px !important;
+    max-height: 18px !important;
     color: var(--color-text-tertiary);
     pointer-events: none;
+    display: block;
+    flex-shrink: 0;
 }
 
 .blog-categories {

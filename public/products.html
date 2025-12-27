@@ -11,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./styles/styles.css">
     <link rel="stylesheet" href="./styles/blog.css">
+    <link rel="stylesheet" href="./styles/skeletons.css">
     <script async src="https://cdn.jsdelivr.net/npm/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
     <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js"}}</script>
     <script type="module">
@@ -19,8 +20,6 @@
         window.dispatchEvent(new CustomEvent('threejs-loaded'));
     </script>
     <script src="https://cdn.jsdelivr.net/npm/lottie-web@5.12.2/build/player/lottie.min.js"></script>
-    <!-- Opnform Popup Widget -->
-    <script async data-nf='{"formurl":"https://opnform.com/forms/reach-out-to-me-hva5m4","emoji":"💬","position":"right","bgcolor":"#214e8c","width":"500"}' src='https://opnform.com/widgets/embed-min.js'></script>
 </head>
 <body>
     <div id="mesh-background" aria-hidden="true"></div>
@@ -116,7 +115,7 @@
                     <li><a href="/#capabilities" class="nav__link">Products</a></li>
                     <li><a href="./blog.html" class="nav__link">Blog</a></li>
                     <li><a href="/#about" class="nav__link">About</a></li>
-                    <li><a href="/#contact" class="nav__link">Contact</a></li>
+                    <li><a href="./contact.html" class="nav__link">Contact</a></li>
                 </ul>
             </div>
         </div>
@@ -156,7 +155,7 @@
                 <div class="footer__cta-group reveal">
                     <h2 class="footer__cta-title">A clearer way through the work</h2>
                     <p class="footer__cta-subtitle">Send a short note with the workflow, the constraints, and where people get stuck. Observer will respond with a simple next step.</p>
-                    <button type="button" class="footer__email" id="contactBtn" onclick="window.opnform?.open()">Contact Us</button>
+                    <a href="./contact.html" class="footer__email" id="contactBtn">Contact Us</a>
                 </div>
                 <nav class="footer__nav reveal" aria-label="Footer">
                     <div class="footer__nav-group">
@@ -240,6 +239,8 @@
         </div>
     </div>
 
+    <script src="./scripts/skeletons.js" defer></script>
+    <script src="./scripts/magnetic-buttons.js" defer></script>
     <script src="./scripts/main.js" defer></script>
     <script src="./scripts/mesh-background.js" defer></script>
     <script src="./scripts/icons.js" defer></script>

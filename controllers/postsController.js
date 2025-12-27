@@ -7,6 +7,55 @@ const config = require('../config');
 
 const postsService = new DataService(config.paths.postsFile);
 
+// Enhanced related posts algorithm
+function getRelatedPosts(currentPost, allPosts) {
+  const now = new Date();
+  const currentDate = new Date(currentPost.publishedAt || currentPost.updatedAt);
+  
+  return allPosts
+    .filter(p => p.published && p.slug !== currentPost.slug)
+    .map(p => {
+      let score = 0;
+      
+      // Category match (weight: 3)
+      if (p.category === currentPost.category) {
+        score += 3;
+      }
+      
+      // Keyword overlap (weight: 2)
+      const currentWords = new Set(
+        (currentPost.title + ' ' + currentPost.excerpt + ' ' + (currentPost.content || ''))
+          .toLowerCase()
+          .split(/\s+/)
+          .filter(w => w.length > 3)
+      );
+      
+      const postWords = new Set(
+        (p.title + ' ' + p.excerpt + ' ' + (p.content || ''))
+          .toLowerCase()
+          .split(/\s+/)
+          .filter(w => w.length > 3)
+      );
+      
+      const intersection = [...currentWords].filter(w => postWords.has(w));
+      const union = new Set([...currentWords, ...postWords]);
+      const similarity = union.size > 0 ? intersection.length / union.size : 0;
+      score += similarity * 2;
+      
+      // Recency boost (weight: 1)
+      const postDate = new Date(p.publishedAt || p.updatedAt);
+      const daysDiff = (now - postDate) / (1000 * 60 * 60 * 24);
+      // Boost for posts within last 90 days
+      if (daysDiff <= 90) {
+        score += (1 - daysDiff / 90) * 1;
+      }
+      
+      return { ...p, _score: score };
+    })
+    .sort((a, b) => b._score - a._score)
+    .map(({ _score, ...p }) => p); // Remove score from result
+}
+
 function getCategories(req, res) {
   res.json(CATEGORIES);
 }
@@ -74,17 +123,17 @@ function getPostBySlug(req, res, next) {
       return res.status(404).json({ error: 'Post not found' });
     }
 
-    // Get related posts
+    // Get related posts with enhanced algorithm
     const allPosts = postsService.findAll();
-    const relatedPosts = allPosts
-      .filter(p => p.published && p.category === post.category && p.slug !== post.slug)
-      .slice(0, 3)
+    const relatedPosts = getRelatedPosts(post, allPosts)
+      .slice(0, 4)
       .map(p => ({
         slug: p.slug,
         title: p.title,
         excerpt: p.excerpt,
         readTime: calculateReadTime(p.content),
-        publishedAt: p.publishedAt
+        publishedAt: p.publishedAt,
+        categoryName: CATEGORIES.find(c => c.slug === p.category)?.name || p.category
       }));
 
     res.json({

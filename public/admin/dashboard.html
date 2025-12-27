@@ -30,6 +30,7 @@
           <button class="content-type-tab active" data-type="posts">Posts</button>
           <button class="content-type-tab" data-type="work">Work</button>
           <button class="content-type-tab" data-type="capabilities">Products</button>
+          <button class="content-type-tab" data-type="messages">Messages</button>
       </div>
         <div class="sidebar-actions">
           <span class="sidebar-title" id="sidebarTitle">Posts</span>
@@ -249,6 +250,39 @@
               </div>
               <span class="toggle-label">Published</span>
             </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Messages Viewer -->
+      <div id="messagesViewer" class="editor-form" style="display: none;">
+        <div class="editor-header">
+          <h2 id="messagesViewerTitle">Message</h2>
+          <div class="editor-actions">
+            <button class="btn btn-danger" id="deleteMessageBtn">Delete</button>
+            <button class="btn btn-ghost" id="markReadBtn" style="display: none;">Mark as Read</button>
+          </div>
+        </div>
+        <div class="editor-content">
+          <div class="form-group">
+            <label class="form-label">From</label>
+            <div class="form-readonly" id="messageFrom"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <div class="form-readonly" id="messageEmail"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Subject</label>
+            <div class="form-readonly" id="messageSubject"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <div class="form-readonly" id="messageDate"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Message</label>
+            <div class="form-readonly form-textarea" id="messageContent" style="white-space: pre-wrap;"></div>
           </div>
         </div>
       </div>

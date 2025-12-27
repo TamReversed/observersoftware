@@ -23,7 +23,8 @@ const config = {
       usersFile: path.join(dataDir, 'users.json'),
       postsFile: path.join(dataDir, 'posts.json'),
       workFile: path.join(dataDir, 'work.json'),
-      capabilitiesFile: path.join(dataDir, 'capabilities.json')
+      capabilitiesFile: path.join(dataDir, 'capabilities.json'),
+      messagesFile: path.join(dataDir, 'messages.json')
     };
   })(),
   admin: {

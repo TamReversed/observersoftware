@@ -167,6 +167,11 @@
         if (typeof initRevealObserver === 'function') {
             initRevealObserver();
         }
+
+        // Re-initialize magnetic buttons for new content
+        if (typeof window.initMagneticButtons === 'function') {
+            window.initMagneticButtons();
+        }
     }
 
     // Modal elements
@@ -430,6 +435,14 @@
 
     // Fetch and render content
     async function loadContent() {
+        const workGrid = document.getElementById('workGrid');
+        const capabilitiesGrid = document.getElementById('capabilitiesGrid');
+
+        // Show skeletons for work
+        if (workGrid && window.SkeletonUtils) {
+            workGrid.innerHTML = window.SkeletonUtils.createSkeletonGrid('work', 4);
+        }
+
         // Load work items (limited to 4 on main page)
         try {
             const workRes = await fetch('/api/work');
@@ -438,15 +451,33 @@
                 if (work.length > 0) {
                     // Limit to first 4 items on main page
                     const limitedWork = work.slice(0, 4);
+                    // Remove skeletons
+                    if (workGrid && window.SkeletonUtils) {
+                        window.SkeletonUtils.removeSkeletons(workGrid);
+                    }
                     renderWork(limitedWork);
                 } else {
+                    if (workGrid && window.SkeletonUtils) {
+                        window.SkeletonUtils.removeSkeletons(workGrid);
+                    }
                     renderWork(fallbackWork.slice(0, 4));
                 }
             } else {
+                if (workGrid && window.SkeletonUtils) {
+                    window.SkeletonUtils.removeSkeletons(workGrid);
+                }
                 renderWork(fallbackWork.slice(0, 4));
             }
         } catch (e) {
+            if (workGrid && window.SkeletonUtils) {
+                window.SkeletonUtils.removeSkeletons(workGrid);
+            }
             renderWork(fallbackWork.slice(0, 4));
+        }
+
+        // Show skeletons for capabilities
+        if (capabilitiesGrid && window.SkeletonUtils) {
+            capabilitiesGrid.innerHTML = window.SkeletonUtils.createSkeletonGrid('work', 4);
         }
 
         // Load capabilities (limited to 4 on main page)
@@ -457,14 +488,27 @@
                 if (capabilities.length > 0) {
                     // Limit to first 4 items on main page
                     const limitedCapabilities = capabilities.slice(0, 4);
+                    // Remove skeletons
+                    if (capabilitiesGrid && window.SkeletonUtils) {
+                        window.SkeletonUtils.removeSkeletons(capabilitiesGrid);
+                    }
                     renderCapabilities(limitedCapabilities);
                 } else {
+                    if (capabilitiesGrid && window.SkeletonUtils) {
+                        window.SkeletonUtils.removeSkeletons(capabilitiesGrid);
+                    }
                     renderCapabilities(fallbackCapabilities.slice(0, 4));
                 }
             } else {
+                if (capabilitiesGrid && window.SkeletonUtils) {
+                    window.SkeletonUtils.removeSkeletons(capabilitiesGrid);
+                }
                 renderCapabilities(fallbackCapabilities.slice(0, 4));
             }
         } catch (e) {
+            if (capabilitiesGrid && window.SkeletonUtils) {
+                window.SkeletonUtils.removeSkeletons(capabilitiesGrid);
+            }
             renderCapabilities(fallbackCapabilities.slice(0, 4));
         }
     }

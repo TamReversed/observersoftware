@@ -81,20 +81,45 @@
         if (typeof initRevealObserver === 'function') {
             initRevealObserver();
         }
+
+        // Re-initialize magnetic buttons for new content
+        if (typeof window.initMagneticButtons === 'function') {
+            window.initMagneticButtons();
+        }
     }
 
     // Load work items
     async function loadWork() {
+        const grid = document.getElementById('workGrid');
+        if (!grid) return;
+
+        // Show skeletons while loading
+        if (window.SkeletonUtils) {
+            grid.innerHTML = window.SkeletonUtils.createSkeletonGrid('work', 6);
+        } else {
+            grid.innerHTML = '<div style="text-align: center; padding: 2rem;">Loading work...</div>';
+        }
+
         try {
             const response = await fetch('/api/work');
             if (response.ok) {
                 const work = await response.json();
+                
+                // Remove skeletons
+                if (window.SkeletonUtils) {
+                    window.SkeletonUtils.removeSkeletons(grid);
+                }
+                
                 renderWork(work);
             } else {
                 throw new Error('Failed to load work');
             }
         } catch (error) {
             console.error('Error loading work:', error);
+            // Remove skeletons on error
+            if (window.SkeletonUtils) {
+                window.SkeletonUtils.removeSkeletons(grid);
+            }
             renderWork(fallbackWork);
         }
     }

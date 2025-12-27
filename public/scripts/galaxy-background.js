@@ -1,34 +1,68 @@
 // Galaxy starfield background (calmer alternative to mesh-background)
 (function() {
-  const canvas = document.getElementById('galaxy');
-  if (!canvas) return;
-  
-  const ctx = canvas.getContext('2d');
-  
+  let canvas, ctx;
   let width, height;
-  const stars = [];
-  const shootingStars = [];
+  let stars = [];
+  let shootingStars = [];
+  let animationId;
+  let time = 0;
   const numStars = 400;
   
+  function init() {
+    canvas = document.getElementById('galaxy');
+    if (!canvas) {
+      // Retry if canvas not found (e.g., during page transitions)
+      setTimeout(init, 100);
+      return;
+    }
+    
+    ctx = canvas.getContext('2d');
+    
+    // Ensure canvas is ready
+    if (window.innerWidth === 0 || window.innerHeight === 0) {
+      setTimeout(init, 100);
+      return;
+    }
+    
+    resize();
+    createStars();
+    startAnimation();
+    startShootingStars();
+  }
+  
   function resize() {
+    if (!canvas) return;
     width = canvas.width = window.innerWidth;
     height = canvas.height = window.innerHeight;
   }
   
-  resize();
-  window.addEventListener('resize', resize);
-  
-  // Create stars
-  for (let i = 0; i < numStars; i++) {
-    stars.push({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      size: Math.random() * 2 + 0.5,
-      twinkleSpeed: Math.random() * 0.02 + 0.005,
-      twinklePhase: Math.random() * Math.PI * 2,
-      color: ['#ffffff', '#cce5ff', '#aaccff', '#fff4e6'][Math.floor(Math.random() * 4)]
-    });
+  function createStars() {
+    stars = [];
+    for (let i = 0; i < numStars; i++) {
+      stars.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        size: Math.random() * 2 + 0.5,
+        twinkleSpeed: Math.random() * 0.02 + 0.005,
+        twinklePhase: Math.random() * Math.PI * 2,
+        color: ['#ffffff', '#cce5ff', '#aaccff', '#fff4e6'][Math.floor(Math.random() * 4)]
+      });
+    }
   }
+  
+  function startAnimation() {
+    if (animationId) {
+      cancelAnimationFrame(animationId);
+    }
+    time = 0;
+    animate();
+  }
+  
+  window.addEventListener('resize', () => {
+    resize();
+    // Recreate stars on resize to fill new dimensions
+    createStars();
+  });
   
   // Shooting star class
   class ShootingStar {
@@ -82,20 +116,23 @@
   }
   
   // Spawn shooting stars occasionally
-  setInterval(() => {
-    if (Math.random() < 0.3) {
-      const star = shootingStars.find(s => !s.active);
-      if (star) {
-        star.reset();
-      } else if (shootingStars.length < 5) {
-        shootingStars.push(new ShootingStar());
+  let shootingStarInterval;
+  function startShootingStars() {
+    if (shootingStarInterval) clearInterval(shootingStarInterval);
+    shootingStarInterval = setInterval(() => {
+      if (Math.random() < 0.3) {
+        const star = shootingStars.find(s => !s.active);
+        if (star) {
+          star.reset();
+        } else if (shootingStars.length < 5) {
+          shootingStars.push(new ShootingStar());
+        }
       }
-    }
-  }, 2000);
-  
-  let time = 0;
+    }, 2000);
+  }
   
   function animate() {
+    if (!ctx || !canvas) return;
     ctx.clearRect(0, 0, width, height);
     time += 0.016;
     
@@ -140,13 +177,31 @@
       star.draw();
     });
     
-    requestAnimationFrame(animate);
+    animationId = requestAnimationFrame(animate);
   }
   
-  animate();
+  // Initialize on load
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+  
+  // Re-initialize after page transitions
+  window.addEventListener('pageTransitionComplete', () => {
+    if (animationId) {
+      cancelAnimationFrame(animationId);
+    }
+    if (shootingStarInterval) {
+      clearInterval(shootingStarInterval);
+    }
+    shootingStars = [];
+    init();
+  });
   
   // Parallax on orbs
   document.addEventListener('mousemove', (e) => {
+    if (!width || !height) return;
     const x = (e.clientX / width - 0.5) * 2;
     const y = (e.clientY / height - 0.5) * 2;
     

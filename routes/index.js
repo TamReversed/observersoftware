@@ -5,12 +5,14 @@ const postsRoutes = require('./posts');
 const workRoutes = require('./work');
 const capabilitiesRoutes = require('./capabilities');
 const uploadRoutes = require('./upload');
+const messagesRoutes = require('./messages');
 
 router.use('/api/auth', authRoutes);
 router.use('/api', postsRoutes);
 router.use('/api', workRoutes);
 router.use('/api', capabilitiesRoutes);
 router.use('/api', uploadRoutes);
+router.use('/api', messagesRoutes);
 
 module.exports = router;
 

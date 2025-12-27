@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="./favicon-eye.svg" type="image/svg+xml">
+    <title>Contact — Observer</title>
+    <meta name="description" content="Get in touch with Observer. Send a short note with the workflow, the constraints, and where people get stuck.">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Contact — Observer">
+    <meta property="og:description" content="Get in touch with Observer. Send a short note with the workflow, the constraints, and where people get stuck.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://observersoftware.io/contact">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Contact — Observer">
+    <meta name="twitter:description" content="Get in touch with Observer. Send a short note with the workflow, the constraints, and where people get stuck.">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./styles/styles.css">
+    <link rel="stylesheet" href="./styles/transitions.css">
+    <script async src="https://cdn.jsdelivr.net/npm/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+    <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js"}}</script>
+    <script type="module">
+        import * as THREE from 'three';
+        window.THREE = THREE;
+        // Dispatch custom event to notify other scripts
+        window.dispatchEvent(new CustomEvent('threejs-loaded'));
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/lottie-web@5.12.2/build/player/lottie.min.js"></script>
+</head>
+<body>
+    <canvas id="galaxy" aria-hidden="true"></canvas>
+    <div class="nebula" aria-hidden="true"></div>
+    <div class="orb orb-1" aria-hidden="true"></div>
+    <div class="orb orb-2" aria-hidden="true"></div>
+    <div class="orb orb-3" aria-hidden="true"></div>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <!-- Navigation -->
+    <nav class="nav" id="nav">
+        <div class="container">
+            <div class="nav__inner">
+                <a href="/" class="nav__logo">
+                    <svg class="logo-mark observer-logo-interactive" width="28" height="28" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="navHexGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#7c9bdd;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#a3b8e8;stop-opacity:1" />
+                            </linearGradient>
+                            <radialGradient id="navNodeGradient" cx="30%" cy="30%" r="70%">
+                                <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#cce5ff;stop-opacity:1" />
+                            </radialGradient>
+                            <linearGradient id="navEyeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#cce5ff;stop-opacity:1" />
+                            </linearGradient>
+                            <linearGradient id="navIrisGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#7c9bdd;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#a3b8e8;stop-opacity:1" />
+                            </linearGradient>
+                            <radialGradient id="navPupilGradient" cx="30%" cy="30%" r="70%">
+                                <stop offset="0%" style="stop-color:#0e1017;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#08090c;stop-opacity:1" />
+                            </radialGradient>
+                            <filter id="navGlow" x="-50%" y="-50%" width="200%" height="200%">
+                                <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+                                <feOffset dx="0" dy="0" result="offsetblur"/>
+                                <feComponentTransfer>
+                                    <feFuncA type="linear" slope="0.8"/>
+                                </feComponentTransfer>
+                                <feMerge>
+                                    <feMergeNode/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+                            <mask id="navCrescentMask" maskUnits="userSpaceOnUse">
+                                <rect width="200" height="200" fill="white"/>
+                                <ellipse cx="100" cy="100" rx="25" ry="25" fill="black"/>
+                            </mask>
+                            <clipPath id="navEyeClip">
+                                <circle cx="100" cy="100" r="35"/>
+                            </clipPath>
+                        </defs>
+                        <path fill="none" stroke="url(#navHexGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M 147 11 L 185 89"/>
+                        <path fill="none" stroke="url(#navHexGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M 186 101 L 146 177"/>
+                        <path fill="none" stroke="url(#navHexGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M 138 183 L 57 183"/>
+                        <path fill="none" stroke="url(#navHexGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M 49 177 L 9 99"/>
+                        <path fill="none" stroke="url(#navHexGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M 9 89 L 50 12"/>
+                        <path fill="none" stroke="url(#navHexGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M 60 9 L 137 5"/>
+                        <circle fill="url(#navNodeGradient)" filter="url(#navGlow)" cx="54" cy="7" r="7"/>
+                        <circle fill="url(#navNodeGradient)" filter="url(#navGlow)" cx="143" cy="7" r="7"/>
+                        <circle fill="url(#navNodeGradient)" filter="url(#navGlow)" cx="188" cy="95" r="7"/>
+                        <circle fill="url(#navNodeGradient)" filter="url(#navGlow)" cx="144" cy="182" r="7"/>
+                        <circle fill="url(#navNodeGradient)" filter="url(#navGlow)" cx="52" cy="182" r="7"/>
+                        <circle fill="url(#navNodeGradient)" filter="url(#navGlow)" cx="7" cy="94" r="7"/>
+                        <g transform="translate(100, 100)">
+                            <path fill="none" stroke="url(#navEyeGradient)" stroke-width="2.5" d="M -35 0 A 35 35 0 0 1 35 0" stroke-linecap="round"/>
+                            <g clip-path="url(#navEyeClip)">
+                                <circle fill="none" stroke="url(#navIrisGradient)" stroke-width="2" cx="0" cy="0" r="30"/>
+                                <circle fill="none" stroke="url(#navEyeGradient)" stroke-width="4" cx="0" cy="0" r="21"/>
+                                <circle fill="url(#navEyeGradient)" cx="9" cy="-15" r="3"/>
+                                <circle fill="url(#navPupilGradient)" cx="0" cy="0" r="17.5" mask="url(#navCrescentMask)"/>
+                            </g>
+                        </g>
+                    </svg>
+                    <span class="nav__brand">Observer</span>
+                    <span class="nav__meta">a Techademy LLC subsidiary</span>
+                </a>
+                <ul class="nav__links">
+                    <li><a href="/#work" class="nav__link">Work</a></li>
+                    <li><a href="/#capabilities" class="nav__link">Products</a></li>
+                    <li><a href="./blog.html" class="nav__link">Blog</a></li>
+                    <li><a href="/#about" class="nav__link">About</a></li>
+                    <li><a href="./contact.html" class="nav__link">Contact</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main">
+        <!-- Contact Section -->
+        <section class="contact-section">
+            <div class="container">
+                <div class="contact-section__header reveal">
+                    <h1 class="contact-section__title">Get in Touch</h1>
+                    <p class="contact-section__subtitle">Send a short note with the workflow, the constraints, and where people get stuck. Observer will respond with a simple next step.</p>
+                </div>
+                <div class="contact-section__form reveal">
+                    <form id="contactForm" class="contact-form">
+                        <div class="form-group">
+                            <label for="contactName" class="form-label">Name *</label>
+                            <input type="text" id="contactName" name="name" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="contactEmail" class="form-label">Email *</label>
+                            <input type="email" id="contactEmail" name="email" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="contactSubject" class="form-label">Subject (optional)</label>
+                            <input type="text" id="contactSubject" name="subject" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label for="contactMessage" class="form-label">Message *</label>
+                            <textarea id="contactMessage" name="message" class="form-input form-textarea" rows="6" required></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary" id="submitBtn">
+                                <span class="btn-text">Send Message</span>
+                                <span class="btn-loading" style="display: none;">Sending...</span>
+                            </button>
+                        </div>
+                        <div id="formMessage" class="form-message" style="display: none;"></div>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer__main">
+                <nav class="footer__nav reveal" aria-label="Footer">
+                    <div class="footer__nav-group">
+                        <h4>Navigation</h4>
+                        <ul>
+                            <li><a href="/#work">Work</a></li>
+                            <li><a href="/#capabilities">Products</a></li>
+                            <li><a href="./blog.html">Blog</a></li>
+                            <li><a href="/#about">About</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer__nav-group">
+                        <h4>Links</h4>
+                        <ul>
+                            <li><a href="/coming-soon">LinkedIn</a></li>
+                            <li><a href="/coming-soon">GitHub</a></li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+            <div class="footer__bottom">
+                <p class="footer__copyright">© 2025 Observer. All rights reserved.</p>
+                <div class="footer__legal">
+                    <a href="/coming-soon">Privacy</a>
+                    <a href="/coming-soon">Terms</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="./scripts/magnetic-buttons.js" defer></script>
+    <script src="./scripts/page-transitions.js" defer></script>
+    <script src="./scripts/main.js" defer></script>
+    <script src="./scripts/galaxy-background.js" defer></script>
+    <script src="./scripts/icons.js" defer></script>
+    <script src="./scripts/logo.js" defer></script>
+    <script src="./scripts/contact-form.js" defer></script>
+</body>
+</html>
+

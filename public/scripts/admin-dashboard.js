@@ -45,7 +45,7 @@ const presetIcons = {
 
 // State
 let currentType = 'posts';
-let items = { posts: [], work: [], capabilities: [] };
+let items = { posts: [], work: [], capabilities: [], messages: [] };
 let categories = [];
 let currentItem = null;
 let isNewItem = false;
@@ -166,7 +166,14 @@ async function loadCategories() {
 // Load items
 async function loadItems(type) {
   try {
-    const endpoint = type === 'posts' ? '/api/admin/posts' : `/api/admin/${type}`;
+    let endpoint;
+    if (type === 'posts') {
+      endpoint = '/api/admin/posts';
+    } else if (type === 'messages') {
+      endpoint = '/api/admin/messages';
+    } else {
+      endpoint = `/api/admin/${type}`;
+    }
     const res = await fetch(endpoint);
     items[type] = await res.json();
     renderItemsList();
@@ -188,15 +195,26 @@ function renderItemsList() {
 
   data.forEach(item => {
     const id = currentType === 'posts' ? item.slug : item.id;
-    const title = currentType === 'posts' ? item.title : 
-                  currentType === 'work' ? item.industry : item.title;
-    // Fix Bug 2: Check if problem exists before substring
-    const subtitle = currentType === 'posts' ? (item.categoryName || 'Uncategorized') :
-                     currentType === 'work' && item.problem ? item.problem.substring(0, 40) + '...' : '';
+    let title, subtitle;
+    
+    if (currentType === 'messages') {
+      title = item.name || 'Unknown';
+      subtitle = item.email || '';
+    } else if (currentType === 'posts') {
+      title = item.title;
+      subtitle = item.categoryName || 'Uncategorized';
+    } else if (currentType === 'work') {
+      title = item.industry;
+      subtitle = item.problem ? item.problem.substring(0, 40) + '...' : '';
+    } else {
+      title = item.title;
+      subtitle = '';
+    }
+    
     const isActive = currentType === 'posts' ? currentItem?.slug === item.slug : currentItem?.id === item.id;
 
     const div = document.createElement('div');
-    div.className = `list-item ${isActive ? 'active' : ''}`;
+    div.className = `list-item ${isActive ? 'active' : ''} ${currentType === 'messages' && !item.read ? 'unread' : ''}`;
     div.dataset.id = id;
 
     const titleDiv = document.createElement('div');
@@ -206,15 +224,33 @@ function renderItemsList() {
     const metaDiv = document.createElement('div');
     metaDiv.className = 'list-item-meta';
 
-    const statusSpan = document.createElement('span');
-    statusSpan.className = `item-status ${item.published ? 'published' : ''}`;
-    statusSpan.textContent = item.published ? 'Published' : 'Draft';
-    metaDiv.appendChild(statusSpan);
+    if (currentType === 'messages') {
+      const statusSpan = document.createElement('span');
+      statusSpan.className = `item-status ${item.read ? 'read' : 'unread'}`;
+      statusSpan.textContent = item.read ? 'Read' : 'New';
+      metaDiv.appendChild(statusSpan);
+      
+      if (item.subject) {
+        const subjectSpan = document.createElement('span');
+        subjectSpan.textContent = item.subject.substring(0, 30) + (item.subject.length > 30 ? '...' : '');
+        metaDiv.appendChild(subjectSpan);
+      }
+      
+      const dateSpan = document.createElement('span');
+      const date = new Date(item.createdAt);
+      dateSpan.textContent = date.toLocaleDateString();
+      metaDiv.appendChild(dateSpan);
+    } else {
+      const statusSpan = document.createElement('span');
+      statusSpan.className = `item-status ${item.published ? 'published' : ''}`;
+      statusSpan.textContent = item.published ? 'Published' : 'Draft';
+      metaDiv.appendChild(statusSpan);
 
-    if (subtitle) {
-      const subtitleSpan = document.createElement('span');
-      subtitleSpan.textContent = subtitle;
-      metaDiv.appendChild(subtitleSpan);
+      if (subtitle) {
+        const subtitleSpan = document.createElement('span');
+        subtitleSpan.textContent = subtitle;
+        metaDiv.appendChild(subtitleSpan);
+      }
     }
 
     div.appendChild(titleDiv);
@@ -243,8 +279,14 @@ function switchType(type) {
   });
 
   // Update sidebar title
-  const titles = { posts: 'Posts', work: 'Work', capabilities: 'Products' };
+  const titles = { posts: 'Posts', work: 'Work', capabilities: 'Products', messages: 'Messages' };
   sidebarTitle.textContent = titles[type];
+  
+  // Hide "New" button for messages (read-only)
+  const newItemBtn = document.getElementById('newItemBtn');
+  if (newItemBtn) {
+    newItemBtn.style.display = type === 'messages' ? 'none' : 'inline-flex';
+  }
 
   // Hide all editors, show welcome
   document.querySelectorAll('.editor-form').forEach(f => f.style.display = 'none');
@@ -315,9 +357,48 @@ function selectItem(item) {
     
     updateIconTypeTabs();
     renderPresetIconGrid();
+  } else if (currentType === 'messages') {
+    document.getElementById('messagesViewer').style.display = 'block';
+    document.getElementById('messagesViewerTitle').textContent = item.subject || 'Message';
+    document.getElementById('messageFrom').textContent = item.name || 'Unknown';
+    document.getElementById('messageEmail').textContent = item.email || '';
+    document.getElementById('messageSubject').textContent = item.subject || '(No subject)';
+    const date = new Date(item.createdAt);
+    document.getElementById('messageDate').textContent = date.toLocaleString();
+    document.getElementById('messageContent').textContent = item.message || '';
+    
+    // Show/hide mark as read button
+    const markReadBtn = document.getElementById('markReadBtn');
+    if (!item.read) {
+      markReadBtn.style.display = 'inline-flex';
+    } else {
+      markReadBtn.style.display = 'none';
+    }
+    
+    // Mark as read when viewing
+    if (!item.read) {
+      markMessageAsRead(item.id);
+    }
   }
 
   renderItemsList();
+}
+
+// Mark message as read
+async function markMessageAsRead(messageId) {
+  try {
+    const token = await getCsrfToken();
+    const res = await authenticatedFetch(`/api/admin/messages/${messageId}/read`, {
+      method: 'PUT',
+      body: {}
+    });
+    if (res.ok) {
+      // Reload messages to update read status
+      await loadItems('messages');
+    }
+  } catch (e) {
+    console.error('Failed to mark message as read:', e);
+  }
 }
 
 // New item
@@ -562,13 +643,21 @@ async function deleteItem(type, id, name) {
   if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
 
   try {
-    const endpoint = type === 'posts' ? `/api/admin/posts/${id}` : `/api/admin/${type}/${id}`;
+    let endpoint;
+    if (type === 'posts') {
+      endpoint = `/api/admin/posts/${id}`;
+    } else if (type === 'messages') {
+      endpoint = `/api/admin/messages/${id}`;
+    } else {
+      endpoint = `/api/admin/${type}/${id}`;
+    }
     const res = await authenticatedFetch(endpoint, { method: 'DELETE' });
     if (!res.ok) throw new Error('Failed to delete');
     
     showToast('Deleted successfully');
     currentItem = null;
     document.querySelectorAll('.editor-form').forEach(f => f.style.display = 'none');
+    document.getElementById('messagesViewer').style.display = 'none';
     welcomeState.style.display = 'flex';
     await loadItems(type);
   } catch (e) {
@@ -798,6 +887,14 @@ document.getElementById('deleteWorkBtn').addEventListener('click', () => {
 });
 document.getElementById('deleteCapabilityBtn').addEventListener('click', () => {
   if (currentItem) deleteItem('capabilities', currentItem.id, currentItem.title);
+});
+document.getElementById('deleteMessageBtn').addEventListener('click', () => {
+  if (currentItem) deleteItem('messages', currentItem.id, currentItem.name || 'Message');
+});
+document.getElementById('markReadBtn').addEventListener('click', () => {
+  if (currentItem && !currentItem.read) {
+    markMessageAsRead(currentItem.id);
+  }
 });
 
 document.getElementById('postTitle').addEventListener('input', (e) => {

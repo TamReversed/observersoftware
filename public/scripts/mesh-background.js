@@ -1114,16 +1114,10 @@
 
     window.addEventListener("resize", handleResize);
 
-    // Handle dark mode changes
-    function updateColors() {
-      const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      const lineColor = isDark ? 0x86a3ff : 0x4b6fb6;
-      lines.material.color.setHex(lineColor);
-      trailParticles.material.uniforms.color.value.setHex(isDark ? 0xaaccff : 0x6688cc);
-    }
-
-    updateColors();
-    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", updateColors);
+    // Always use dark mode colors
+    const lineColor = 0x86a3ff;
+    lines.material.color.setHex(lineColor);
+    trailParticles.material.uniforms.color.value.setHex(0xaaccff);
     
   } // Close init()
 

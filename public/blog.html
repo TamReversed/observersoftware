@@ -10,9 +10,23 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./styles/styles.css">
+    <script>
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('SW registered:', registration);
+                    })
+                    .catch((error) => {
+                        console.log('SW registration failed:', error);
+                    });
+            });
+        }
+    </script>
     <link rel="stylesheet" href="./styles/blog.css">
-    <!-- Opnform Popup Widget -->
-    <script async data-nf='{"formurl":"https://opnform.com/forms/reach-out-to-me-hva5m4","emoji":"💬","position":"right","bgcolor":"#214e8c","width":"500"}' src='https://opnform.com/widgets/embed-min.js'></script>
+    <link rel="stylesheet" href="./styles/skeletons.css">
+    <link rel="stylesheet" href="./styles/transitions.css">
 </head>
 <body>
     <a class="skip-link" href="#main">Skip to content</a>
@@ -31,7 +45,7 @@
                     <li><a href="/#capabilities" class="nav__link">Products</a></li>
                     <li><a href="./blog.html" class="nav__link">Blog</a></li>
                     <li><a href="/#about" class="nav__link">About</a></li>
-                    <li><a href="/#contact" class="nav__link">Contact</a></li>
+                    <li><a href="./contact.html" class="nav__link">Contact</a></li>
                 </ul>
             </div>
         </div>
@@ -68,7 +82,7 @@
         <section class="blog-posts">
             <div class="container">
                 <div class="blog-posts__grid" id="postsGrid">
-                    <div class="blog-loading">Loading posts...</div>
+                    <!-- Skeletons will be inserted here by blog.js -->
                 </div>
             </div>
         </section>
@@ -85,7 +99,7 @@
                 <div class="footer__cta-group">
                     <h2 class="footer__cta-title">A clearer way through the work</h2>
                     <p class="footer__cta-subtitle">Send a short note with the workflow, the constraints, and where people get stuck. Observer will respond with a simple next step.</p>
-                    <button type="button" class="footer__email" id="contactBtn" onclick="window.opnform?.open()">Contact Us</button>
+                    <a href="./contact.html" class="footer__email" id="contactBtn">Contact Us</a>
                 </div>
                 <nav class="footer__nav" aria-label="Footer">
                     <div class="footer__nav-group">
@@ -116,7 +130,52 @@
         </div>
     </footer>
 
+    <script>
+        // Immediate test to verify scripts can run
+        console.log('[DEBUG] Inline script in blog.html executed', new Date().getTime());
+    </script>
+    <script src="./scripts/skeletons.js" defer></script>
+    <script src="./scripts/magnetic-buttons.js" defer></script>
+    <script src="./scripts/page-transitions.js" defer></script>
     <script src="./scripts/blog.js" defer></script>
+    <script>
+        // Check after defer scripts should have loaded
+        window.addEventListener('load', function() {
+            console.log('[DEBUG] Window load event fired', {
+                hasSkeletonUtils: typeof window.SkeletonUtils !== 'undefined',
+                hasPostsGrid: !!document.getElementById('postsGrid'),
+                postsGridContent: document.getElementById('postsGrid')?.innerHTML?.substring(0, 100),
+                blogJsLoaded: typeof window.initialize === 'function' || document.querySelector('script[src*="blog.js"]') !== null
+            });
+            
+            // Fallback: If blog.js didn't load, try to load it manually
+            if (!document.querySelector('script[src*="blog.js"]') || typeof window.initialize === 'undefined') {
+                console.warn('[DEBUG] blog.js not found or initialize not available, attempting to load manually');
+                const script = document.createElement('script');
+                script.src = './scripts/blog.js';
+                script.onload = () => {
+                    console.log('[DEBUG] blog.js manually loaded');
+                    // Try to call initialize if it exists
+                    if (typeof window.initialize === 'function') {
+                        setTimeout(() => window.initialize(), 100);
+                    }
+                };
+                script.onerror = (err) => {
+                    console.error('[DEBUG] Failed to manually load blog.js', err);
+                };
+                document.body.appendChild(script);
+            }
+        });
+        
+        // Also check on DOMContentLoaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('[DEBUG] DOMContentLoaded fired', {
+                    hasBlogJs: !!document.querySelector('script[src*="blog.js"]')
+                });
+            });
+        }
+    </script>
 </body>
 </html>
 
