@@ -224,25 +224,28 @@ if (document.readyState === 'loading') {
 
 const { startAuthentication, startRegistration } = SimpleWebAuthnBrowser;
 
-// Easter Egg: Konami code to reveal login form
+// Easter Egg: Pleiades constellation drag-and-drop to reveal login form
 (function() {
   // Wait for DOM to be ready
-  function initKonamiCode() {
+  function initPleiadesEasterEgg() {
     // Check if form was already revealed (persist in sessionStorage)
     const wasRevealed = sessionStorage.getItem('loginFormRevealed') === 'true';
     
     const loginCard = document.getElementById('loginCard');
     const loginTitle = document.getElementById('loginTitle');
     const loginSubtitle = document.getElementById('loginSubtitle');
+    const constellationCanvas = document.getElementById('pleiades-constellation');
+    const logo = document.querySelector('.observer-logo-interactive');
     
-    if (!loginCard || !loginTitle || !loginSubtitle) {
+    if (!loginCard || !loginTitle || !loginSubtitle || !constellationCanvas || !logo) {
       // Elements not ready yet, try again
-      setTimeout(initKonamiCode, 100);
+      setTimeout(initPleiadesEasterEgg, 100);
       return;
     }
     
     if (wasRevealed) {
-      // Form was already revealed, show it immediately
+      // Form was already revealed, show it immediately and hide constellation
+      constellationCanvas.style.display = 'none';
       loginCard.style.display = 'block';
       setTimeout(() => {
         loginCard.classList.add('revealed');
@@ -254,20 +257,13 @@ const { startAuthentication, startRegistration } = SimpleWebAuthnBrowser;
       return;
     }
     
-    // Konami code sequence: ↑↑↓↓←→←→BA
-    const konamiCode = [
-      'ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
-      'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight',
-      'KeyB', 'KeyA'
-    ];
-    
-    let konamiIndex = 0;
-    let konamiTimer = null;
-    const KONAMI_TIMEOUT = 3000; // Reset after 3 seconds of inactivity
-    
+    // Function to reveal login form
     function revealLoginForm() {
       // Store in sessionStorage
       sessionStorage.setItem('loginFormRevealed', 'true');
+      
+      // Hide constellation
+      constellationCanvas.style.display = 'none';
       
       // Show and animate the login form
       loginCard.style.display = 'block';
@@ -282,56 +278,241 @@ const { startAuthentication, startRegistration } = SimpleWebAuthnBrowser;
       }, 50);
     }
     
-    // Prevent default behavior for arrow keys to avoid scrolling
-    document.addEventListener('keydown', (e) => {
-      // Only handle if form isn't revealed yet
-      const isHidden = loginCard.style.display === 'none' || 
-                      getComputedStyle(loginCard).display === 'none' ||
-                      !loginCard.classList.contains('revealed');
+    // Pleiades constellation setup
+    const ctx = constellationCanvas.getContext('2d');
+    let canvasWidth = window.innerWidth;
+    let canvasHeight = window.innerHeight;
+    
+    function resizeCanvas() {
+      canvasWidth = constellationCanvas.width = window.innerWidth;
+      canvasHeight = constellationCanvas.height = window.innerHeight;
+      drawConstellation();
+    }
+    
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    
+    // Pleiades star positions (relative to initial position)
+    // Pattern: 7 stars in a recognizable cluster
+    const pleiadesStars = [
+      { x: 0, y: 0, size: 3 },      // Center star
+      { x: -15, y: -10, size: 2.5 }, // Top-left
+      { x: 15, y: -8, size: 2.5 },   // Top-right
+      { x: -20, y: 8, size: 2 },     // Bottom-left
+      { x: 20, y: 10, size: 2 },      // Bottom-right
+      { x: -8, y: 15, size: 2 },     // Lower-left
+      { x: 12, y: 18, size: 2 }      // Lower-right
+    ];
+    
+    // Initial position (upper-right area)
+    let constellationX = canvasWidth * 0.8;
+    let constellationY = canvasHeight * 0.2;
+    
+    // Drag state
+    let isDragging = false;
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
+    let isOverLogo = false;
+    let time = 0;
+    
+    // Logo bounds for collision detection (in canvas coordinates)
+    function getLogoBounds() {
+      const rect = logo.getBoundingClientRect();
+      const canvasRect = constellationCanvas.getBoundingClientRect();
+      return {
+        centerX: (rect.left - canvasRect.left) + rect.width / 2,
+        centerY: (rect.top - canvasRect.top) + rect.height / 2,
+        radius: Math.max(rect.width, rect.height) / 2 + 120 // 120px threshold for easier drop
+      };
+    }
+    
+    // Draw constellation
+    function drawConstellation() {
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
       
-      if (!isHidden) {
-        return; // Form already revealed, don't process
+      const logoBounds = getLogoBounds();
+      const distanceToLogo = Math.sqrt(
+        Math.pow(constellationX - logoBounds.centerX, 2) + 
+        Math.pow(constellationY - logoBounds.centerY, 2)
+      );
+      
+      isOverLogo = distanceToLogo < logoBounds.radius;
+      
+      // Draw connecting lines
+      ctx.strokeStyle = isOverLogo 
+        ? 'rgba(124, 155, 221, 0.6)' 
+        : 'rgba(124, 155, 221, 0.3)';
+      ctx.lineWidth = 1;
+      
+      // Connect nearby stars
+      for (let i = 0; i < pleiadesStars.length; i++) {
+        for (let j = i + 1; j < pleiadesStars.length; j++) {
+          const dist = Math.sqrt(
+            Math.pow(pleiadesStars[i].x - pleiadesStars[j].x, 2) + 
+            Math.pow(pleiadesStars[i].y - pleiadesStars[j].y, 2)
+          );
+          if (dist < 25) {
+            ctx.beginPath();
+            ctx.moveTo(
+              constellationX + pleiadesStars[i].x, 
+              constellationY + pleiadesStars[i].y
+            );
+            ctx.lineTo(
+              constellationX + pleiadesStars[j].x, 
+              constellationY + pleiadesStars[j].y
+            );
+            ctx.stroke();
+          }
+        }
       }
       
-      // Clear timer on any keypress
-      if (konamiTimer) {
-        clearTimeout(konamiTimer);
-      }
+      // Draw stars with twinkling
+      pleiadesStars.forEach((star, index) => {
+        const twinkle = Math.sin(time * 2 + index) * 0.3 + 0.7;
+        const alpha = isOverLogo ? 0.9 + twinkle * 0.1 : 0.6 + twinkle * 0.4;
+        const size = star.size * (isOverLogo ? 1.3 : 1);
+        
+        // Star glow
+        const gradient = ctx.createRadialGradient(
+          constellationX + star.x, 
+          constellationY + star.y, 
+          0,
+          constellationX + star.x, 
+          constellationY + star.y, 
+          size * 4
+        );
+        gradient.addColorStop(0, `rgba(255, 255, 255, ${alpha})`);
+        gradient.addColorStop(0.5, `rgba(200, 220, 255, ${alpha * 0.5})`);
+        gradient.addColorStop(1, 'rgba(124, 155, 221, 0)');
+        
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(
+          constellationX + star.x, 
+          constellationY + star.y, 
+          size * 4, 
+          0, 
+          Math.PI * 2
+        );
+        ctx.fill();
+        
+        // Star core
+        ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+        ctx.beginPath();
+        ctx.arc(
+          constellationX + star.x, 
+          constellationY + star.y, 
+          size, 
+          0, 
+          Math.PI * 2
+        );
+        ctx.fill();
+      });
       
-      // Check if current key matches the sequence
-      if (e.code === konamiCode[konamiIndex]) {
-        konamiIndex++;
-        
-        // Prevent default for arrow keys to avoid scrolling
-        if (e.code.startsWith('Arrow')) {
-          e.preventDefault();
-        }
-        
-        // Check if we've completed the sequence
-        if (konamiIndex === konamiCode.length) {
-          revealLoginForm();
-          konamiIndex = 0;
-          return;
-        }
+      // Visual feedback when over logo
+      if (isOverLogo) {
+        logo.style.filter = 'brightness(1.3) drop-shadow(0 0 20px rgba(124, 155, 221, 0.8))';
+        logo.style.transition = 'filter 0.3s ease';
+        constellationCanvas.style.cursor = 'grabbing';
       } else {
-        // Wrong key, reset sequence (but don't reset on modifier keys)
-        if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
-          konamiIndex = 0;
-        }
+        logo.style.filter = '';
+        constellationCanvas.style.cursor = isDragging ? 'grabbing' : 'grab';
+      }
+    }
+    
+    // Animation loop
+    function animate() {
+      time += 0.016;
+      drawConstellation();
+      requestAnimationFrame(animate);
+    }
+    animate();
+    
+    // Drag handlers
+    function getMousePos(e) {
+      return {
+        x: e.clientX || (e.touches && e.touches[0].clientX),
+        y: e.clientY || (e.touches && e.touches[0].clientY)
+      };
+    }
+    
+    function handleStart(e) {
+      const pos = getMousePos(e);
+      if (!pos.x || !pos.y) return;
+      
+      const rect = constellationCanvas.getBoundingClientRect();
+      
+      // Check if click is within constellation bounds
+      const clickX = pos.x - rect.left;
+      const clickY = pos.y - rect.top;
+      const distToCenter = Math.sqrt(
+        Math.pow(clickX - constellationX, 2) + 
+        Math.pow(clickY - constellationY, 2)
+      );
+      
+      if (distToCenter < 60) { // Click within 60px of constellation center
+        isDragging = true;
+        dragOffsetX = clickX - constellationX;
+        dragOffsetY = clickY - constellationY;
+        constellationCanvas.style.cursor = 'grabbing';
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    }
+    
+    function handleMove(e) {
+      if (!isDragging) return;
+      
+      const pos = getMousePos(e);
+      if (!pos.x || !pos.y) return;
+      
+      const rect = constellationCanvas.getBoundingClientRect();
+      constellationX = pos.x - rect.left - dragOffsetX;
+      constellationY = pos.y - rect.top - dragOffsetY;
+      
+      // Constrain to canvas bounds
+      constellationX = Math.max(30, Math.min(canvasWidth - 30, constellationX));
+      constellationY = Math.max(30, Math.min(canvasHeight - 30, constellationY));
+      
+      // Check if dropped on logo
+      const logoBounds = getLogoBounds();
+      const distance = Math.sqrt(
+        Math.pow(constellationX - logoBounds.centerX, 2) + 
+        Math.pow(constellationY - logoBounds.centerY, 2)
+      );
+      
+      if (distance < logoBounds.radius) {
+        revealLoginForm();
+        isDragging = false;
       }
       
-      // Reset after timeout
-      konamiTimer = setTimeout(() => {
-        konamiIndex = 0;
-      }, KONAMI_TIMEOUT);
-    }, { passive: false });
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    function handleEnd(e) {
+      if (isDragging) {
+        isDragging = false;
+        constellationCanvas.style.cursor = 'grab';
+      }
+    }
+    
+    // Mouse events
+    constellationCanvas.addEventListener('mousedown', handleStart);
+    document.addEventListener('mousemove', handleMove);
+    document.addEventListener('mouseup', handleEnd);
+    
+    // Touch events
+    constellationCanvas.addEventListener('touchstart', handleStart, { passive: false });
+    document.addEventListener('touchmove', handleMove, { passive: false });
+    document.addEventListener('touchend', handleEnd);
   }
   
   // Initialize when DOM is ready
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initKonamiCode);
+    document.addEventListener('DOMContentLoaded', initPleiadesEasterEgg);
   } else {
-    initKonamiCode();
+    initPleiadesEasterEgg();
   }
 })();
 

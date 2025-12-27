@@ -258,3 +258,20 @@ body {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.6; }
 }
+
+/* Pleiades Constellation */
+#pleiades-constellation {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 5;
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: none;
+}
+
+#pleiades-constellation:active {
+  cursor: grabbing;
+}
