@@ -113,4 +113,69 @@ setTimeout(initializeLogos, 100);
 // Export for manual initialization if needed
 window.initInteractiveLogo = initInteractiveLogo;
 
+// Easter Egg: Click logo 5-7 times to access admin panel
+(function() {
+  // Only on public pages (not admin pages)
+  if (window.location.pathname.includes('/admin') || window.location.pathname.includes('/observe')) {
+    return;
+  }
+
+  let clickCount = 0;
+  let clickTimer = null;
+  const REQUIRED_CLICKS = 6; // 5-7 range, using 6 as middle
+  const CLICK_TIMEOUT = 3000; // 3 seconds
+
+  function handleLogoClick(e) {
+    // Only trigger on actual logo SVG clicks, not parent links
+    if (e.target.closest('a')) {
+      const logo = e.target.closest('a').querySelector('.observer-logo-interactive');
+      if (!logo || !logo.contains(e.target)) {
+        return;
+      }
+    }
+
+    clickCount++;
+    
+    // Clear existing timer
+    if (clickTimer) {
+      clearTimeout(clickTimer);
+    }
+
+    // Visual feedback - subtle pulse on logo
+    const logo = e.target.closest('.observer-logo-interactive') || 
+                 document.querySelector('.observer-logo-interactive');
+    if (logo) {
+      logo.style.transition = 'filter 0.3s ease, transform 0.3s ease';
+      logo.style.filter = 'brightness(1.3) drop-shadow(0 0 10px rgba(124, 155, 221, 0.6))';
+      logo.style.transform = 'scale(1.05)';
+      
+      setTimeout(() => {
+        logo.style.filter = '';
+        logo.style.transform = '';
+      }, 300);
+    }
+
+    // Check if we've reached the required clicks
+    if (clickCount >= REQUIRED_CLICKS) {
+      // Navigate to admin panel
+      window.location.href = '/observe';
+      return;
+    }
+
+    // Reset counter after timeout
+    clickTimer = setTimeout(() => {
+      clickCount = 0;
+    }, CLICK_TIMEOUT);
+  }
+
+  // Add click listeners to all logos
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.observer-logo-interactive') || 
+        e.target.closest('.nav__logo')?.querySelector('.observer-logo-interactive') ||
+        e.target.closest('.hero__logo')?.querySelector('.observer-logo-interactive')) {
+      handleLogoClick(e);
+    }
+  });
+})();
+
 })(); // Close IIFE

@@ -207,6 +207,94 @@ document.addEventListener('DOMContentLoaded', () => {
 
 const { startAuthentication, startRegistration } = SimpleWebAuthnBrowser;
 
+// Easter Egg: Konami code to reveal login form
+(function() {
+  // Check if form was already revealed (persist in sessionStorage)
+  const wasRevealed = sessionStorage.getItem('loginFormRevealed') === 'true';
+  
+  const loginCard = document.getElementById('loginCard');
+  const loginTitle = document.getElementById('loginTitle');
+  const loginSubtitle = document.getElementById('loginSubtitle');
+  
+  if (wasRevealed && loginCard) {
+    // Form was already revealed, show it immediately
+    loginCard.style.display = 'block';
+    setTimeout(() => {
+      loginCard.classList.add('revealed');
+      if (loginTitle) {
+        loginTitle.textContent = 'Admin Login';
+        loginTitle.classList.remove('observing');
+      }
+      if (loginSubtitle) {
+        loginSubtitle.textContent = 'Sign in to manage your content';
+        loginSubtitle.style.opacity = '1';
+      }
+    }, 50);
+    return;
+  }
+  
+  // Konami code sequence: ↑↑↓↓←→←→BA
+  const konamiCode = [
+    'ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
+    'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight',
+    'KeyB', 'KeyA'
+  ];
+  
+  let konamiIndex = 0;
+  let konamiTimer = null;
+  const KONAMI_TIMEOUT = 3000; // Reset after 3 seconds of inactivity
+  
+  function revealLoginForm() {
+    if (!loginCard) return;
+    
+    // Store in sessionStorage
+    sessionStorage.setItem('loginFormRevealed', 'true');
+    
+    // Show and animate the login form
+    loginCard.style.display = 'block';
+    setTimeout(() => {
+      loginCard.classList.add('revealed');
+      
+      // Update title and subtitle
+      if (loginTitle) {
+        loginTitle.textContent = 'Admin Login';
+        loginTitle.classList.remove('observing');
+      }
+      if (loginSubtitle) {
+        loginSubtitle.textContent = 'Sign in to manage your content';
+        loginSubtitle.style.opacity = '1';
+      }
+    }, 50);
+  }
+  
+  document.addEventListener('keydown', (e) => {
+    // Clear timer on any keypress
+    if (konamiTimer) {
+      clearTimeout(konamiTimer);
+    }
+    
+    // Check if current key matches the sequence
+    if (e.code === konamiCode[konamiIndex]) {
+      konamiIndex++;
+      
+      // Check if we've completed the sequence
+      if (konamiIndex === konamiCode.length) {
+        revealLoginForm();
+        konamiIndex = 0;
+        return;
+      }
+    } else {
+      // Wrong key, reset sequence
+      konamiIndex = 0;
+    }
+    
+    // Reset after timeout
+    konamiTimer = setTimeout(() => {
+      konamiIndex = 0;
+    }, KONAMI_TIMEOUT);
+  });
+})();
+
 // Check if already authenticated
 fetch('/api/auth/status')
   .then(res => res.json())

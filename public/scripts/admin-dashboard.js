@@ -112,7 +112,7 @@ async function checkAuth() {
     const res = await fetch('/api/auth/status');
     const data = await res.json();
     if (!data.authenticated) {
-      window.location.href = '/admin/login';
+      window.location.href = '/observe';
       return false;
     }
     adminUser.textContent = data.username;

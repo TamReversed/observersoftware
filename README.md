@@ -216,7 +216,7 @@ See `.env.example` for all required and optional environment variables.
 
 ## Admin Panel
 
-Access the admin panel at `/admin/login`. Default credentials:
+Access the admin panel at `/observe`. Default credentials:
 - Username: `admin`
 - Password: `changeme123` (change in production!)
 

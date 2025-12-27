@@ -107,8 +107,13 @@ app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin', 'dashboard.html'));
 });
 
-app.get('/admin/login', (req, res) => {
+app.get('/observe', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin', 'login.html'));
+});
+
+// Keep /admin/login as redirect for backwards compatibility
+app.get('/admin/login', (req, res) => {
+  res.redirect('/observe');
 });
 
 app.get('/coming-soon', (req, res) => {
@@ -159,7 +164,7 @@ async function startServer() {
     
     app.listen(config.port, () => {
       console.log(`Server running at http://localhost:${config.port}`);
-      console.log(`Admin panel: http://localhost:${config.port}/admin/login`);
+      console.log(`Admin panel: http://localhost:${config.port}/observe`);
       if (config.database.useDatabase) {
         console.log('✓ Using PostgreSQL database');
       } else {
