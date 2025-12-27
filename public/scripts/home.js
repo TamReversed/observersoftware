@@ -299,14 +299,22 @@
                 if (carousel) carousel.innerHTML = '';
                 if (indicators) indicators.innerHTML = '';
                 
-                // Create carousel items
+                // Create carousel items - wrap each image in a container
                 data.screenshots.forEach((src, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'product-modal__screenshot-item';
+                    item.style.minWidth = '100%';
+                    item.style.width = '100%';
+                    item.style.flexShrink = '0';
+                    
                     const img = document.createElement('img');
                     img.src = src;
                     img.alt = `${data.title} screenshot ${index + 1}`;
                     img.className = 'product-modal__screenshot';
                     img.loading = 'lazy';
-                    if (carousel) carousel.appendChild(img);
+                    
+                    item.appendChild(img);
+                    if (carousel) carousel.appendChild(item);
                     
                     // Create indicator
                     if (indicators) {
@@ -338,9 +346,9 @@
                         });
                     }
                     
-                    // Update nav buttons
-                    if (prevBtn) prevBtn.disabled = index === 0;
-                    if (nextBtn) nextBtn.disabled = index === data.screenshots.length - 1;
+                    // Update nav buttons (allow wrapping)
+                    if (prevBtn) prevBtn.disabled = false;
+                    if (nextBtn) nextBtn.disabled = false;
                 };
                 
                 // Attach indicator click handlers
@@ -350,26 +358,32 @@
                     });
                 }
                 
-                // Attach navigation handlers
+                // Attach navigation handlers (with wrapping)
                 if (prevBtn) {
-                    prevBtn.onclick = () => goToScreenshot(currentIndex - 1);
-                    prevBtn.disabled = currentIndex === 0;
+                    prevBtn.onclick = () => {
+                        const newIndex = currentIndex > 0 ? currentIndex - 1 : data.screenshots.length - 1;
+                        goToScreenshot(newIndex);
+                    };
                 }
                 
                 if (nextBtn) {
-                    nextBtn.onclick = () => goToScreenshot(currentIndex + 1);
-                    nextBtn.disabled = currentIndex === data.screenshots.length - 1;
+                    nextBtn.onclick = () => {
+                        const newIndex = currentIndex < data.screenshots.length - 1 ? currentIndex + 1 : 0;
+                        goToScreenshot(newIndex);
+                    };
                 }
                 
-                // Keyboard navigation
+                // Keyboard navigation (with wrapping)
                 const handleKeyNav = (e) => {
                     if (modal?.getAttribute('aria-hidden') === 'false') {
-                        if (e.key === 'ArrowLeft' && currentIndex > 0) {
+                        if (e.key === 'ArrowLeft') {
                             e.preventDefault();
-                            goToScreenshot(currentIndex - 1);
-                        } else if (e.key === 'ArrowRight' && currentIndex < data.screenshots.length - 1) {
+                            const newIndex = currentIndex > 0 ? currentIndex - 1 : data.screenshots.length - 1;
+                            goToScreenshot(newIndex);
+                        } else if (e.key === 'ArrowRight') {
                             e.preventDefault();
-                            goToScreenshot(currentIndex + 1);
+                            const newIndex = currentIndex < data.screenshots.length - 1 ? currentIndex + 1 : 0;
+                            goToScreenshot(newIndex);
                         }
                     }
                 };

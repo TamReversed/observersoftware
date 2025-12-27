@@ -234,31 +234,33 @@
 
         screenshots.forEach((screenshot, index) => {
             const item = document.createElement('div');
-            item.className = 'carousel-item';
-            if (index === 0) item.classList.add('active');
-            item.setAttribute('data-index', index);
+            item.className = 'product-modal__screenshot-item';
+            item.style.minWidth = '100%';
+            item.style.width = '100%';
+            item.style.flexShrink = '0';
 
             const img = document.createElement('img');
             img.src = screenshot;
             img.alt = `Screenshot ${index + 1}`;
+            img.className = 'product-modal__screenshot';
             img.loading = 'lazy';
 
             item.appendChild(img);
             screenshotCarousel.appendChild(item);
         });
 
-        // Create indicators
-        if (screenshotIndicators) {
-            screenshotIndicators.innerHTML = '';
-            screenshots.forEach((_, index) => {
-                const indicator = document.createElement('button');
-                indicator.className = 'carousel-indicator';
-                if (index === 0) indicator.classList.add('active');
-                indicator.setAttribute('aria-label', `Go to screenshot ${index + 1}`);
-                indicator.addEventListener('click', () => goToScreenshot(index));
-                screenshotIndicators.appendChild(indicator);
-            });
-        }
+            // Create indicators
+            if (screenshotIndicators) {
+                screenshotIndicators.innerHTML = '';
+                screenshots.forEach((_, index) => {
+                    const indicator = document.createElement('button');
+                    indicator.className = 'product-modal__screenshots-indicator';
+                    if (index === 0) indicator.classList.add('active');
+                    indicator.setAttribute('aria-label', `Go to screenshot ${index + 1}`);
+                    indicator.addEventListener('click', () => goToScreenshot(index));
+                    screenshotIndicators.appendChild(indicator);
+                });
+            }
 
         // Navigation handlers
         if (screenshotPrev) {
@@ -283,36 +285,15 @@
     }
 
     function goToScreenshot(index) {
-        const items = screenshotCarousel?.querySelectorAll('.carousel-item');
-        const indicators = screenshotIndicators?.querySelectorAll('.carousel-indicator');
-        
-        if (!items || items.length === 0) return;
+        if (!screenshotCarousel || index < 0 || index >= screenshotCarousel.children.length) return;
 
         currentScreenshotIndex = index;
-        updateCarousel();
-    }
-
-    function updateCarousel() {
-        const items = screenshotCarousel?.querySelectorAll('.carousel-item');
-        const indicators = screenshotIndicators?.querySelectorAll('.carousel-indicator');
+        screenshotCarousel.style.transform = `translateX(-${index * 100}%)`;
         
-        if (!items) return;
-
-        items.forEach((item, index) => {
-            if (index === currentScreenshotIndex) {
-                item.classList.add('active');
-            } else {
-                item.classList.remove('active');
-            }
-        });
-
-        if (indicators) {
-            indicators.forEach((indicator, index) => {
-                if (index === currentScreenshotIndex) {
-                    indicator.classList.add('active');
-                } else {
-                    indicator.classList.remove('active');
-                }
+        // Update indicators
+        if (screenshotIndicators) {
+            screenshotIndicators.querySelectorAll('.product-modal__screenshots-indicator').forEach((ind, i) => {
+                ind.classList.toggle('active', i === index);
             });
         }
     }

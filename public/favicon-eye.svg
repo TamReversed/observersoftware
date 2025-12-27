@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
   <defs>
     <linearGradient id="eyeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#667eea"/>
@@ -12,12 +12,25 @@
       <stop offset="0%" style="stop-color:#1a1a2e"/>
       <stop offset="100%" style="stop-color:#0f0f23"/>
     </radialGradient>
+    <mask id="crescentMask" maskUnits="userSpaceOnUse">
+      <circle cx="100" cy="100" r="17.5" fill="white"/>
+      <circle cx="100" cy="90" r="14" fill="black"/>
+    </mask>
+    <clipPath id="eyeClip">
+      <path d="M 40 95 C 64.54 56.33 131.46 56.33 156 95 C 131.46 133.67 64.54 133.67 40 95"/>
+    </clipPath>
   </defs>
-  <!-- Eye shape -->
-  <ellipse cx="50" cy="50" rx="30" ry="20" fill="none" stroke="url(#eyeGradient)" stroke-width="2"/>
-  <!-- Iris -->
-  <circle cx="50" cy="50" r="15" fill="url(#irisGradient)"/>
-  <!-- Pupil -->
-  <circle cx="50" cy="50" r="8" fill="url(#pupilGradient)"/>
+  <!-- Eye shape (scaled and centered) -->
+  <g transform="translate(22, 52.5)">
+    <path fill="none" stroke="url(#eyeGradient)" stroke-width="2.5" 
+          d="M 40 95 C 64.54 56.33 131.46 56.33 156 95 C 131.46 133.67 64.54 133.67 40 95"/>
+    <g clip-path="url(#eyeClip)">
+      <g transform="translate(99, 95)">
+        <circle fill="none" stroke="url(#irisGradient)" stroke-width="2" cx="0" cy="0" r="30"/>
+        <circle fill="none" stroke="url(#eyeGradient)" stroke-width="4" cx="0" cy="0" r="21"/>
+        <circle fill="url(#eyeGradient)" cx="9" cy="-15" r="3"/>
+        <circle fill="url(#pupilGradient)" cx="0" cy="0" r="17.5" mask="url(#crescentMask)"/>
+      </g>
+    </g>
+  </g>
 </svg>
-
