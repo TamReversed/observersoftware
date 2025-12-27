@@ -82,7 +82,7 @@
                 <div class="footer__cta-group">
                     <h2 class="footer__cta-title">A clearer way through the work</h2>
                     <p class="footer__cta-subtitle">Send a short note with the workflow, the constraints, and where people get stuck. Observer will respond with a simple next step.</p>
-                    <button type="button" class="footer__email" id="contactBtn">Contact Us</button>
+                    <button type="button" class="footer__email" id="contactBtn" onclick="window.opnform?.open()">Contact Us</button>
                 </div>
                 <nav class="footer__nav" aria-label="Footer">
                     <div class="footer__nav-group">
@@ -113,39 +113,10 @@
         </div>
     </footer>
 
-    <!-- Contact Modal -->
-    <div class="product-modal" id="contactModal" aria-hidden="true" role="dialog" aria-labelledby="contactModalTitle">
-        <div class="product-modal__backdrop" id="contactModalBackdrop"></div>
-        <div class="product-modal__container">
-            <div class="product-modal__content">
-                <button class="product-modal__close" id="contactModalClose" aria-label="Close modal">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M18 6L6 18M6 6l12 12"/>
-                    </svg>
-                </button>
-                
-                <div class="product-modal__header">
-                    <h2 class="product-modal__title" id="contactModalTitle">Contact Us</h2>
-                    <p class="product-modal__subtitle">Send a short note with the workflow, the constraints, and where people get stuck. Observer will respond with a simple next step.</p>
-                </div>
+    <!-- Opnform Popup Widget -->
+    <script async data-nf='{"formurl":"https://opnform.com/forms/reach-out-to-me-hva5m4","emoji":"💬","position":"right","bgcolor":"#214e8c","width":"500"}' src='https://opnform.com/widgets/embed-min.js'></script>
 
-                <div class="product-modal__body">
-                    <div style="min-height: 500px; width: 100%;">
-                        <iframe style="border:none;width:100%;min-height:500px;" id="reach-out-to-me-hva5m4" src="https://opnform.com/forms/reach-out-to-me-hva5m4"></iframe>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script type="text/javascript" src="https://opnform.com/widgets/iframe.min.js"></script>
-    <script>
-        if (typeof initEmbed === 'function') {
-            initEmbed('reach-out-to-me-hva5m4', { autoResize: true });
-        }
-    </script>
     <script src="./scripts/blog.js" defer></script>
-    <script src="./scripts/contact-modal.js" defer></script>
 </body>
 </html>
 
