@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="eyeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea"/>
+      <stop offset="100%" style="stop-color:#764ba2"/>
+    </linearGradient>
+    <linearGradient id="irisGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00d2ff"/>
+      <stop offset="100%" style="stop-color:#3a7bd5"/>
+    </linearGradient>
+    <radialGradient id="pupilGradient" cx="30%" cy="30%" r="70%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="100%" style="stop-color:#0f0f23"/>
+    </radialGradient>
+  </defs>
+  <!-- Eye shape -->
+  <ellipse cx="50" cy="50" rx="30" ry="20" fill="none" stroke="url(#eyeGradient)" stroke-width="2"/>
+  <!-- Iris -->
+  <circle cx="50" cy="50" r="15" fill="url(#irisGradient)"/>
+  <!-- Pupil -->
+  <circle cx="50" cy="50" r="8" fill="url(#pupilGradient)"/>
+</svg>
+

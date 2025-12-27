@@ -156,12 +156,20 @@
 })();
 
 // Custom logo eye tracking - follows cursor anywhere on page
-document.addEventListener('DOMContentLoaded', () => {
+function initEyeTracking() {
   const logo = document.querySelector('.observer-logo-interactive');
-  if (!logo) return;
+  if (!logo) {
+    // Retry if logo not loaded yet
+    setTimeout(initEyeTracking, 100);
+    return;
+  }
   
   const eyeInner = logo.querySelector('.eye-inner');
-  if (!eyeInner) return;
+  if (!eyeInner) {
+    // Retry if eye element not found yet
+    setTimeout(initEyeTracking, 100);
+    return;
+  }
   
   const eyeCenterX = 99 + 5;
   const eyeCenterY = 95 + 10;
@@ -181,6 +189,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Track mouse anywhere on the page
   document.addEventListener('mousemove', (e) => {
     const rect = logo.getBoundingClientRect();
+    if (!rect.width || !rect.height) return; // Logo not rendered yet
+    
     const scaleX = 200 / rect.width;
     const scaleY = 250 / rect.height;
     
@@ -203,96 +213,126 @@ document.addEventListener('DOMContentLoaded', () => {
     targetX = 0;
     targetY = 0;
   });
-});
+}
+
+// Initialize eye tracking when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initEyeTracking);
+} else {
+  initEyeTracking();
+}
 
 const { startAuthentication, startRegistration } = SimpleWebAuthnBrowser;
 
 // Easter Egg: Konami code to reveal login form
 (function() {
-  // Check if form was already revealed (persist in sessionStorage)
-  const wasRevealed = sessionStorage.getItem('loginFormRevealed') === 'true';
-  
-  const loginCard = document.getElementById('loginCard');
-  const loginTitle = document.getElementById('loginTitle');
-  const loginSubtitle = document.getElementById('loginSubtitle');
-  
-  if (wasRevealed && loginCard) {
-    // Form was already revealed, show it immediately
-    loginCard.style.display = 'block';
-    setTimeout(() => {
-      loginCard.classList.add('revealed');
-      if (loginTitle) {
-        loginTitle.textContent = 'Admin Login';
-        loginTitle.classList.remove('observing');
-      }
-      if (loginSubtitle) {
-        loginSubtitle.textContent = 'Sign in to manage your content';
-        loginSubtitle.style.opacity = '1';
-      }
-    }, 50);
-    return;
-  }
-  
-  // Konami code sequence: ↑↑↓↓←→←→BA
-  const konamiCode = [
-    'ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
-    'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight',
-    'KeyB', 'KeyA'
-  ];
-  
-  let konamiIndex = 0;
-  let konamiTimer = null;
-  const KONAMI_TIMEOUT = 3000; // Reset after 3 seconds of inactivity
-  
-  function revealLoginForm() {
-    if (!loginCard) return;
+  // Wait for DOM to be ready
+  function initKonamiCode() {
+    // Check if form was already revealed (persist in sessionStorage)
+    const wasRevealed = sessionStorage.getItem('loginFormRevealed') === 'true';
     
-    // Store in sessionStorage
-    sessionStorage.setItem('loginFormRevealed', 'true');
+    const loginCard = document.getElementById('loginCard');
+    const loginTitle = document.getElementById('loginTitle');
+    const loginSubtitle = document.getElementById('loginSubtitle');
     
-    // Show and animate the login form
-    loginCard.style.display = 'block';
-    setTimeout(() => {
-      loginCard.classList.add('revealed');
-      
-      // Update title and subtitle
-      if (loginTitle) {
-        loginTitle.textContent = 'Admin Login';
-        loginTitle.classList.remove('observing');
-      }
-      if (loginSubtitle) {
-        loginSubtitle.textContent = 'Sign in to manage your content';
-        loginSubtitle.style.opacity = '1';
-      }
-    }, 50);
-  }
-  
-  document.addEventListener('keydown', (e) => {
-    // Clear timer on any keypress
-    if (konamiTimer) {
-      clearTimeout(konamiTimer);
+    if (!loginCard || !loginTitle || !loginSubtitle) {
+      // Elements not ready yet, try again
+      setTimeout(initKonamiCode, 100);
+      return;
     }
     
-    // Check if current key matches the sequence
-    if (e.code === konamiCode[konamiIndex]) {
-      konamiIndex++;
+    if (wasRevealed) {
+      // Form was already revealed, show it immediately
+      loginCard.style.display = 'block';
+      setTimeout(() => {
+        loginCard.classList.add('revealed');
+        loginTitle.textContent = 'Admin Login';
+        loginTitle.classList.remove('observing');
+        loginSubtitle.textContent = 'Sign in to manage your content';
+        loginSubtitle.style.opacity = '1';
+      }, 50);
+      return;
+    }
+    
+    // Konami code sequence: ↑↑↓↓←→←→BA
+    const konamiCode = [
+      'ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
+      'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight',
+      'KeyB', 'KeyA'
+    ];
+    
+    let konamiIndex = 0;
+    let konamiTimer = null;
+    const KONAMI_TIMEOUT = 3000; // Reset after 3 seconds of inactivity
+    
+    function revealLoginForm() {
+      // Store in sessionStorage
+      sessionStorage.setItem('loginFormRevealed', 'true');
       
-      // Check if we've completed the sequence
-      if (konamiIndex === konamiCode.length) {
-        revealLoginForm();
+      // Show and animate the login form
+      loginCard.style.display = 'block';
+      setTimeout(() => {
+        loginCard.classList.add('revealed');
+        
+        // Update title and subtitle
+        loginTitle.textContent = 'Admin Login';
+        loginTitle.classList.remove('observing');
+        loginSubtitle.textContent = 'Sign in to manage your content';
+        loginSubtitle.style.opacity = '1';
+      }, 50);
+    }
+    
+    // Prevent default behavior for arrow keys to avoid scrolling
+    document.addEventListener('keydown', (e) => {
+      // Only handle if form isn't revealed yet
+      const isHidden = loginCard.style.display === 'none' || 
+                      getComputedStyle(loginCard).display === 'none' ||
+                      !loginCard.classList.contains('revealed');
+      
+      if (!isHidden) {
+        return; // Form already revealed, don't process
+      }
+      
+      // Clear timer on any keypress
+      if (konamiTimer) {
+        clearTimeout(konamiTimer);
+      }
+      
+      // Check if current key matches the sequence
+      if (e.code === konamiCode[konamiIndex]) {
+        konamiIndex++;
+        
+        // Prevent default for arrow keys to avoid scrolling
+        if (e.code.startsWith('Arrow')) {
+          e.preventDefault();
+        }
+        
+        // Check if we've completed the sequence
+        if (konamiIndex === konamiCode.length) {
+          revealLoginForm();
+          konamiIndex = 0;
+          return;
+        }
+      } else {
+        // Wrong key, reset sequence (but don't reset on modifier keys)
+        if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
+          konamiIndex = 0;
+        }
+      }
+      
+      // Reset after timeout
+      konamiTimer = setTimeout(() => {
         konamiIndex = 0;
-        return;
-      }
-    } else {
-      // Wrong key, reset sequence
-      konamiIndex = 0;
-    }
-    
-    // Reset after timeout
-    konamiTimer = setTimeout(() => {
-      konamiIndex = 0;
-    }, KONAMI_TIMEOUT);
-  });
+      }, KONAMI_TIMEOUT);
+    }, { passive: false });
+  }
+  
+  // Initialize when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initKonamiCode);
+  } else {
+    initKonamiCode();
+  }
 })();
 
 // Check if already authenticated
