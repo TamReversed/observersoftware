@@ -351,6 +351,9 @@
                     if (nextBtn) nextBtn.disabled = false;
                 };
                 
+                // Initialize to first screenshot
+                goToScreenshot(0);
+                
                 // Attach indicator click handlers
                 if (indicators) {
                     indicators.querySelectorAll('.product-modal__screenshots-indicator').forEach((indicator, index) => {

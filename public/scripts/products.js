@@ -281,7 +281,8 @@
             };
         }
 
-        updateCarousel();
+        // Initialize to first screenshot
+        goToScreenshot(0);
     }
 
     function goToScreenshot(index) {
