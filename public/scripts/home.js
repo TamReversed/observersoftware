@@ -308,10 +308,22 @@
                     item.style.flexShrink = '0';
                     
                     const img = document.createElement('img');
-                    img.src = src;
+                    // Ensure src is a full path (prepend / if it's a relative path)
+                    img.src = src.startsWith('/') ? src : `/${src}`;
                     img.alt = `${data.title} screenshot ${index + 1}`;
                     img.className = 'product-modal__screenshot';
                     img.loading = 'lazy';
+                    
+                    // Handle image load errors
+                    img.onerror = function() {
+                        console.error('Failed to load screenshot:', src);
+                        this.style.display = 'none';
+                        const errorMsg = document.createElement('div');
+                        errorMsg.className = 'screenshot-error';
+                        errorMsg.textContent = 'Image failed to load';
+                        errorMsg.style.cssText = 'padding: 2rem; text-align: center; color: var(--color-text-secondary);';
+                        this.parentElement.appendChild(errorMsg);
+                    };
                     
                     item.appendChild(img);
                     if (carousel) carousel.appendChild(item);
