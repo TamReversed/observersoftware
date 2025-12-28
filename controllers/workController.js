@@ -1,32 +1,34 @@
 const { v4: uuidv4 } = require('uuid');
 const DataService = require('../services/dataService');
+const DbService = require('../services/dbService');
 const config = require('../config');
 
-const workService = new DataService(config.paths.workFile);
+// Use database if available, otherwise fall back to JSON files
+const workService = config.database.useDatabase
+  ? new DbService('work')
+  : new DataService(config.paths.workFile);
 
-function getWork(req, res, next) {
+async function getWork(req, res, next) {
   try {
-    const work = workService
-      .findAll(w => w.published)
-      .sort((a, b) => a.order - b.order);
+    let work = await workService.findAll(w => w.published);
+    work.sort((a, b) => a.order - b.order);
     res.json(work);
   } catch (error) {
     next(error);
   }
 }
 
-function getAllWork(req, res, next) {
+async function getAllWork(req, res, next) {
   try {
-    const work = workService
-      .findAll()
-      .sort((a, b) => a.order - b.order);
+    let work = await workService.findAll();
+    work.sort((a, b) => a.order - b.order);
     res.json(work);
   } catch (error) {
     next(error);
   }
 }
 
-function createWork(req, res, next) {
+async function createWork(req, res, next) {
   try {
     const { industry, problem, solution, tags, image, client, date, caseStudyUrl, published } = req.body;
 
@@ -34,7 +36,7 @@ function createWork(req, res, next) {
       return res.status(400).json({ error: 'Industry, problem, and solution are required' });
     }
 
-    const work = workService.findAll();
+    const work = await workService.findAll();
     const maxOrder = work.reduce((max, w) => Math.max(max, w.order || 0), 0);
 
     const newWork = {
@@ -51,17 +53,17 @@ function createWork(req, res, next) {
       published: !!published
     };
 
-    workService.create(newWork);
-    res.json(newWork);
+    const created = await workService.create(newWork);
+    res.json(created);
   } catch (error) {
     next(error);
   }
 }
 
-function updateWork(req, res, next) {
+async function updateWork(req, res, next) {
   try {
     const { industry, problem, solution, tags, image, client, date, caseStudyUrl, order, published } = req.body;
-    const work = workService.findById(req.params.id);
+    const work = await workService.findById(req.params.id);
 
     if (!work) {
       return res.status(404).json({ error: 'Work item not found' });
@@ -79,16 +81,16 @@ function updateWork(req, res, next) {
     if (order !== undefined) updates.order = order;
     if (published !== undefined) updates.published = published;
 
-    const updatedWork = workService.updateById(req.params.id, updates);
+    const updatedWork = await workService.updateById(req.params.id, updates);
     res.json(updatedWork);
   } catch (error) {
     next(error);
   }
 }
 
-function deleteWork(req, res, next) {
+async function deleteWork(req, res, next) {
   try {
-    const deleted = workService.deleteById(req.params.id);
+    const deleted = await workService.deleteById(req.params.id);
     if (!deleted) {
       return res.status(404).json({ error: 'Work item not found' });
     }

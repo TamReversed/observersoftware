@@ -1,10 +1,14 @@
 const bcrypt = require('bcrypt');
 const DataService = require('../services/dataService');
+const DbService = require('../services/dbService');
 const config = require('../config');
 const webauthnService = require('../services/webauthnService');
 const { getRpIDFromOrigin } = require('../services/webauthnService');
 
-const usersService = new DataService(config.paths.usersFile);
+// Use database if available, otherwise fall back to JSON files
+const usersService = config.database.useDatabase
+  ? new DbService('users')
+  : new DataService(config.paths.usersFile);
 
 async function login(req, res, next) {
   try {
@@ -14,7 +18,7 @@ async function login(req, res, next) {
       return res.status(400).json({ error: 'Username and password are required' });
     }
 
-    const users = usersService.findAll();
+    const users = await usersService.findAll();
     const user = users.find(u => u.username === username);
 
     if (!user) {
@@ -39,11 +43,11 @@ function logout(req, res) {
   res.json({ success: true });
 }
 
-function getStatus(req, res) {
+async function getStatus(req, res) {
   if (req.session && req.session.userId) {
-    const user = usersService.findById(req.session.userId);
-    res.json({ 
-      authenticated: true, 
+    const user = await usersService.findById(req.session.userId);
+    res.json({
+      authenticated: true,
       username: req.session.username,
       hasPasskey: user && user.webauthnCredentials && user.webauthnCredentials.length > 0
     });
@@ -66,7 +70,7 @@ async function startWebAuthnRegistration(req, res, next) {
       return res.status(400).json({ error: 'Username is required' });
     }
 
-    const users = usersService.findAll();
+    const users = await usersService.findAll();
     const user = users.find(u => u.username === username);
 
     if (!user) {
@@ -77,7 +81,7 @@ async function startWebAuthnRegistration(req, res, next) {
     if (!user.webauthnCredentials) {
       user.webauthnCredentials = [];
       // Update user to persist the empty array
-      usersService.updateById(user.id, { webauthnCredentials: [] });
+      await usersService.updateById(user.id, { webauthnCredentials: [] });
     }
 
     // Check if user already has a passkey (we only allow one per user)
@@ -160,7 +164,7 @@ async function finishWebAuthnRegistration(req, res, next) {
     }
 
     const userId = req.session.webauthnUserId;
-    const user = usersService.findById(userId);
+    const user = await usersService.findById(userId);
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
@@ -170,10 +174,10 @@ async function finishWebAuthnRegistration(req, res, next) {
     const protocol = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
     const host = req.headers.host || req.get('host');
     const origin = `${protocol}://${host}`;
-    
+
     // Get rpID from origin
     const rpID = getRpIDFromOrigin(origin);
-    
+
     // Create options object with stored challenge
     const storedChallenge = req.session.webauthnChallenge;
     const options = {
@@ -195,21 +199,21 @@ async function finishWebAuthnRegistration(req, res, next) {
         storedChallengeLength: storedChallenge?.length,
         responseChallenge: response?.response?.clientDataJSON ? 'present' : 'missing'
       });
-      
+
       const verification = await webauthnService.verifyRegistration(options, response, origin);
 
       if (!verification.verified) {
         console.error('Registration verification failed - not verified');
         return res.status(400).json({ error: 'Registration verification failed' });
       }
-      
+
       console.log('Registration verified successfully');
 
     // Add credential to user
     const updatedCredentials = user.webauthnCredentials || [];
     updatedCredentials.push(verification.credential);
 
-    usersService.updateById(userId, {
+    await usersService.updateById(userId, {
       webauthnCredentials: updatedCredentials
     });
 
@@ -266,7 +270,7 @@ async function startWebAuthnLogin(req, res, next) {
       return res.status(400).json({ error: 'Username is required' });
     }
 
-    const users = usersService.findAll();
+    const users = await usersService.findAll();
     const user = users.find(u => u.username === username);
 
     if (!user) {
@@ -325,14 +329,14 @@ async function finishWebAuthnLogin(req, res, next) {
     }
 
     // Verify session state
-    if (!req.session.webauthnChallenge || 
-        !req.session.webauthnUserId || 
+    if (!req.session.webauthnChallenge ||
+        !req.session.webauthnUserId ||
         req.session.webauthnType !== 'authentication') {
       return res.status(400).json({ error: 'Invalid authentication session' });
     }
 
     const userId = req.session.webauthnUserId;
-    const user = usersService.findById(userId);
+    const user = await usersService.findById(userId);
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
@@ -382,7 +386,7 @@ async function finishWebAuthnLogin(req, res, next) {
     );
     if (credentialIndex !== -1) {
       user.webauthnCredentials[credentialIndex].counter = verification.newCounter;
-      usersService.updateById(userId, {
+      await usersService.updateById(userId, {
         webauthnCredentials: user.webauthnCredentials
       });
     }

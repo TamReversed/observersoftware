@@ -2,17 +2,26 @@ const fs = require('fs');
 const bcrypt = require('bcrypt');
 const { v4: uuidv4 } = require('uuid');
 const DataService = require('./dataService');
+const DbService = require('./dbService');
 const config = require('../config');
 
+// Helper to get appropriate service based on storage mode
+function getService(tableName, filePath) {
+  return config.database.useDatabase
+    ? new DbService(tableName)
+    : new DataService(filePath);
+}
+
 async function initializeData() {
-  // Create data directory if needed
-  if (!fs.existsSync(config.paths.dataDir)) {
+  // Create data directory if needed (only for file-based storage)
+  if (!config.database.useDatabase && !fs.existsSync(config.paths.dataDir)) {
     fs.mkdirSync(config.paths.dataDir, { recursive: true });
   }
 
-  // Initialize users file with admin account
-  const usersService = new DataService(config.paths.usersFile);
-  if (usersService.findAll().length === 0) {
+  // Initialize users with admin account
+  const usersService = getService('users', config.paths.usersFile);
+  const existingUsers = await usersService.findAll();
+  if (existingUsers.length === 0) {
     const adminPassword = config.admin.defaultPassword;
     const hashedPassword = await bcrypt.hash(adminPassword, 12);
     const adminUser = {
@@ -22,16 +31,17 @@ async function initializeData() {
       webauthnCredentials: [], // Initialize empty array for passkeys
       createdAt: new Date().toISOString()
     };
-    usersService.create(adminUser);
+    await usersService.create(adminUser);
     console.log(`Admin user created: ${config.admin.defaultUsername}`);
     if (!process.env.ADMIN_PASSWORD) {
       console.log('WARNING: Using default admin password. Set ADMIN_PASSWORD env var for production!');
     }
   }
 
-  // Initialize posts file
-  const postsService = new DataService(config.paths.postsFile);
-  if (postsService.findAll().length === 0) {
+  // Initialize posts
+  const postsService = getService('posts', config.paths.postsFile);
+  const existingPosts = await postsService.findAll();
+  if (existingPosts.length === 0) {
     const samplePosts = [
       {
         id: uuidv4(),
@@ -127,13 +137,16 @@ The patterns people create organically are the real requirements. Our job is to 
         published: true
       }
     ];
-    samplePosts.forEach(post => postsService.create(post));
+    for (const post of samplePosts) {
+      await postsService.create(post);
+    }
     console.log('Sample blog posts created');
   }
 
-  // Initialize work file
-  const workService = new DataService(config.paths.workFile);
-  if (workService.findAll().length === 0) {
+  // Initialize work
+  const workService = getService('work', config.paths.workFile);
+  const existingWork = await workService.findAll();
+  if (existingWork.length === 0) {
     const sampleWork = [
       {
         id: uuidv4(),
@@ -188,13 +201,16 @@ The patterns people create organically are the real requirements. Our job is to 
         published: true
       }
     ];
-    sampleWork.forEach(item => workService.create(item));
+    for (const item of sampleWork) {
+      await workService.create(item);
+    }
     console.log('Sample work items created');
   }
 
-  // Initialize capabilities file
-  const capabilitiesService = new DataService(config.paths.capabilitiesFile);
-  if (capabilitiesService.findAll().length === 0) {
+  // Initialize capabilities
+  const capabilitiesService = getService('capabilities', config.paths.capabilitiesFile);
+  const existingCapabilities = await capabilitiesService.findAll();
+  if (existingCapabilities.length === 0) {
     const sampleCapabilities = [
       {
         id: uuidv4(),
@@ -211,13 +227,11 @@ The patterns people create organically are the real requirements. Our job is to 
         published: true
       }
     ];
-    sampleCapabilities.forEach(cap => capabilitiesService.create(cap));
+    for (const cap of sampleCapabilities) {
+      await capabilitiesService.create(cap);
+    }
     console.log('Sample capabilities created');
   }
 }
 
 module.exports = { initializeData };
-
-
-
-

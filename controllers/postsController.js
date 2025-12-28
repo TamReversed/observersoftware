@@ -1,11 +1,15 @@
 const { v4: uuidv4 } = require('uuid');
 const DataService = require('../services/dataService');
+const DbService = require('../services/dbService');
 const { slugify, calculateReadTime } = require('../utils/helpers');
 const { renderMarkdown } = require('../services/markdownService');
 const { CATEGORIES } = require('../utils/constants');
 const config = require('../config');
 
-const postsService = new DataService(config.paths.postsFile);
+// Use database if available, otherwise fall back to JSON files
+const postsService = config.database.useDatabase
+  ? new DbService('posts')
+  : new DataService(config.paths.postsFile);
 
 // Enhanced related posts algorithm
 function getRelatedPosts(currentPost, allPosts) {
@@ -60,15 +64,14 @@ function getCategories(req, res) {
   res.json(CATEGORIES);
 }
 
-function getPosts(req, res, next) {
+async function getPosts(req, res, next) {
   try {
     const { search, category, page = 1, limit = 8 } = req.query;
     const pageNum = parseInt(page, 10);
     const limitNum = parseInt(limit, 10);
 
-    let posts = postsService
-      .findAll(p => p.published)
-      .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+    let posts = await postsService.findAll(p => p.published);
+    posts.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
 
     // Filter by category
     if (category) {
@@ -115,16 +118,16 @@ function getPosts(req, res, next) {
   }
 }
 
-function getPostBySlug(req, res, next) {
+async function getPostBySlug(req, res, next) {
   try {
-    const post = postsService.findBySlug(req.params.slug);
+    const post = await postsService.findBySlug(req.params.slug);
 
     if (!post || !post.published) {
       return res.status(404).json({ error: 'Post not found' });
     }
 
     // Get related posts with enhanced algorithm
-    const allPosts = postsService.findAll();
+    const allPosts = await postsService.findAll();
     const relatedPosts = getRelatedPosts(post, allPosts)
       .slice(0, 4)
       .map(p => ({
@@ -148,10 +151,10 @@ function getPostBySlug(req, res, next) {
   }
 }
 
-function getAllPosts(req, res, next) {
+async function getAllPosts(req, res, next) {
   try {
-    const posts = postsService
-      .findAll()
+    let posts = await postsService.findAll();
+    posts = posts
       .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
       .map(p => ({
         ...p,
@@ -164,7 +167,7 @@ function getAllPosts(req, res, next) {
   }
 }
 
-function createPost(req, res, next) {
+async function createPost(req, res, next) {
   try {
     const { title, excerpt, content, category, published } = req.body;
 
@@ -172,7 +175,7 @@ function createPost(req, res, next) {
       return res.status(400).json({ error: 'Title and content are required' });
     }
 
-    const posts = postsService.findAll();
+    const posts = await postsService.findAll();
     const slug = slugify(title);
 
     // Check for duplicate slug
@@ -193,17 +196,17 @@ function createPost(req, res, next) {
       published: !!published
     };
 
-    postsService.create(newPost);
-    res.json(newPost);
+    const created = await postsService.create(newPost);
+    res.json(created);
   } catch (error) {
     next(error);
   }
 }
 
-function updatePost(req, res, next) {
+async function updatePost(req, res, next) {
   try {
     const { title, excerpt, content, category, published } = req.body;
-    const post = postsService.findBySlug(req.params.slug);
+    const post = await postsService.findBySlug(req.params.slug);
 
     if (!post) {
       return res.status(404).json({ error: 'Post not found' });
@@ -213,7 +216,7 @@ function updatePost(req, res, next) {
 
     // Check for duplicate slug (excluding current post)
     if (newSlug !== post.slug) {
-      const posts = postsService.findAll();
+      const posts = await postsService.findAll();
       if (posts.some(p => p.slug === newSlug)) {
         return res.status(400).json({ error: 'A post with this title already exists' });
       }
@@ -224,23 +227,23 @@ function updatePost(req, res, next) {
       ...(excerpt !== undefined && { excerpt }),
       ...(category !== undefined && { category }),
       ...(content !== undefined && { content }),
-      ...(published !== undefined && { 
+      ...(published !== undefined && {
         published,
         publishedAt: published && !post.publishedAt ? new Date().toISOString() : post.publishedAt
       }),
       updatedAt: new Date().toISOString()
     };
 
-    const updatedPost = postsService.updateBySlug(req.params.slug, updates);
+    const updatedPost = await postsService.updateBySlug(req.params.slug, updates);
     res.json(updatedPost);
   } catch (error) {
     next(error);
   }
 }
 
-function deletePost(req, res, next) {
+async function deletePost(req, res, next) {
   try {
-    const deleted = postsService.deleteBySlug(req.params.slug);
+    const deleted = await postsService.deleteBySlug(req.params.slug);
     if (!deleted) {
       return res.status(404).json({ error: 'Post not found' });
     }

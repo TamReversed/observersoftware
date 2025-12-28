@@ -29,18 +29,17 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://opnform.com", "blob:"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "blob:"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       imgSrc: ["'self'", "data:", "https:"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       connectSrc: [
-        "'self'", 
-        "https://fonts.googleapis.com", 
-        "https://cdn.jsdelivr.net", 
-        "https://opnform.com",
+        "'self'",
+        "https://fonts.googleapis.com",
+        "https://cdn.jsdelivr.net",
         ...(config.isProduction ? [] : ["http://127.0.0.1:7242", "http://localhost:7242"])
       ],
-      frameSrc: ["'self'", "https://opnform.com"],
+      frameSrc: ["'self'"],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: config.isProduction ? [] : null
     }
@@ -194,7 +193,7 @@ async function startServer() {
       console.log('Security features enabled:');
       console.log('  ✓ Helmet.js security headers');
       console.log('  ✓ CSRF protection');
-      console.log('  ✓ Rate limiting (login: 5/15min, API: 100/15min)');
+      console.log('  ✓ Rate limiting (login: 5/15min, API: 200/15min)');
       console.log('  ✓ Input validation');
       console.log('  ✓ Markdown sanitization');
       console.log('  ✓ File upload validation');
