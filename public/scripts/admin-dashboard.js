@@ -279,18 +279,26 @@ function switchType(type) {
   });
 
   // Update sidebar title
-  const titles = { posts: 'Posts', work: 'Work', capabilities: 'Products', messages: 'Messages' };
+  const titles = { posts: 'Posts', work: 'Work', capabilities: 'Products', messages: 'Messages', changelog: 'Changelog' };
   sidebarTitle.textContent = titles[type];
-  
-  // Hide "New" button for messages (read-only)
+
+  // Hide "New" button for messages and changelog (read-only)
   const newItemBtn = document.getElementById('newItemBtn');
   if (newItemBtn) {
-    newItemBtn.style.display = type === 'messages' ? 'none' : 'inline-flex';
+    newItemBtn.style.display = (type === 'messages' || type === 'changelog') ? 'none' : 'inline-flex';
   }
 
   // Hide all editors, show welcome
   document.querySelectorAll('.editor-form').forEach(f => f.style.display = 'none');
   welcomeState.style.display = 'flex';
+
+  // Handle changelog type specially
+  if (type === 'changelog') {
+    welcomeState.style.display = 'none';
+    document.getElementById('changelogViewer').style.display = 'block';
+    itemsList.innerHTML = '<div class="empty-state">View application updates and fixes</div>';
+    return;
+  }
 
   // Load and render
   loadItems(type);

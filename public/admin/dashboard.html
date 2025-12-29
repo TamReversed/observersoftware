@@ -31,6 +31,7 @@
           <button class="content-type-tab" data-type="work">Work</button>
           <button class="content-type-tab" data-type="capabilities">Products</button>
           <button class="content-type-tab" data-type="messages">Messages</button>
+          <button class="content-type-tab" data-type="changelog">Changelog</button>
       </div>
         <div class="sidebar-actions">
           <span class="sidebar-title" id="sidebarTitle">Posts</span>
@@ -283,6 +284,69 @@
           <div class="form-group">
             <label class="form-label">Message</label>
             <div class="form-readonly form-textarea" id="messageContent" style="white-space: pre-wrap;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Changelog Viewer -->
+      <div id="changelogViewer" class="editor-form" style="display: none;">
+        <div class="editor-header">
+          <h2>Application Changelog</h2>
+        </div>
+        <div class="editor-content changelog-content">
+          <div class="changelog-entry">
+            <div class="changelog-date">December 29, 2025</div>
+            <h3 class="changelog-title">WebAuthn Authentication Fix</h3>
+            <div class="changelog-details">
+              <p><strong>Issue:</strong> Passkey login was failing with <code>input.replace is not a function</code> error after successful registration.</p>
+              <p><strong>Root Cause:</strong> The SimpleWebAuthn library v10+ expects credential IDs in <code>allowCredentials</code> to be base64url <em>strings</em>, not Buffers. The code was incorrectly converting the stored base64url string IDs into Buffer objects before passing them to the library.</p>
+              <p><strong>Fix:</strong> Modified <code>webauthnService.js</code> to pass credential IDs directly as base64url strings instead of converting them to Buffers. The library handles the conversion internally.</p>
+              <p><strong>Files Changed:</strong> <code>services/webauthnService.js</code></p>
+            </div>
+          </div>
+
+          <div class="changelog-entry">
+            <div class="changelog-date">December 29, 2025</div>
+            <h3 class="changelog-title">Blog Script Loading Fix</h3>
+            <div class="changelog-details">
+              <p><strong>Issue:</strong> Blog page showed <code>Identifier 'isDevelopment' has already been declared</code> error.</p>
+              <p><strong>Root Cause:</strong> The <code>blog.html</code> file had debug code that attempted to re-load <code>blog.js</code> if it detected initialization hadn't completed. This caused the script to load twice, resulting in duplicate variable declarations.</p>
+              <p><strong>Fix:</strong> Removed the duplicate script loading fallback code from <code>blog.html</code> and cleaned up debug logging from <code>blog.js</code>.</p>
+              <p><strong>Files Changed:</strong> <code>public/blog.html</code>, <code>public/scripts/blog.js</code></p>
+            </div>
+          </div>
+
+          <div class="changelog-entry">
+            <div class="changelog-date">December 29, 2025</div>
+            <h3 class="changelog-title">JSONB Serialization &amp; Blog Posts Migration</h3>
+            <div class="changelog-details">
+              <p><strong>Issue:</strong> Blog posts were not appearing on the production site.</p>
+              <p><strong>Root Cause:</strong> The <code>data/posts.json</code> file was excluded in <code>.gitignore</code>, so posts weren't available on Railway for migration to PostgreSQL.</p>
+              <p><strong>Fix:</strong> Updated <code>.gitignore</code> to track <code>posts.json</code> so the migration script can import posts to the database on deployment.</p>
+              <p><strong>Files Changed:</strong> <code>.gitignore</code>, <code>data/posts.json</code></p>
+            </div>
+          </div>
+
+          <div class="changelog-entry">
+            <div class="changelog-date">December 28, 2025</div>
+            <h3 class="changelog-title">Product Modal &amp; Screenshot Display Fixes</h3>
+            <div class="changelog-details">
+              <p><strong>Issue:</strong> Product modals weren't opening on click, and screenshots weren't displaying properly.</p>
+              <p><strong>Root Cause:</strong> The Three.js mesh background canvas was intercepting click events. Screenshot image paths weren't being normalized correctly.</p>
+              <p><strong>Fix:</strong> Added <code>pointer-events: none</code> to the mesh background element and improved screenshot URL handling with better error messages.</p>
+              <p><strong>Files Changed:</strong> <code>public/styles/styles.css</code>, <code>public/scripts/products.js</code>, <code>public/scripts/home.js</code></p>
+            </div>
+          </div>
+
+          <div class="changelog-entry">
+            <div class="changelog-date">December 28, 2025</div>
+            <h3 class="changelog-title">Database Mode for All Controllers</h3>
+            <div class="changelog-details">
+              <p><strong>Issue:</strong> Some controllers were hardcoded to use JSON file storage instead of PostgreSQL when deployed.</p>
+              <p><strong>Root Cause:</strong> The <code>postsController</code>, <code>workController</code>, and <code>authController</code> weren't checking the database configuration flag.</p>
+              <p><strong>Fix:</strong> Updated all controllers to conditionally use <code>DbService</code> (PostgreSQL) or <code>DataService</code> (JSON files) based on the <code>config.database.useDatabase</code> setting.</p>
+              <p><strong>Files Changed:</strong> <code>controllers/postsController.js</code>, <code>controllers/workController.js</code>, <code>controllers/authController.js</code>, <code>services/initService.js</code></p>
+            </div>
           </div>
         </div>
       </div>
