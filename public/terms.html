@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="./favicon-eye.svg" type="image/svg+xml">
+    <title>Terms & Privacy — Observer</title>
+    <meta name="description" content="Terms of Service and Privacy Policy for Observer Software. Learn how we handle your data.">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Terms & Privacy — Observer">
+    <meta property="og:description" content="Terms of Service and Privacy Policy for Observer Software.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://observersoftware.io/terms">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Terms & Privacy — Observer">
+    <meta name="twitter:description" content="Terms of Service and Privacy Policy for Observer Software.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./styles/styles.css">
+    <link rel="stylesheet" href="./styles/transitions.css">
+    <script async src="https://cdn.jsdelivr.net/npm/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+    <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js"}}</script>
+    <script type="module">
+        import * as THREE from 'three';
+        window.THREE = THREE;
+        window.dispatchEvent(new CustomEvent('threejs-loaded'));
+    </script>
+    <style>
+        .terms-section {
+            padding: 8rem 0 4rem;
+            min-height: 100vh;
+        }
+        .terms-section__header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .terms-section__title {
+            font-family: 'Source Serif 4', serif;
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 400;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+        .terms-section__subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .terms-section__updated {
+            color: var(--text-tertiary);
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+        .terms-content {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 1rem;
+            padding: 2.5rem;
+            backdrop-filter: blur(20px);
+        }
+        .terms-content h2 {
+            font-family: 'Source Serif 4', serif;
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin: 2rem 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .terms-content h2:first-child {
+            margin-top: 0;
+        }
+        .terms-content h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 1.5rem 0 0.75rem;
+        }
+        .terms-content p {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 1rem;
+        }
+        .terms-content ul {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+        .terms-content li {
+            margin-bottom: 0.5rem;
+        }
+        .terms-content strong {
+            color: var(--text-primary);
+        }
+        .terms-content a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        .terms-content a:hover {
+            text-decoration: underline;
+        }
+        .terms-toc {
+            background: rgba(124, 155, 221, 0.1);
+            border: 1px solid rgba(124, 155, 221, 0.2);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .terms-toc__title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .terms-toc ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.5rem;
+        }
+        .terms-toc li {
+            margin: 0;
+        }
+        .terms-toc a {
+            color: var(--accent);
+            font-size: 0.9rem;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+        .data-table th,
+        .data-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .data-table th {
+            color: var(--text-primary);
+            font-weight: 600;
+            background: rgba(124, 155, 221, 0.1);
+        }
+        .data-table td {
+            color: var(--text-secondary);
+        }
+        .highlight-box {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        .highlight-box--warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.2);
+        }
+        @media (max-width: 768px) {
+            .terms-content {
+                padding: 1.5rem;
+            }
+            .data-table {
+                font-size: 0.8rem;
+            }
+            .data-table th,
+            .data-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="galaxy" aria-hidden="true"></canvas>
+    <div class="nebula" aria-hidden="true"></div>
+    <div class="orb orb-1" aria-hidden="true"></div>
+    <div class="orb orb-2" aria-hidden="true"></div>
+    <div class="orb orb-3" aria-hidden="true"></div>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <!-- Navigation -->
+    <nav class="nav" id="nav">
+        <div class="container">
+            <div class="nav__inner">
+                <a href="/" class="nav__logo">
+                    <svg class="logo-mark observer-logo-interactive" width="28" height="28" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="navHexGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#7c9bdd;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#a3b8e8;stop-opacity:1" />
+                            </linearGradient>
+                            <radialGradient id="navNodeGradient" cx="30%" cy="30%" r="70%">
+                                <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#cce5ff;stop-opacity:1" />
+                            </radialGradient>
+                            <linearGradient id="navEyeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#cce5ff;stop-opacity:1" />
+                            </linearGradient>
+                            <linearGradient id="navIrisGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#7c9bdd;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#a3b8e8;stop-opacity:1" />
+                            </linearGradient>
+                            <radialGradient id="navPupilGradient" cx="30%" cy="30%" r="70%">
+                                <stop offset="0%" style="stop-color:#0e1017;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#08090c;stop-opacity:1" />
+                            </radialGradient>
+                            <filter id="navGlow" x="-50%" y="-50%" width="200%" height="200%">
+                                <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+                                <feOffset dx="0" dy="0" result="offsetblur"/>
+                                <feComponentTransfer>
+                                    <feFuncA type="linear" slope="0.8"/>
+                                </feComponentTransfer>
+                                <feMerge>
+                                    <feMergeNode/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+                            <mask id="navCrescentMask" maskUnits="userSpaceOnUse">
+                                <rect width="200" height="200" fill="white"/>
+                                <ellipse cx="100" cy="100" rx="25" ry="25" fill="black"/>
+                            </mask>
+                            <clipPath id="navEyeClip">
+                                <circle cx="100" cy="100" r="35"/>
+                            </clipPath>
+                        </defs>
+                        <path fill="none" stroke="url(#navHexGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M 147 11 L 185 89"/>
+                        <path fill="none" stroke="url(#navHexGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M 186 101 L 146 177"/>
+                        <path fill="none" stroke="url(#navHexGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M 138 183 L 57 183"/>
+                        <path fill="none" stroke="url(#navHexGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M 49 177 L 9 99"/>
+                        <path fill="none" stroke="url(#navHexGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M 9 89 L 50 12"/>
+                        <path fill="none" stroke="url(#navHexGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M 60 9 L 137 5"/>
+                        <circle fill="url(#navNodeGradient)" filter="url(#navGlow)" cx="54" cy="7" r="7"/>
+                        <circle fill="url(#navNodeGradient)" filter="url(#navGlow)" cx="143" cy="7" r="7"/>
+                        <circle fill="url(#navNodeGradient)" filter="url(#navGlow)" cx="188" cy="95" r="7"/>
+                        <circle fill="url(#navNodeGradient)" filter="url(#navGlow)" cx="144" cy="182" r="7"/>
+                        <circle fill="url(#navNodeGradient)" filter="url(#navGlow)" cx="52" cy="182" r="7"/>
+                        <circle fill="url(#navNodeGradient)" filter="url(#navGlow)" cx="7" cy="94" r="7"/>
+                        <g transform="translate(100, 100)">
+                            <path fill="none" stroke="url(#navEyeGradient)" stroke-width="2.5" d="M -35 0 A 35 35 0 0 1 35 0" stroke-linecap="round"/>
+                            <g clip-path="url(#navEyeClip)">
+                                <circle fill="none" stroke="url(#navIrisGradient)" stroke-width="2" cx="0" cy="0" r="30"/>
+                                <circle fill="none" stroke="url(#navEyeGradient)" stroke-width="4" cx="0" cy="0" r="21"/>
+                                <circle fill="url(#navEyeGradient)" cx="9" cy="-15" r="3"/>
+                                <circle fill="url(#navPupilGradient)" cx="0" cy="0" r="17.5" mask="url(#navCrescentMask)"/>
+                            </g>
+                        </g>
+                    </svg>
+                    <span class="nav__brand">Observer</span>
+                    <span class="nav__meta">a Techademy LLC subsidiary</span>
+                </a>
+                <ul class="nav__links">
+                    <li><a href="/#work" class="nav__link">Work</a></li>
+                    <li><a href="/#capabilities" class="nav__link">Products</a></li>
+                    <li><a href="./blog.html" class="nav__link">Blog</a></li>
+                    <li><a href="/#about" class="nav__link">About</a></li>
+                    <li><a href="./contact.html" class="nav__link">Contact</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main id="main">
+        <section class="terms-section">
+            <div class="container">
+                <div class="terms-section__header reveal">
+                    <h1 class="terms-section__title">Terms & Privacy</h1>
+                    <p class="terms-section__subtitle">How we handle your data and the terms governing use of our services.</p>
+                    <p class="terms-section__updated">Last updated: December 28, 2025</p>
+                </div>
+
+                <div class="terms-content reveal">
+                    <div class="terms-toc">
+                        <div class="terms-toc__title">Contents</div>
+                        <ul>
+                            <li><a href="#privacy">Privacy Policy</a></li>
+                            <li><a href="#data-collection">Data We Collect</a></li>
+                            <li><a href="#cookies">Cookies & Sessions</a></li>
+                            <li><a href="#security">Security Measures</a></li>
+                            <li><a href="#third-party">Third-Party Services</a></li>
+                            <li><a href="#retention">Data Retention</a></li>
+                            <li><a href="#rights">Your Rights</a></li>
+                            <li><a href="#terms">Terms of Service</a></li>
+                        </ul>
+                    </div>
+
+                    <h2 id="privacy">Privacy Policy</h2>
+                    <p>Observer ("we", "us", or "our") operates the observersoftware.io website. This page informs you of our policies regarding the collection, use, and disclosure of personal information when you use our Service.</p>
+
+                    <div class="highlight-box">
+                        <strong>Privacy First:</strong> We do not use any third-party analytics, tracking pixels, or advertising networks. Your browsing activity on our site is not monitored or shared with any external parties.
+                    </div>
+
+                    <h2 id="data-collection">Data We Collect</h2>
+
+                    <h3>Contact Form Submissions</h3>
+                    <p>When you submit our contact form, we collect:</p>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Purpose</th>
+                                <th>Required</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Name</td>
+                                <td>To address you in our response</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>Email address</td>
+                                <td>To respond to your inquiry</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>Subject</td>
+                                <td>To categorize your message</td>
+                                <td>No</td>
+                            </tr>
+                            <tr>
+                                <td>Message content</td>
+                                <td>To understand and respond to your inquiry</td>
+                                <td>Yes</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>Contact form submissions are rate-limited to 3 messages per 15 minutes to prevent spam.</p>
+
+                    <h3>Administrator Accounts</h3>
+                    <p>For site administrators only, we store:</p>
+                    <ul>
+                        <li><strong>Username:</strong> For authentication purposes</li>
+                        <li><strong>Password:</strong> Securely hashed using bcrypt (we never store plaintext passwords)</li>
+                        <li><strong>Passkey credentials:</strong> WebAuthn public keys for passwordless authentication (optional)</li>
+                    </ul>
+
+                    <h3>What We Do NOT Collect</h3>
+                    <ul>
+                        <li>IP addresses for tracking purposes</li>
+                        <li>Browser fingerprints</li>
+                        <li>Location data</li>
+                        <li>Demographic information</li>
+                        <li>Browsing behavior or page views</li>
+                        <li>Third-party cookies or tracking pixels</li>
+                    </ul>
+
+                    <h2 id="cookies">Cookies & Sessions</h2>
+                    <p>We use minimal, essential cookies only:</p>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Cookie</th>
+                                <th>Purpose</th>
+                                <th>Duration</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Session cookie</td>
+                                <td>Maintains admin login state and CSRF protection</td>
+                                <td>24 hours</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <p>Our session cookies are:</p>
+                    <ul>
+                        <li><strong>HttpOnly:</strong> Not accessible to JavaScript (prevents XSS attacks)</li>
+                        <li><strong>Secure:</strong> Only transmitted over HTTPS in production</li>
+                        <li><strong>SameSite=Strict:</strong> Not sent with cross-site requests (prevents CSRF)</li>
+                    </ul>
+
+                    <p>We do not use advertising cookies, analytics cookies, or any third-party tracking cookies.</p>
+
+                    <h2 id="security">Security Measures</h2>
+                    <p>We implement enterprise-grade security measures to protect your data:</p>
+
+                    <h3>Authentication Security</h3>
+                    <ul>
+                        <li><strong>Password hashing:</strong> All passwords are hashed using bcrypt with salt</li>
+                        <li><strong>Account lockout:</strong> Accounts are temporarily locked after 5 failed login attempts</li>
+                        <li><strong>CSRF protection:</strong> All state-changing requests require valid CSRF tokens</li>
+                        <li><strong>Rate limiting:</strong> Login attempts are limited to 5 per 15 minutes</li>
+                        <li><strong>WebAuthn/Passkeys:</strong> Support for phishing-resistant passwordless authentication</li>
+                    </ul>
+
+                    <h3>Transport Security</h3>
+                    <ul>
+                        <li><strong>HTTPS only:</strong> All connections use TLS encryption in production</li>
+                        <li><strong>HSTS:</strong> HTTP Strict Transport Security with 1-year max-age</li>
+                        <li><strong>Secure cookies:</strong> Session cookies only transmitted over HTTPS</li>
+                    </ul>
+
+                    <h3>Content Security</h3>
+                    <ul>
+                        <li><strong>Content Security Policy:</strong> Strict CSP headers prevent XSS attacks</li>
+                        <li><strong>Input validation:</strong> All user input is validated and sanitized</li>
+                        <li><strong>Markdown sanitization:</strong> User-generated content is sanitized before display</li>
+                        <li><strong>Clickjacking protection:</strong> X-Frame-Options and frame-ancestors prevent embedding</li>
+                    </ul>
+
+                    <h2 id="third-party">Third-Party Services</h2>
+                    <p>We use minimal third-party services, none of which receive your personal data:</p>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Service</th>
+                                <th>Purpose</th>
+                                <th>Data Shared</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Google Fonts</td>
+                                <td>Typography (Source Serif 4, DM Sans)</td>
+                                <td>None (CSS files only)</td>
+                            </tr>
+                            <tr>
+                                <td>jsDelivr CDN</td>
+                                <td>JavaScript libraries (Three.js, Lottie)</td>
+                                <td>None (static files only)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="highlight-box">
+                        <strong>No Analytics:</strong> We do not use Google Analytics, Mixpanel, Segment, or any other analytics or tracking service. Your visit is not tracked or logged beyond essential server operations.
+                    </div>
+
+                    <h2 id="retention">Data Retention</h2>
+                    <ul>
+                        <li><strong>Contact messages:</strong> Retained until manually deleted by an administrator</li>
+                        <li><strong>Session data:</strong> Automatically expires after 24 hours of inactivity</li>
+                        <li><strong>Failed login attempts:</strong> Cleared after 15 minutes (in-memory only, not persisted)</li>
+                    </ul>
+                    <p>We do not have automated data retention policies. If you wish to have your contact form submission deleted, please contact us.</p>
+
+                    <h2 id="rights">Your Rights</h2>
+                    <p>You have the right to:</p>
+                    <ul>
+                        <li><strong>Access:</strong> Request a copy of any personal data we hold about you</li>
+                        <li><strong>Rectification:</strong> Request correction of inaccurate personal data</li>
+                        <li><strong>Erasure:</strong> Request deletion of your personal data</li>
+                        <li><strong>Restriction:</strong> Request restriction of processing of your personal data</li>
+                    </ul>
+                    <p>To exercise any of these rights, please <a href="/contact">contact us</a>.</p>
+
+                    <h2 id="terms">Terms of Service</h2>
+
+                    <h3>Acceptance of Terms</h3>
+                    <p>By accessing and using this website, you accept and agree to be bound by the terms and provisions of this agreement.</p>
+
+                    <h3>Use of Service</h3>
+                    <p>You agree to use this website only for lawful purposes and in a way that does not infringe the rights of, restrict, or inhibit anyone else's use and enjoyment of the website.</p>
+
+                    <h3>Intellectual Property</h3>
+                    <p>All content on this website, including but not limited to text, graphics, logos, images, and software, is the property of Observer or its content suppliers and is protected by intellectual property laws.</p>
+
+                    <h3>Limitation of Liability</h3>
+                    <p>Observer shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your access to or use of, or inability to access or use, the website or any content on the website.</p>
+
+                    <h3>Changes to Terms</h3>
+                    <p>We reserve the right to modify these terms at any time. We will notify users of any material changes by updating the "Last updated" date at the top of this page.</p>
+
+                    <h3>Contact</h3>
+                    <p>If you have any questions about these Terms or our Privacy Policy, please <a href="/contact">contact us</a>.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer__main">
+                <nav class="footer__nav reveal" aria-label="Footer">
+                    <div class="footer__nav-group">
+                        <h4>Navigation</h4>
+                        <ul>
+                            <li><a href="/#work">Work</a></li>
+                            <li><a href="/#capabilities">Products</a></li>
+                            <li><a href="./blog.html">Blog</a></li>
+                            <li><a href="/#about">About</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer__nav-group">
+                        <h4>Links</h4>
+                        <ul>
+                            <li><a href="/coming-soon">LinkedIn</a></li>
+                            <li><a href="/coming-soon">GitHub</a></li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+            <div class="footer__bottom">
+                <p class="footer__copyright">&copy; 2025 Observer. All rights reserved.</p>
+                <div class="footer__legal">
+                    <a href="/terms">Privacy</a>
+                    <a href="/terms">Terms</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="./scripts/magnetic-buttons.js" defer></script>
+    <script src="./scripts/main.js" defer></script>
+    <script src="./scripts/galaxy-background.js" defer></script>
+    <script src="./scripts/logo.js" defer></script>
+</body>
+</html>
