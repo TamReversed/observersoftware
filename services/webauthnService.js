@@ -243,93 +243,72 @@ async function verifyRegistration(options, response, expectedOrigin) {
 
     if (verification.verified && verification.registrationInfo) {
       const registrationInfo = verification.registrationInfo;
-      
-      // SimpleWebAuthn returns credentialID and credentialPublicKey as Buffers
-      // Check for both the expected names and alternative names
-      let credentialID = registrationInfo.credentialID || registrationInfo.credentialId;
-      let credentialPublicKey = registrationInfo.credentialPublicKey || registrationInfo.publicKey;
 
-      // If credentialID is still missing, try to get it from the response object
-      if (!credentialID && response?.id) {
-        console.log('credentialID not in registrationInfo, using response.id');
-        credentialID = response.id;
-      }
-
-      // Try to get publicKey from response if missing from registrationInfo
-      if (!credentialPublicKey && response?.response?.publicKey) {
-        console.log('credentialPublicKey not in registrationInfo, using response.response.publicKey');
-        credentialPublicKey = response.response.publicKey;
-      }
-
-      // Validate that we have the required data
-      if (!credentialID) {
-        console.error('credentialID is missing from both registrationInfo and response:', {
-          registrationInfoKeys: Object.keys(registrationInfo),
-          responseId: response?.id,
-          responseKeys: response ? Object.keys(response) : []
-        });
-        throw new Error('Registration verification failed: credentialID is missing');
-      }
-      if (!credentialPublicKey) {
-        console.error('credentialPublicKey is missing from both registrationInfo and response:', {
-          registrationInfoKeys: Object.keys(registrationInfo),
-          registrationInfoValues: Object.keys(registrationInfo).reduce((acc, key) => {
-            acc[key] = typeof registrationInfo[key];
-            return acc;
-          }, {}),
-          responseKeys: response ? Object.keys(response) : [],
-          responseResponseKeys: response?.response ? Object.keys(response.response) : []
-        });
-        throw new Error('Registration verification failed: credentialPublicKey is missing');
-      }
-
-      console.log('Registration info received:', {
-        hasCredentialID: !!credentialID,
-        credentialIDType: credentialID?.constructor?.name,
-        credentialIDIsBuffer: Buffer.isBuffer(credentialID),
-        credentialIDLength: credentialID?.length,
-        hasCredentialPublicKey: !!credentialPublicKey,
-        credentialPublicKeyType: credentialPublicKey?.constructor?.name,
-        credentialPublicKeyIsBuffer: Buffer.isBuffer(credentialPublicKey),
-        credentialPublicKeyLength: credentialPublicKey?.length
+      // SimpleWebAuthn v11+ structure: registrationInfo.credential.{id, publicKey} as base64url strings
+      // v10 structure: registrationInfo.{credentialID, credentialPublicKey} as Uint8Arrays
+      console.log('RegistrationInfo structure (v11+ check):', {
+        hasCredentialObj: !!registrationInfo.credential,
+        credentialKeys: registrationInfo.credential ? Object.keys(registrationInfo.credential) : [],
+        topLevelKeys: Object.keys(registrationInfo)
       });
 
-      // Convert credentialID to Buffer if needed
-      // If it came from response.id, it's already base64url, so we need to decode it first
-      let credentialIDBuffer;
-      if (Buffer.isBuffer(credentialID)) {
-        credentialIDBuffer = credentialID;
-      } else if (typeof credentialID === 'string') {
-        // If it's a string, it might be base64url (from response.id) or need to be converted
-        // Try to decode as base64url first, if that fails, treat as raw string
-        try {
-          credentialIDBuffer = Buffer.from(credentialID, 'base64url');
-        } catch (e) {
-          // If base64url decode fails, try as UTF-8
-          credentialIDBuffer = Buffer.from(credentialID, 'utf8');
-        }
+      let credentialIDBase64url;
+      let credentialPublicKeyBase64url;
+
+      // Check for v11+ structure first (credential sub-object with base64url strings)
+      if (registrationInfo.credential && registrationInfo.credential.id && registrationInfo.credential.publicKey) {
+        console.log('Using SimpleWebAuthn v11+ structure (registrationInfo.credential)');
+        // In v11+, these are already base64url strings
+        credentialIDBase64url = registrationInfo.credential.id;
+        credentialPublicKeyBase64url = registrationInfo.credential.publicKey;
       } else {
-        // Convert to string first, then to buffer
-        const idString = String(credentialID);
-        try {
-          credentialIDBuffer = Buffer.from(idString, 'base64url');
-        } catch (e) {
-          credentialIDBuffer = Buffer.from(idString, 'utf8');
+        // Fall back to v10 structure (direct properties as Uint8Arrays)
+        console.log('Falling back to SimpleWebAuthn v10 structure');
+        let credentialID = registrationInfo.credentialID || registrationInfo.credentialId;
+        let credentialPublicKey = registrationInfo.credentialPublicKey;
+
+        // Validate that we have the required data - DO NOT use response.response.publicKey as it's SPKI format, not COSE
+        if (!credentialID) {
+          console.error('credentialID is missing from registrationInfo:', {
+            registrationInfoKeys: Object.keys(registrationInfo),
+            hasCredentialObj: !!registrationInfo.credential
+          });
+          throw new Error('Registration verification failed: credentialID is missing');
         }
+        if (!credentialPublicKey) {
+          console.error('credentialPublicKey is missing from registrationInfo:', {
+            registrationInfoKeys: Object.keys(registrationInfo),
+            hasCredentialObj: !!registrationInfo.credential,
+            note: 'response.response.publicKey is SPKI format, not COSE - cannot use as fallback'
+          });
+          throw new Error('Registration verification failed: credentialPublicKey is missing (COSE key required)');
+        }
+
+        // Convert v10 Uint8Arrays to base64url strings
+        credentialIDBase64url = Buffer.isBuffer(credentialID)
+          ? credentialID.toString('base64url')
+          : Buffer.from(credentialID).toString('base64url');
+        credentialPublicKeyBase64url = Buffer.isBuffer(credentialPublicKey)
+          ? credentialPublicKey.toString('base64url')
+          : Buffer.from(credentialPublicKey).toString('base64url');
       }
 
-      // Convert credentialPublicKey to Buffer if needed
-      const credentialPublicKeyBuffer = Buffer.isBuffer(credentialPublicKey)
-        ? credentialPublicKey
-        : Buffer.from(credentialPublicKey);
+      console.log('Credential data extracted:', {
+        credentialIDBase64url: credentialIDBase64url.substring(0, 30) + '...',
+        publicKeyLength: credentialPublicKeyBase64url.length,
+        publicKeyPreview: credentialPublicKeyBase64url.substring(0, 30) + '...'
+      });
+
+      // Get counter from appropriate location
+      const counter = registrationInfo.credential?.counter ?? registrationInfo.counter ?? 0;
 
       return {
         verified: true,
         credential: {
-          id: credentialIDBuffer.toString('base64url'),
-          publicKey: credentialPublicKeyBuffer.toString('base64url'),
-          counter: registrationInfo.counter || 0,
-          deviceName: 'Passkey', // Default name, can be updated later
+          id: credentialIDBase64url,
+          publicKey: credentialPublicKeyBase64url,
+          counter: counter,
+          deviceName: 'Passkey',
           registeredAt: new Date().toISOString()
         }
       };

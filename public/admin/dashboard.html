@@ -295,7 +295,19 @@
         </div>
         <div class="editor-content changelog-content">
           <div class="changelog-entry">
-            <div class="changelog-date">December 29, 2025</div>
+            <div class="changelog-date">December 28, 2025</div>
+            <h3 class="changelog-title">WebAuthn PublicKey Format Fix (COSE vs SPKI)</h3>
+            <div class="changelog-details">
+              <p><strong>Issue:</strong> Passkey login was failing with <code>cosePublicKey.get is not a function</code> error after successful registration.</p>
+              <p><strong>Root Cause:</strong> The code had a fallback that used <code>response.response.publicKey</code> when the credential's public key wasn't found in the expected location. However, this browser-provided publicKey is in <strong>SPKI format</strong> (SubjectPublicKeyInfo), not the <strong>COSE format</strong> that SimpleWebAuthn requires for verification. Additionally, SimpleWebAuthn v11+ changed its return structure from <code>registrationInfo.credentialPublicKey</code> to <code>registrationInfo.credential.publicKey</code>.</p>
+              <p><strong>Fix:</strong> Updated <code>verifyRegistration</code> to properly handle SimpleWebAuthn v11+ structure by checking for <code>registrationInfo.credential.id</code> and <code>registrationInfo.credential.publicKey</code>. Removed the incorrect fallback to <code>response.response.publicKey</code> which caused COSE key parsing to fail.</p>
+              <p><strong>Files Changed:</strong> <code>services/webauthnService.js</code></p>
+              <p><strong>Note:</strong> Existing passkeys stored with the wrong publicKey format will need to be re-registered.</p>
+            </div>
+          </div>
+
+          <div class="changelog-entry">
+            <div class="changelog-date">December 28, 2025</div>
             <h3 class="changelog-title">WebAuthn RP ID Mismatch Fix</h3>
             <div class="changelog-details">
               <p><strong>Issue:</strong> Passkey login was failing with <code>Unexpected RP ID hash</code> error after successful registration.</p>
