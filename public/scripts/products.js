@@ -238,6 +238,7 @@
             item.style.minWidth = '100%';
             item.style.width = '100%';
             item.style.flexShrink = '0';
+            item.style.position = 'relative';
 
             const img = document.createElement('img');
             // Normalize src path
@@ -248,21 +249,31 @@
             img.src = imageSrc;
             img.alt = `Screenshot ${index + 1}`;
             img.className = 'product-modal__screenshot';
-            img.loading = 'lazy';
-            
+            img.loading = index === 0 ? 'eager' : 'lazy';
+
             // Handle image load errors
             img.onerror = function() {
                 console.error('Failed to load screenshot:', screenshot, 'Attempted URL:', this.src);
-                // Show error overlay
+                // Hide the broken image
+                this.style.display = 'none';
+                // Show error overlay with more details
                 const errorMsg = document.createElement('div');
                 errorMsg.className = 'screenshot-error';
-                errorMsg.textContent = `Image failed to load`;
-                errorMsg.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 1rem; text-align: center; color: var(--color-text-secondary); background: rgba(0,0,0,0.7); border-radius: 4px; font-size: 0.875rem; z-index: 10; white-space: nowrap;';
-                this.parentElement.style.position = 'relative';
+                errorMsg.innerHTML = `
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">🖼️</div>
+                    <div>Image unavailable</div>
+                    <div style="font-size: 0.75rem; opacity: 0.7; margin-top: 0.25rem; word-break: break-all; max-width: 300px;">${escapeHtml(screenshot)}</div>
+                `;
+                errorMsg.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 1.5rem; text-align: center; color: var(--color-text-secondary); background: rgba(0,0,0,0.8); border-radius: 8px; font-size: 0.875rem; z-index: 10;';
                 // Remove any existing error message
                 const existingError = this.parentElement.querySelector('.screenshot-error');
                 if (existingError) existingError.remove();
                 this.parentElement.appendChild(errorMsg);
+            };
+
+            // Handle successful load
+            img.onload = function() {
+                console.log('Screenshot loaded successfully:', imageSrc);
             };
 
             item.appendChild(img);
