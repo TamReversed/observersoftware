@@ -39,12 +39,17 @@ app.use(helmet({
         "https://cdn.jsdelivr.net",
         ...(config.isProduction ? [] : ["http://127.0.0.1:7242", "http://localhost:7242"])
       ],
-      frameSrc: ["'self'"],
+      frameSrc: ["'none'"], // Prevent embedding in iframes (except self)
+      frameAncestors: ["'none'"], // Prevent clickjacking - site cannot be embedded
       objectSrc: ["'none'"],
+      baseUri: ["'self'"], // Prevent base tag hijacking
+      formAction: ["'self'"], // Forms can only submit to same origin
       upgradeInsecureRequests: config.isProduction ? [] : null
     }
   },
-  crossOriginEmbedderPolicy: false // Allow external resources
+  crossOriginEmbedderPolicy: false, // Allow external resources
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  hsts: config.isProduction ? { maxAge: 31536000, includeSubDomains: true, preload: true } : false
 }));
 
 // Request size limits
@@ -93,6 +98,7 @@ const apiLimiter = rateLimit({
 
 // Apply rate limiting
 app.use('/api/auth/login', loginLimiter);
+app.use('/api/auth/webauthn', loginLimiter); // Same limits for passkey auth
 app.use('/api/messages', contactFormLimiter); // Stricter rate limit for contact form
 app.use('/api', apiLimiter);
 

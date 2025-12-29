@@ -2,6 +2,16 @@ const path = require('path');
 
 const isProduction = process.env.NODE_ENV === 'production';
 
+// Security: Require strong credentials in production
+if (isProduction) {
+  if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET.length < 32) {
+    throw new Error('Production requires SESSION_SECRET environment variable (min 32 characters)');
+  }
+  if (!process.env.ADMIN_PASSWORD || process.env.ADMIN_PASSWORD === 'changeme123') {
+    throw new Error('Production requires ADMIN_PASSWORD environment variable (cannot be default)');
+  }
+}
+
 const config = {
   port: process.env.PORT || 3000,
   isProduction,
@@ -11,7 +21,7 @@ const config = {
       secure: isProduction,
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      sameSite: 'lax'
+      sameSite: 'strict' // Upgraded from 'lax' for better CSRF protection
     }
   },
   paths: (() => {
