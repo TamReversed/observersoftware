@@ -441,11 +441,22 @@ async function finishWebAuthnLogin(req, res, next) {
     const protocol = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
     const host = req.headers.host || req.get('host');
     const origin = `${protocol}://${host}`;
-    
+
+    // Derive RP ID from origin (must match what was used during registration)
+    let rpID;
+    try {
+      const url = new URL(origin);
+      rpID = url.hostname;
+    } catch (e) {
+      rpID = host.split(':')[0]; // Fallback: strip port from host
+    }
+
+    console.log('WebAuthn login verification:', { origin, rpID, host });
+
     // Create options object with stored challenge
     const options = {
       challenge: req.session.webauthnChallenge,
-      rpID: config.webauthn.rpID,
+      rpID: rpID,
       origin: origin
     };
 

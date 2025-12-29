@@ -296,6 +296,17 @@
         <div class="editor-content changelog-content">
           <div class="changelog-entry">
             <div class="changelog-date">December 29, 2025</div>
+            <h3 class="changelog-title">WebAuthn RP ID Mismatch Fix</h3>
+            <div class="changelog-details">
+              <p><strong>Issue:</strong> Passkey login was failing with <code>Unexpected RP ID hash</code> error after successful registration.</p>
+              <p><strong>Root Cause:</strong> During registration, the RP ID was dynamically derived from the request origin (<code>observersoftware-production.up.railway.app</code>), but during login verification, the code used <code>config.webauthn.rpID</code> which defaulted to <code>observersoftware.io</code>. This mismatch caused the verification to fail.</p>
+              <p><strong>Fix:</strong> Modified <code>finishWebAuthnLogin</code> to derive the RP ID dynamically from the request origin, matching the registration behavior.</p>
+              <p><strong>Files Changed:</strong> <code>controllers/authController.js</code></p>
+            </div>
+          </div>
+
+          <div class="changelog-entry">
+            <div class="changelog-date">December 29, 2025</div>
             <h3 class="changelog-title">WebAuthn Authentication Fix</h3>
             <div class="changelog-details">
               <p><strong>Issue:</strong> Passkey login was failing with <code>input.replace is not a function</code> error after successful registration.</p>
