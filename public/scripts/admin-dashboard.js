@@ -965,7 +965,11 @@ document.getElementById('capabilityScreenshotInput')?.addEventListener('keydown'
 setupScreenshotUpload();
 
 document.getElementById('logoutBtn').addEventListener('click', async () => {
-  await fetch('/api/auth/logout', { method: 'POST' });
+  try {
+    await authenticatedFetch('/api/auth/logout', { method: 'POST' });
+  } catch (e) {
+    // Even if logout fails, redirect to login
+  }
   window.location.href = '/admin/login';
 });
 
