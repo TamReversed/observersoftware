@@ -30,9 +30,14 @@ class PageTransitions {
       }
 
       // Skip page transitions for blog and contact pages - let them do full page loads
-      // This prevents issues with scripts not loading properly
-      if (href.includes('/blog') || href.includes('blog.html') || 
-          href.includes('/contact') || href.includes('contact.html')) {
+      // This prevents issues with scripts not loading properly and missing background elements
+      const currentPath = window.location.pathname;
+      const isBlogOrContact = (path) =>
+        path.includes('/blog') || path.includes('blog.html') ||
+        path.includes('/contact') || path.includes('contact.html');
+
+      // Skip if navigating TO or FROM blog/contact pages
+      if (isBlogOrContact(href) || isBlogOrContact(currentPath)) {
         return; // Let browser handle normally
       }
 
@@ -83,40 +88,28 @@ class PageTransitions {
   }
 
   updateContent(currentElement, newElement, newDoc) {
-    console.log('[DEBUG] page-transitions: updateContent called', {
-      hasCurrentElement: !!currentElement,
-      hasNewElement: !!newElement,
-      hasNewDoc: !!newDoc,
-      url: window.location.pathname
-    });
-    
     // Load CSS files from the new page
     if (newDoc) {
       this.loadStylesheets(newDoc);
     }
-    
+
     if (currentElement && newElement) {
       currentElement.innerHTML = newElement.innerHTML;
-      
+
       // Extract and execute scripts from the new page
       if (newDoc) {
-        console.log('[DEBUG] page-transitions: Executing scripts from new document');
         // Wait for all scripts to load before dispatching event
         this.executeScripts(newDoc).then(() => {
-          // Dispatch event after scripts are loaded
-          console.log('[DEBUG] page-transitions: All scripts loaded, dispatching pageTransitionComplete event');
           window.dispatchEvent(new CustomEvent('pageTransitionComplete', {
             detail: { url: window.location.pathname }
           }));
         }).catch(() => {
           // Even if some scripts fail, dispatch the event
-          console.warn('[DEBUG] page-transitions: Some scripts failed, but dispatching event anyway');
           window.dispatchEvent(new CustomEvent('pageTransitionComplete', {
             detail: { url: window.location.pathname }
           }));
         });
       } else {
-        console.warn('[DEBUG] page-transitions: No newDoc provided, cannot execute scripts');
         // Dispatch event anyway after a delay
         setTimeout(() => {
           window.dispatchEvent(new CustomEvent('pageTransitionComplete', {
@@ -137,82 +130,55 @@ class PageTransitions {
       }, 100);
     }
   }
-  
+
   loadStylesheets(newDoc) {
     // Find all stylesheet links in the new document
     const stylesheets = newDoc.querySelectorAll('link[rel="stylesheet"]');
-    
-    console.log('[DEBUG] page-transitions: loadStylesheets called', {
-      stylesheetCount: stylesheets.length,
-      stylesheetHrefs: Array.from(stylesheets).map(s => s.href)
-    });
-    
+
     stylesheets.forEach((link) => {
       const href = link.getAttribute('href');
       if (!href) return;
-      
+
       // Check if stylesheet is already loaded
       const existingLink = document.querySelector(`link[href="${href}"]`);
-      if (existingLink) {
-        console.log('[DEBUG] page-transitions: Stylesheet already loaded', href);
-        return;
-      }
-      
+      if (existingLink) return;
+
       // Create new link element
       const newLink = document.createElement('link');
       newLink.rel = 'stylesheet';
       newLink.href = href;
-      
-      newLink.onload = () => {
-        console.log('[DEBUG] page-transitions: Stylesheet loaded', href);
-      };
-      
-      newLink.onerror = (err) => {
-        console.error('[DEBUG] page-transitions: Stylesheet failed to load', href, err);
-      };
-      
+
       // Append to head
       document.head.appendChild(newLink);
-      console.log('[DEBUG] page-transitions: Loading stylesheet', href);
     });
   }
-  
+
   executeScripts(newDoc) {
     // Find all script tags in the new document (from body, not just main)
     const scripts = newDoc.querySelectorAll('body script, script');
-    
-    console.log('[DEBUG] page-transitions: executeScripts called', {
-      scriptCount: scripts.length,
-      scriptSources: Array.from(scripts).map(s => s.src || 'inline')
-    });
-    
     const scriptPromises = [];
-    
+
     scripts.forEach((oldScript) => {
       // Skip if it's the page-transitions script itself (would cause infinite loop)
       if (oldScript.src && oldScript.src.includes('page-transitions.js')) {
-        console.log('[DEBUG] page-transitions: Skipping page-transitions.js');
         return;
       }
-      
+
       const newScript = document.createElement('script');
-      
+
       // Copy attributes
       Array.from(oldScript.attributes).forEach((attr) => {
         newScript.setAttribute(attr.name, attr.value);
       });
-      
+
       // Copy content if inline script
       if (oldScript.textContent) {
         newScript.textContent = oldScript.textContent;
         // Inline scripts execute immediately, no need to wait
         document.body.appendChild(newScript);
-        console.log('[DEBUG] page-transitions: Inline script executed', {
-          contentLength: oldScript.textContent.length
-        });
         return;
       }
-      
+
       // Handle src attribute (external scripts)
       if (oldScript.src) {
         // Force reload by adding a cache-busting parameter or removing defer
@@ -220,46 +186,28 @@ class PageTransitions {
         // Remove defer attribute to force immediate execution
         newScript.removeAttribute('defer');
         newScript.src = srcUrl.href;
-        
-        console.log('[DEBUG] page-transitions: Loading script', {
-          src: newScript.src,
-          hasDefer: oldScript.hasAttribute('defer')
-        });
-        
+
         // Create a promise that resolves when the script loads
         const scriptPromise = new Promise((resolve, reject) => {
-          newScript.onload = () => {
-            console.log('[DEBUG] page-transitions: Script loaded', newScript.src);
-            resolve(newScript.src);
-          };
-          newScript.onerror = (err) => {
-            console.error('[DEBUG] page-transitions: Script failed to load', newScript.src, err);
-            reject(err);
-          };
+          newScript.onload = () => resolve(newScript.src);
+          newScript.onerror = (err) => reject(err);
         });
-        
+
         scriptPromises.push(scriptPromise);
-        
+
         // Remove existing script with same src to force re-execution
         const existingScript = document.querySelector(`script[src="${oldScript.src}"]`);
         if (existingScript) {
-          console.log('[DEBUG] page-transitions: Removing existing script', oldScript.src);
           existingScript.remove();
         }
-        
+
         // Append to body to execute
         document.body.appendChild(newScript);
-        console.log('[DEBUG] page-transitions: Script appended to body', {
-          src: newScript.src,
-          isInline: false
-        });
       }
     });
-    
+
     // Return promise that resolves when all scripts are loaded
-    return Promise.all(scriptPromises).catch(err => {
-      console.error('[DEBUG] page-transitions: Some scripts failed to load', err);
-    });
+    return Promise.all(scriptPromises).catch(() => {});
   }
 
   fadeTransition(currentElement, newElement, url, newDoc) {
@@ -270,7 +218,7 @@ class PageTransitions {
     setTimeout(() => {
       this.updateContent(currentElement, newElement, newDoc);
       window.history.pushState({}, '', url);
-      
+
       setTimeout(() => {
         body.style.opacity = '1';
       }, 50);
@@ -285,10 +233,7 @@ class PageTransitions {
     if (typeof window.initTableOfContents === 'function') {
       window.initTableOfContents();
     }
-    if (typeof window.initShareButton === 'function') {
-      // Share button will be re-initialized by post.js
-    }
-    
+
     // Dispatch custom event for other scripts
     window.dispatchEvent(new CustomEvent('pageTransitionComplete'));
   }
@@ -321,4 +266,3 @@ if (document.readyState === 'loading') {
 } else {
   new PageTransitions();
 }
-

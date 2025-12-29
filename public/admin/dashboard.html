@@ -296,6 +296,20 @@
         <div class="editor-content changelog-content">
           <div class="changelog-entry">
             <div class="changelog-date">December 28, 2025</div>
+            <h3 class="changelog-title">Application Review &amp; Cleanup</h3>
+            <div class="changelog-details">
+              <p><strong>Issues Fixed:</strong></p>
+              <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                <li><strong>Stars not visible from blog:</strong> Page transitions weren't skipping navigation FROM blog/contact pages, only TO them. Now both directions skip transitions to ensure full page loads with all background elements.</li>
+                <li><strong>Changelog tab layout:</strong> Improved tab layout with flex-wrap to ensure all tabs are visible on smaller screens.</li>
+                <li><strong>Debug logging removed:</strong> Cleaned up development debug console.log statements from skeletons.js, page-transitions.js, products.js, and home.js.</li>
+              </ul>
+              <p><strong>Files Changed:</strong> <code>page-transitions.js</code>, <code>skeletons.js</code>, <code>products.js</code>, <code>home.js</code>, <code>admin.css</code></p>
+            </div>
+          </div>
+
+          <div class="changelog-entry">
+            <div class="changelog-date">December 28, 2025</div>
             <h3 class="changelog-title">WebAuthn PublicKey Format Fix (COSE vs SPKI)</h3>
             <div class="changelog-details">
               <p><strong>Issue:</strong> Passkey login was failing with <code>cosePublicKey.get is not a function</code> error after successful registration.</p>

@@ -339,10 +339,6 @@
                         this.parentElement.appendChild(errorMsg);
                     };
 
-                    // Handle successful load
-                    img.onload = function() {
-                        console.log('Screenshot loaded successfully:', imageSrc);
-                    };
 
                     item.appendChild(img);
                     if (carousel) carousel.appendChild(item);

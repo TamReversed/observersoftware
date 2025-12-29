@@ -1,44 +1,6 @@
 // Loading Skeletons
 // Utility functions to create skeleton placeholders
 
-// Helper to check if we're in development mode
-const isDevelopment = () => {
-    if (typeof window === 'undefined') return false;
-    const hostname = window.location.hostname;
-    return hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.');
-};
-
-// Helper for debug logging (only in development)
-const debugLog = (location, message, data) => {
-    if (!isDevelopment()) return;
-    try {
-        fetch('http://127.0.0.1:7242/ingest/29c99047-e168-4827-8051-3605d09418af', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                location,
-                message,
-                data,
-                timestamp: Date.now(),
-                sessionId: 'debug-session',
-                runId: 'run1',
-                hypothesisId: 'A'
-            })
-        }).catch(() => {});
-    } catch (e) {
-        // Silently fail in production
-    }
-};
-
-// #region agent log
-(function() {
-    if (isDevelopment()) {
-        console.log('[DEBUG] skeletons.js file loaded', new Date().getTime());
-        console.trace('[DEBUG] skeletons.js call stack');
-    }
-})();
-// #endregion
-
 function createBlogPostSkeleton() {
     return `
         <div class="skeleton-post-card skeleton">
@@ -98,7 +60,7 @@ function createSkeletonGrid(type, count = 6) {
             skeletons.push(createWorkCardSkeleton());
         }
     }
-    
+
     const gridClass = type === 'blog' ? 'skeleton-grid--blog' : 'skeleton-grid--work';
     return `<div class="skeleton-grid ${gridClass}" style="display: grid; gap: var(--space-lg); width: 100%;">${skeletons.join('')}</div>`;
 }
@@ -106,20 +68,10 @@ function createSkeletonGrid(type, count = 6) {
 function removeSkeletons(container) {
     if (!container) return;
     const skeletons = container.querySelectorAll('.skeleton, .skeleton-grid, .skeleton-post-card, .skeleton-work-card, .skeleton-post-content');
-    // Remove instantly for better performance
     skeletons.forEach(skeleton => skeleton.remove());
 }
 
 // Export functions
-// #region agent log
-if (isDevelopment()) {
-    console.log('[DEBUG] skeletons.js creating SkeletonUtils', {readyState: document.readyState});
-    debugLog('skeletons.js:80', 'Creating SkeletonUtils', {
-        hasWindow: typeof window !== 'undefined',
-        readyState: document.readyState
-    });
-}
-// #endregion
 window.SkeletonUtils = {
     createBlogPostSkeleton,
     createPostContentSkeleton,
@@ -127,13 +79,3 @@ window.SkeletonUtils = {
     createSkeletonGrid,
     removeSkeletons
 };
-// #region agent log
-if (isDevelopment()) {
-    console.log('[DEBUG] SkeletonUtils assigned', {hasSkeletonUtils: typeof window.SkeletonUtils !== 'undefined', hasCreateGrid: typeof window.SkeletonUtils?.createSkeletonGrid === 'function'});
-    debugLog('skeletons.js:87', 'SkeletonUtils assigned', {
-        hasSkeletonUtils: typeof window.SkeletonUtils !== 'undefined',
-        hasCreateGrid: typeof window.SkeletonUtils?.createSkeletonGrid === 'function'
-    });
-}
-// #endregion
-
