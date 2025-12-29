@@ -283,14 +283,14 @@ class DbService {
 
   /**
    * Serialize value for database
-   * Note: PostgreSQL's pg driver automatically handles JSONB serialization,
-   * so we pass objects/arrays directly without JSON.stringify()
+   * Note: For JSONB columns, pass JavaScript objects directly - node-postgres handles serialization
    */
   _serializeValue(value) {
     if (value === null || value === undefined) {
       return null;
     }
-    // Return objects/arrays as-is - pg driver handles JSONB serialization
+    // Don't stringify objects - node-postgres handles JSONB columns automatically
+    // This prevents double-encoding issues
     return value;
   }
 

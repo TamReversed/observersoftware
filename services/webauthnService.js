@@ -364,7 +364,27 @@ async function verifyRegistration(options, response, expectedOrigin) {
  * @returns {Promise<Object>} Authentication options
  */
 async function generateAuthenticationOptionsForUser(userId, credentials = [], origin) {
-  if (credentials.length === 0) {
+  console.log('generateAuthenticationOptionsForUser called with:', {
+    userId,
+    credentialsType: typeof credentials,
+    credentialsIsArray: Array.isArray(credentials),
+    credentialsLength: credentials?.length,
+    credentialsRaw: JSON.stringify(credentials).substring(0, 500)
+  });
+
+  // Handle case where credentials might be a string (double-encoded JSON)
+  let parsedCredentials = credentials;
+  if (typeof credentials === 'string') {
+    try {
+      parsedCredentials = JSON.parse(credentials);
+      console.log('Parsed credentials from string:', typeof parsedCredentials, Array.isArray(parsedCredentials));
+    } catch (e) {
+      console.error('Failed to parse credentials string:', e);
+      throw new Error('Invalid credentials format');
+    }
+  }
+
+  if (!Array.isArray(parsedCredentials) || parsedCredentials.length === 0) {
     throw new Error('No credentials found for user');
   }
 
@@ -372,7 +392,7 @@ async function generateAuthenticationOptionsForUser(userId, credentials = [], or
   const rpID = getRpIDFromOrigin(origin || config.webauthn.origin);
 
   // Map credentials, handling potential format issues
-  const allowCredentials = credentials.map((cred, index) => {
+  const allowCredentials = parsedCredentials.map((cred, index) => {
     try {
       if (!cred.id) {
         throw new Error(`Credential at index ${index} is missing id field`);

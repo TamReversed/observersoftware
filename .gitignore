@@ -7,13 +7,13 @@ node_modules/
 .env.production
 
 # Data files (user-generated content)
-# Exclude most data files, but allow capabilities.json and work.json to be tracked
+# Exclude most data files, but allow some to be tracked for initial migration
 data/*
 !data/capabilities.json
 !data/work.json
-# Exclude user-generated data files
+!data/posts.json
+# Exclude sensitive/user-generated data files
 data/messages.json
-data/posts.json
 data/users.json
 
 # OS files
