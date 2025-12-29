@@ -438,22 +438,21 @@ async function generateAuthenticationOptionsForUser(userId, credentials = [], or
         throw new Error(`Credential at index ${index} could not be converted to Buffer. Type: ${typeof cred.id}, Value: ${JSON.stringify(cred.id)}`);
       }
 
+      // Ensure transports is an array of strings
+      let transports = [];
+      if (Array.isArray(cred.transports)) {
+        transports = cred.transports.filter(t => typeof t === 'string');
+      }
+
       return {
         id: credentialID,
         type: 'public-key',
-        transports: cred.transports || []
+        transports
       };
     } catch (error) {
       console.error(`Error processing credential at index ${index}:`, error);
-      console.error('Credential data:', cred);
       throw error;
     }
-  });
-
-  console.log('Generating authentication options:', {
-    rpID,
-    credentialCount: allowCredentials.length,
-    credentialIDs: allowCredentials.map(c => c.id.toString('base64url').substring(0, 20) + '...')
   });
 
   const options = await generateAuthenticationOptions({

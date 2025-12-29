@@ -209,13 +209,40 @@ async function finishWebAuthnRegistration(req, res, next) {
 
       console.log('Registration verified successfully');
 
-    // Add credential to user
-    const updatedCredentials = user.webauthnCredentials || [];
-    updatedCredentials.push(verification.credential);
+      // Validate the credential before saving
+      const newCredential = verification.credential;
+      if (!newCredential || typeof newCredential !== 'object') {
+        console.error('Invalid credential from verification:', newCredential);
+        return res.status(500).json({ error: 'Invalid credential data received' });
+      }
+      if (!newCredential.id || typeof newCredential.id !== 'string') {
+        console.error('Credential missing valid id:', newCredential);
+        return res.status(500).json({ error: 'Credential missing valid id' });
+      }
+      if (!newCredential.publicKey || typeof newCredential.publicKey !== 'string') {
+        console.error('Credential missing valid publicKey:', newCredential);
+        return res.status(500).json({ error: 'Credential missing valid publicKey' });
+      }
 
-    await usersService.updateById(userId, {
-      webauthnCredentials: updatedCredentials
-    });
+      console.log('Saving credential:', {
+        id: newCredential.id.substring(0, 20) + '...',
+        idType: typeof newCredential.id,
+        publicKeyType: typeof newCredential.publicKey,
+        counter: newCredential.counter
+      });
+
+      // Add credential to user
+      const updatedCredentials = Array.isArray(user.webauthnCredentials) ? [...user.webauthnCredentials] : [];
+      updatedCredentials.push(newCredential);
+
+      console.log('Updating user with credentials:', {
+        count: updatedCredentials.length,
+        credentialTypes: updatedCredentials.map(c => ({ idType: typeof c.id, pkType: typeof c.publicKey }))
+      });
+
+      await usersService.updateById(userId, {
+        webauthnCredentials: updatedCredentials
+      });
 
       // Clear session
       delete req.session.webauthnChallenge;
@@ -282,6 +309,59 @@ async function startWebAuthnLogin(req, res, next) {
       return res.status(400).json({ error: 'No passkey registered for this user' });
     }
 
+    // Log credential format for debugging
+    console.log('WebAuthn login - credentials from DB:', {
+      type: typeof user.webauthnCredentials,
+      isArray: Array.isArray(user.webauthnCredentials),
+      length: user.webauthnCredentials?.length,
+      raw: JSON.stringify(user.webauthnCredentials).substring(0, 500)
+    });
+
+    // Validate and normalize credentials
+    let credentials = user.webauthnCredentials;
+
+    // Handle case where credentials might still be a string (double-encoded)
+    if (typeof credentials === 'string') {
+      try {
+        credentials = JSON.parse(credentials);
+        console.log('Parsed credentials from string');
+      } catch (e) {
+        console.error('Failed to parse credentials string:', e);
+        return res.status(500).json({ error: 'Corrupted credential data. Please re-register your passkey.' });
+      }
+    }
+
+    // Validate each credential has required fields
+    if (!Array.isArray(credentials)) {
+      console.error('Credentials is not an array:', typeof credentials);
+      return res.status(500).json({ error: 'Invalid credential format. Please re-register your passkey.' });
+    }
+
+    const validCredentials = credentials.filter(cred => {
+      if (!cred || typeof cred !== 'object') {
+        console.error('Invalid credential object:', cred);
+        return false;
+      }
+      if (!cred.id || typeof cred.id !== 'string') {
+        console.error('Credential missing valid id:', { id: cred.id, type: typeof cred.id });
+        return false;
+      }
+      if (!cred.publicKey || typeof cred.publicKey !== 'string') {
+        console.error('Credential missing valid publicKey:', { publicKey: cred.publicKey, type: typeof cred.publicKey });
+        return false;
+      }
+      return true;
+    });
+
+    if (validCredentials.length === 0) {
+      console.error('No valid credentials found after filtering');
+      return res.status(400).json({
+        error: 'No valid passkeys found. Your passkey data may be corrupted. Please re-register.'
+      });
+    }
+
+    console.log(`Found ${validCredentials.length} valid credentials out of ${credentials.length}`);
+
     // Get origin from request (handle Railway proxy)
     const protocol = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
     const host = req.headers.host || req.get('host');
@@ -289,7 +369,7 @@ async function startWebAuthnLogin(req, res, next) {
     try {
       const options = await webauthnService.generateAuthenticationOptionsForUser(
         user.id,
-        user.webauthnCredentials,
+        validCredentials,
         origin
       );
 
