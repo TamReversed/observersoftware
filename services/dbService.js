@@ -282,15 +282,15 @@ class DbService {
   }
 
   /**
-   * Serialize value for database (convert objects/arrays to JSONB)
+   * Serialize value for database
+   * Note: PostgreSQL's pg driver automatically handles JSONB serialization,
+   * so we pass objects/arrays directly without JSON.stringify()
    */
   _serializeValue(value) {
     if (value === null || value === undefined) {
       return null;
     }
-    if (typeof value === 'object' && !(value instanceof Date)) {
-      return JSON.stringify(value);
-    }
+    // Return objects/arrays as-is - pg driver handles JSONB serialization
     return value;
   }
 
@@ -299,19 +299,25 @@ class DbService {
    */
   _deserializeRow(row) {
     const deserialized = { ...row };
-    
+
     // Convert database field names back to camelCase
     const result = {};
     for (const [key, value] of Object.entries(deserialized)) {
       const jsKey = this._getJsFieldName(key);
-      
+
       // Parse JSONB fields (PostgreSQL returns JSONB as objects, but check anyway)
       if (value && typeof value === 'object' && !(value instanceof Date) && !Buffer.isBuffer(value)) {
         // If it's already an object (PostgreSQL JSONB), use it directly
         result[jsKey] = value;
       } else if (typeof value === 'string' && (value.startsWith('[') || value.startsWith('{'))) {
+        // Handle legacy double-encoded JSON strings
         try {
-          result[jsKey] = JSON.parse(value);
+          let parsed = JSON.parse(value);
+          // Check if it's still a string (double-encoded) and parse again
+          while (typeof parsed === 'string' && (parsed.startsWith('[') || parsed.startsWith('{'))) {
+            parsed = JSON.parse(parsed);
+          }
+          result[jsKey] = parsed;
         } catch (e) {
           result[jsKey] = value;
         }
@@ -319,7 +325,7 @@ class DbService {
         result[jsKey] = value;
       }
     }
-    
+
     return result;
   }
 
