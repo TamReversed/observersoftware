@@ -296,7 +296,29 @@ function switchType(type) {
   if (type === 'changelog') {
     welcomeState.style.display = 'none';
     document.getElementById('changelogViewer').style.display = 'block';
-    itemsList.innerHTML = '<div class="empty-state">View application updates and fixes</div>';
+    itemsList.innerHTML = `
+      <div class="empty-state">
+        <p style="margin-bottom: 1rem;">View application updates and fixes</p>
+        <div class="timeline-key">
+          <div class="timeline-key-item">
+            <span class="timeline-key-dot timeline-key-dot--fix"></span>
+            <span>Bug Fix</span>
+          </div>
+          <div class="timeline-key-item">
+            <span class="timeline-key-dot timeline-key-dot--feature"></span>
+            <span>Feature</span>
+          </div>
+          <div class="timeline-key-item">
+            <span class="timeline-key-dot timeline-key-dot--improvement"></span>
+            <span>Improvement</span>
+          </div>
+          <div class="timeline-key-item">
+            <span class="timeline-key-dot timeline-key-dot--security"></span>
+            <span>Security</span>
+          </div>
+        </div>
+      </div>
+    `;
     return;
   }
 
