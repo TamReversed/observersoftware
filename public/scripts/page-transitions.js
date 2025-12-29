@@ -29,15 +29,16 @@ class PageTransitions {
         return; // Skip anchors and special links
       }
 
-      // Skip page transitions for blog and contact pages - let them do full page loads
+      // Skip page transitions for certain pages - let them do full page loads
       // This prevents issues with scripts not loading properly and missing background elements
       const currentPath = window.location.pathname;
-      const isBlogOrContact = (path) =>
+      const shouldSkipTransition = (path) =>
         path.includes('/blog') || path.includes('blog.html') ||
-        path.includes('/contact') || path.includes('contact.html');
+        path.includes('/contact') || path.includes('contact.html') ||
+        path.includes('/terms') || path.includes('terms.html');
 
-      // Skip if navigating TO or FROM blog/contact pages
-      if (isBlogOrContact(href) || isBlogOrContact(currentPath)) {
+      // Skip if navigating TO or FROM these pages
+      if (shouldSkipTransition(href) || shouldSkipTransition(currentPath)) {
         return; // Let browser handle normally
       }
 
