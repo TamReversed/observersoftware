@@ -41,6 +41,18 @@ class ReadingProgress {
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', handleScroll, { passive: true });
 
+    // Listen for content loaded events (from post.js)
+    window.addEventListener('postContentLoaded', () => {
+      this.update();
+    });
+
+    // Also listen for page transition completion
+    window.addEventListener('pageTransitionComplete', () => {
+      if (document.getElementById('postContent')) {
+        this.update();
+      }
+    });
+
     // Initial update
     this.update();
   }

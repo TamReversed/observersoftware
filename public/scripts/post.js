@@ -104,10 +104,8 @@ function renderPost(post) {
         }, 100);
     }
 
-    // Initialize reading progress
-    if (typeof ReadingProgress !== 'undefined') {
-        // Reading progress will auto-initialize
-    }
+    // Trigger reading progress update now that content is loaded
+    window.dispatchEvent(new CustomEvent('postContentLoaded'));
 }
 
 // Escape HTML to prevent XSS

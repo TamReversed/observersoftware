@@ -294,96 +294,154 @@
           <h2>Application Changelog</h2>
         </div>
         <div class="editor-content changelog-content">
-          <div class="changelog-entry">
-            <div class="changelog-date">December 28, 2025</div>
-            <h3 class="changelog-title">Application Review &amp; Cleanup</h3>
-            <div class="changelog-details">
-              <p><strong>Issues Fixed:</strong></p>
-              <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
-                <li><strong>Stars not visible from blog:</strong> Page transitions weren't skipping navigation FROM blog/contact pages, only TO them. Now both directions skip transitions to ensure full page loads with all background elements.</li>
-                <li><strong>Changelog tab layout:</strong> Improved tab layout with flex-wrap to ensure all tabs are visible on smaller screens.</li>
-                <li><strong>Debug logging removed:</strong> Cleaned up development debug console.log statements from skeletons.js, page-transitions.js, products.js, and home.js.</li>
-              </ul>
-              <p><strong>Files Changed:</strong> <code>page-transitions.js</code>, <code>skeletons.js</code>, <code>products.js</code>, <code>home.js</code>, <code>admin.css</code></p>
-            </div>
-          </div>
+          <div class="vertical-timeline">
 
-          <div class="changelog-entry">
-            <div class="changelog-date">December 28, 2025</div>
-            <h3 class="changelog-title">WebAuthn PublicKey Format Fix (COSE vs SPKI)</h3>
-            <div class="changelog-details">
-              <p><strong>Issue:</strong> Passkey login was failing with <code>cosePublicKey.get is not a function</code> error after successful registration.</p>
-              <p><strong>Root Cause:</strong> The code had a fallback that used <code>response.response.publicKey</code> when the credential's public key wasn't found in the expected location. However, this browser-provided publicKey is in <strong>SPKI format</strong> (SubjectPublicKeyInfo), not the <strong>COSE format</strong> that SimpleWebAuthn requires for verification. Additionally, SimpleWebAuthn v11+ changed its return structure from <code>registrationInfo.credentialPublicKey</code> to <code>registrationInfo.credential.publicKey</code>.</p>
-              <p><strong>Fix:</strong> Updated <code>verifyRegistration</code> to properly handle SimpleWebAuthn v11+ structure by checking for <code>registrationInfo.credential.id</code> and <code>registrationInfo.credential.publicKey</code>. Removed the incorrect fallback to <code>response.response.publicKey</code> which caused COSE key parsing to fail.</p>
-              <p><strong>Files Changed:</strong> <code>services/webauthnService.js</code></p>
-              <p><strong>Note:</strong> Existing passkeys stored with the wrong publicKey format will need to be re-registered.</p>
+            <!-- Application Review & Cleanup -->
+            <div class="timeline-element">
+              <div class="timeline-icon timeline-icon--improvement">
+                <svg viewBox="0 0 24 24"><path d="M12 20V10M18 20V4M6 20v-4"/></svg>
+              </div>
+              <div class="timeline-content">
+                <span class="timeline-date">December 28, 2025</span>
+                <h3 class="timeline-title">Application Review &amp; Cleanup</h3>
+                <div class="timeline-details">
+                  <p><strong>Issues Fixed:</strong></p>
+                  <ul>
+                    <li><strong>Stars not visible from blog:</strong> Page transitions now skip both TO and FROM blog/contact pages.</li>
+                    <li><strong>Changelog tab layout:</strong> Improved tab layout with flex-wrap for smaller screens.</li>
+                    <li><strong>Debug logging removed:</strong> Cleaned up console.log statements from production code.</li>
+                  </ul>
+                </div>
+                <div class="timeline-files"><strong>Files:</strong> page-transitions.js, skeletons.js, products.js, home.js, admin.css</div>
+              </div>
             </div>
-          </div>
 
-          <div class="changelog-entry">
-            <div class="changelog-date">December 28, 2025</div>
-            <h3 class="changelog-title">WebAuthn RP ID Mismatch Fix</h3>
-            <div class="changelog-details">
-              <p><strong>Issue:</strong> Passkey login was failing with <code>Unexpected RP ID hash</code> error after successful registration.</p>
-              <p><strong>Root Cause:</strong> During registration, the RP ID was dynamically derived from the request origin (<code>observersoftware-production.up.railway.app</code>), but during login verification, the code used <code>config.webauthn.rpID</code> which defaulted to <code>observersoftware.io</code>. This mismatch caused the verification to fail.</p>
-              <p><strong>Fix:</strong> Modified <code>finishWebAuthnLogin</code> to derive the RP ID dynamically from the request origin, matching the registration behavior.</p>
-              <p><strong>Files Changed:</strong> <code>controllers/authController.js</code></p>
+            <!-- WebAuthn PublicKey Format Fix -->
+            <div class="timeline-element">
+              <div class="timeline-icon timeline-icon--security">
+                <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+              <div class="timeline-content">
+                <span class="timeline-date">December 28, 2025</span>
+                <h3 class="timeline-title">WebAuthn PublicKey Format Fix (COSE vs SPKI)</h3>
+                <div class="timeline-details">
+                  <p><strong>Issue:</strong> Passkey login failing with <code>cosePublicKey.get is not a function</code></p>
+                  <p><strong>Root Cause:</strong> Code was using SPKI format publicKey instead of COSE format required by SimpleWebAuthn v11+.</p>
+                  <p><strong>Fix:</strong> Updated to use <code>registrationInfo.credential.publicKey</code> (base64url COSE key).</p>
+                </div>
+                <div class="timeline-files"><strong>Files:</strong> services/webauthnService.js</div>
+              </div>
             </div>
-          </div>
 
-          <div class="changelog-entry">
-            <div class="changelog-date">December 29, 2025</div>
-            <h3 class="changelog-title">WebAuthn Authentication Fix</h3>
-            <div class="changelog-details">
-              <p><strong>Issue:</strong> Passkey login was failing with <code>input.replace is not a function</code> error after successful registration.</p>
-              <p><strong>Root Cause:</strong> The SimpleWebAuthn library v10+ expects credential IDs in <code>allowCredentials</code> to be base64url <em>strings</em>, not Buffers. The code was incorrectly converting the stored base64url string IDs into Buffer objects before passing them to the library.</p>
-              <p><strong>Fix:</strong> Modified <code>webauthnService.js</code> to pass credential IDs directly as base64url strings instead of converting them to Buffers. The library handles the conversion internally.</p>
-              <p><strong>Files Changed:</strong> <code>services/webauthnService.js</code></p>
+            <!-- WebAuthn RP ID Mismatch Fix -->
+            <div class="timeline-element">
+              <div class="timeline-icon timeline-icon--fix">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+              </div>
+              <div class="timeline-content">
+                <span class="timeline-date">December 28, 2025</span>
+                <h3 class="timeline-title">WebAuthn RP ID Mismatch Fix</h3>
+                <div class="timeline-details">
+                  <p><strong>Issue:</strong> Passkey login failing with <code>Unexpected RP ID hash</code></p>
+                  <p><strong>Root Cause:</strong> Registration used dynamic origin but login used static config value.</p>
+                  <p><strong>Fix:</strong> Login now derives RP ID from request origin, matching registration.</p>
+                </div>
+                <div class="timeline-files"><strong>Files:</strong> controllers/authController.js</div>
+              </div>
             </div>
-          </div>
 
-          <div class="changelog-entry">
-            <div class="changelog-date">December 29, 2025</div>
-            <h3 class="changelog-title">Blog Script Loading Fix</h3>
-            <div class="changelog-details">
-              <p><strong>Issue:</strong> Blog page showed <code>Identifier 'isDevelopment' has already been declared</code> error.</p>
-              <p><strong>Root Cause:</strong> The <code>blog.html</code> file had debug code that attempted to re-load <code>blog.js</code> if it detected initialization hadn't completed. This caused the script to load twice, resulting in duplicate variable declarations.</p>
-              <p><strong>Fix:</strong> Removed the duplicate script loading fallback code from <code>blog.html</code> and cleaned up debug logging from <code>blog.js</code>.</p>
-              <p><strong>Files Changed:</strong> <code>public/blog.html</code>, <code>public/scripts/blog.js</code></p>
+            <!-- WebAuthn Authentication Fix -->
+            <div class="timeline-element">
+              <div class="timeline-icon timeline-icon--fix">
+                <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+              </div>
+              <div class="timeline-content">
+                <span class="timeline-date">December 28, 2025</span>
+                <h3 class="timeline-title">WebAuthn Authentication Fix</h3>
+                <div class="timeline-details">
+                  <p><strong>Issue:</strong> <code>input.replace is not a function</code> error during passkey login.</p>
+                  <p><strong>Root Cause:</strong> SimpleWebAuthn v10+ expects base64url strings, not Buffers.</p>
+                  <p><strong>Fix:</strong> Pass credential IDs as base64url strings directly.</p>
+                </div>
+                <div class="timeline-files"><strong>Files:</strong> services/webauthnService.js</div>
+              </div>
             </div>
-          </div>
 
-          <div class="changelog-entry">
-            <div class="changelog-date">December 29, 2025</div>
-            <h3 class="changelog-title">JSONB Serialization &amp; Blog Posts Migration</h3>
-            <div class="changelog-details">
-              <p><strong>Issue:</strong> Blog posts were not appearing on the production site.</p>
-              <p><strong>Root Cause:</strong> The <code>data/posts.json</code> file was excluded in <code>.gitignore</code>, so posts weren't available on Railway for migration to PostgreSQL.</p>
-              <p><strong>Fix:</strong> Updated <code>.gitignore</code> to track <code>posts.json</code> so the migration script can import posts to the database on deployment.</p>
-              <p><strong>Files Changed:</strong> <code>.gitignore</code>, <code>data/posts.json</code></p>
+            <!-- Blog Script Loading Fix -->
+            <div class="timeline-element">
+              <div class="timeline-icon timeline-icon--fix">
+                <svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              </div>
+              <div class="timeline-content">
+                <span class="timeline-date">December 28, 2025</span>
+                <h3 class="timeline-title">Blog Script Loading Fix</h3>
+                <div class="timeline-details">
+                  <p><strong>Issue:</strong> <code>Identifier 'isDevelopment' has already been declared</code></p>
+                  <p><strong>Root Cause:</strong> Debug code was re-loading blog.js causing duplicate declarations.</p>
+                  <p><strong>Fix:</strong> Removed duplicate script loading and cleaned up debug code.</p>
+                </div>
+                <div class="timeline-files"><strong>Files:</strong> public/blog.html, public/scripts/blog.js</div>
+              </div>
             </div>
-          </div>
 
-          <div class="changelog-entry">
-            <div class="changelog-date">December 28, 2025</div>
-            <h3 class="changelog-title">Product Modal &amp; Screenshot Display Fixes</h3>
-            <div class="changelog-details">
-              <p><strong>Issue:</strong> Product modals weren't opening on click, and screenshots weren't displaying properly.</p>
-              <p><strong>Root Cause:</strong> The Three.js mesh background canvas was intercepting click events. Screenshot image paths weren't being normalized correctly.</p>
-              <p><strong>Fix:</strong> Added <code>pointer-events: none</code> to the mesh background element and improved screenshot URL handling with better error messages.</p>
-              <p><strong>Files Changed:</strong> <code>public/styles/styles.css</code>, <code>public/scripts/products.js</code>, <code>public/scripts/home.js</code></p>
+            <!-- JSONB Serialization Fix -->
+            <div class="timeline-element">
+              <div class="timeline-icon timeline-icon--feature">
+                <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 12V7a9 3 0 0 1 18 0v5M3 12a9 3 0 0 0 9 3 9 3 0 0 0 9-3"/></svg>
+              </div>
+              <div class="timeline-content">
+                <span class="timeline-date">December 28, 2025</span>
+                <h3 class="timeline-title">JSONB Serialization &amp; Blog Posts Migration</h3>
+                <div class="timeline-details">
+                  <p><strong>Issue:</strong> Blog posts not appearing on production site.</p>
+                  <p><strong>Root Cause:</strong> posts.json excluded from git, not available for Railway migration.</p>
+                  <p><strong>Fix:</strong> Updated .gitignore to track posts.json for database migration.</p>
+                </div>
+                <div class="timeline-files"><strong>Files:</strong> .gitignore, data/posts.json</div>
+              </div>
             </div>
-          </div>
 
-          <div class="changelog-entry">
-            <div class="changelog-date">December 28, 2025</div>
-            <h3 class="changelog-title">Database Mode for All Controllers</h3>
-            <div class="changelog-details">
-              <p><strong>Issue:</strong> Some controllers were hardcoded to use JSON file storage instead of PostgreSQL when deployed.</p>
-              <p><strong>Root Cause:</strong> The <code>postsController</code>, <code>workController</code>, and <code>authController</code> weren't checking the database configuration flag.</p>
-              <p><strong>Fix:</strong> Updated all controllers to conditionally use <code>DbService</code> (PostgreSQL) or <code>DataService</code> (JSON files) based on the <code>config.database.useDatabase</code> setting.</p>
-              <p><strong>Files Changed:</strong> <code>controllers/postsController.js</code>, <code>controllers/workController.js</code>, <code>controllers/authController.js</code>, <code>services/initService.js</code></p>
+            <!-- Product Modal Fix -->
+            <div class="timeline-element">
+              <div class="timeline-icon timeline-icon--fix">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+              </div>
+              <div class="timeline-content">
+                <span class="timeline-date">December 28, 2025</span>
+                <h3 class="timeline-title">Product Modal &amp; Screenshot Display Fixes</h3>
+                <div class="timeline-details">
+                  <p><strong>Issue:</strong> Product modals not opening, screenshots not displaying.</p>
+                  <p><strong>Root Cause:</strong> Canvas intercepting clicks; screenshot paths not normalized.</p>
+                  <p><strong>Fix:</strong> Added pointer-events: none to canvas; improved URL handling.</p>
+                </div>
+                <div class="timeline-files"><strong>Files:</strong> styles.css, products.js, home.js</div>
+              </div>
             </div>
+
+            <!-- Database Mode Fix -->
+            <div class="timeline-element">
+              <div class="timeline-icon timeline-icon--feature">
+                <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+              </div>
+              <div class="timeline-content">
+                <span class="timeline-date">December 28, 2025</span>
+                <h3 class="timeline-title">Database Mode for All Controllers</h3>
+                <div class="timeline-details">
+                  <p><strong>Issue:</strong> Controllers hardcoded to JSON instead of PostgreSQL.</p>
+                  <p><strong>Root Cause:</strong> Controllers not checking database config flag.</p>
+                  <p><strong>Fix:</strong> All controllers now use DbService or DataService based on config.</p>
+                </div>
+                <div class="timeline-files"><strong>Files:</strong> postsController.js, workController.js, authController.js, initService.js</div>
+              </div>
+            </div>
+
+            <!-- Timeline end marker -->
+            <div class="timeline-end">
+              <div class="timeline-end-icon">
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
