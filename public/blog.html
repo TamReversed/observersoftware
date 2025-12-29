@@ -130,52 +130,10 @@
         </div>
     </footer>
 
-    <script>
-        // Immediate test to verify scripts can run
-        console.log('[DEBUG] Inline script in blog.html executed', new Date().getTime());
-    </script>
     <script src="./scripts/skeletons.js" defer></script>
     <script src="./scripts/magnetic-buttons.js" defer></script>
     <script src="./scripts/page-transitions.js" defer></script>
     <script src="./scripts/blog.js" defer></script>
-    <script>
-        // Check after defer scripts should have loaded
-        window.addEventListener('load', function() {
-            console.log('[DEBUG] Window load event fired', {
-                hasSkeletonUtils: typeof window.SkeletonUtils !== 'undefined',
-                hasPostsGrid: !!document.getElementById('postsGrid'),
-                postsGridContent: document.getElementById('postsGrid')?.innerHTML?.substring(0, 100),
-                blogJsLoaded: typeof window.initialize === 'function' || document.querySelector('script[src*="blog.js"]') !== null
-            });
-            
-            // Fallback: If blog.js didn't load, try to load it manually
-            if (!document.querySelector('script[src*="blog.js"]') || typeof window.initialize === 'undefined') {
-                console.warn('[DEBUG] blog.js not found or initialize not available, attempting to load manually');
-                const script = document.createElement('script');
-                script.src = './scripts/blog.js';
-                script.onload = () => {
-                    console.log('[DEBUG] blog.js manually loaded');
-                    // Try to call initialize if it exists
-                    if (typeof window.initialize === 'function') {
-                        setTimeout(() => window.initialize(), 100);
-                    }
-                };
-                script.onerror = (err) => {
-                    console.error('[DEBUG] Failed to manually load blog.js', err);
-                };
-                document.body.appendChild(script);
-            }
-        });
-        
-        // Also check on DOMContentLoaded
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', function() {
-                console.log('[DEBUG] DOMContentLoaded fired', {
-                    hasBlogJs: !!document.querySelector('script[src*="blog.js"]')
-                });
-            });
-        }
-    </script>
 </body>
 </html>
 

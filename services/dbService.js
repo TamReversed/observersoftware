@@ -283,14 +283,17 @@ class DbService {
 
   /**
    * Serialize value for database
-   * Note: For JSONB columns, pass JavaScript objects directly - node-postgres handles serialization
+   * Objects/arrays must be stringified for JSONB columns
    */
   _serializeValue(value) {
     if (value === null || value === undefined) {
       return null;
     }
-    // Don't stringify objects - node-postgres handles JSONB columns automatically
-    // This prevents double-encoding issues
+    // Stringify objects/arrays for JSONB columns
+    // node-postgres requires JSON string input for JSONB types
+    if (typeof value === 'object' && !(value instanceof Date)) {
+      return JSON.stringify(value);
+    }
     return value;
   }
 
