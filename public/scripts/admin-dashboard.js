@@ -43,9 +43,28 @@ const presetIcons = {
   "plug": `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"/></svg>`
 };
 
+// Content types configuration
+const contentTypes = {
+  // Content types with lists
+  posts: { title: 'Posts', hasList: true, hasNew: true, endpoint: '/api/admin/posts' },
+  work: { title: 'Work', hasList: true, hasNew: true, endpoint: '/api/admin/work' },
+  capabilities: { title: 'Products', hasList: true, hasNew: true, endpoint: '/api/admin/capabilities' },
+  messages: { title: 'Messages', hasList: true, hasNew: false, endpoint: '/api/admin/messages' },
+  navigation: { title: 'Navigation', hasList: true, hasNew: true, endpoint: '/api/admin/navigation' },
+  categories: { title: 'Categories', hasList: true, hasNew: true, endpoint: '/api/admin/categories' },
+  testimonials: { title: 'Testimonials', hasList: true, hasNew: true, endpoint: '/api/admin/testimonials' },
+  faqs: { title: 'FAQs', hasList: true, hasNew: true, endpoint: '/api/admin/faqs' },
+  changelog: { title: 'Changelog', hasList: true, hasNew: true, endpoint: '/api/admin/changelog' },
+  // Single-view types (no list)
+  settings: { title: 'Settings', hasList: false, hasNew: false },
+  homepage: { title: 'Homepage', hasList: false, hasNew: false },
+  media: { title: 'Media', hasList: false, hasNew: false },
+  users: { title: 'Users', hasList: false, hasNew: false }
+};
+
 // State
 let currentType = 'posts';
-let items = { posts: [], work: [], capabilities: [], messages: [] };
+let items = {};
 let categories = [];
 let currentItem = null;
 let isNewItem = false;
@@ -60,9 +79,11 @@ let selectedPresetIcon = '';
 // Elements
 const itemsList = document.getElementById('itemsList');
 const sidebarTitle = document.getElementById('sidebarTitle');
+const sidebarListSection = document.getElementById('sidebarListSection');
 const welcomeState = document.getElementById('welcomeState');
 const toast = document.getElementById('toast');
 const adminUser = document.getElementById('adminUser');
+const newItemBtn = document.getElementById('newItemBtn');
 
 // CSRF token management
 let csrfToken = null;
@@ -87,7 +108,7 @@ async function authenticatedFetch(url, options = {}) {
     'Content-Type': 'application/json',
     'X-CSRF-Token': token || ''
   };
-  
+
   if (options.body && typeof options.body === 'object') {
     options.body = JSON.stringify({ ...options.body, csrfToken: token });
   } else if (options.body && typeof options.body === 'string') {
@@ -98,7 +119,7 @@ async function authenticatedFetch(url, options = {}) {
       // If body is not JSON, add token as header only
     }
   }
-  
+
   return fetch(url, {
     ...options,
     headers,
@@ -116,7 +137,6 @@ async function checkAuth() {
       return false;
     }
     adminUser.textContent = data.username;
-    // Get CSRF token on auth check
     await getCsrfToken();
     return true;
   } catch {
@@ -151,67 +171,115 @@ async function loadCategories() {
     const res = await fetch('/api/categories');
     categories = await res.json();
     const select = document.getElementById('postCategory');
-    select.innerHTML = '';
-    categories.forEach(c => {
-      const option = document.createElement('option');
-      option.value = c.slug || '';
-      option.textContent = c.name || '';
-      select.appendChild(option);
-    });
+    if (select) {
+      select.innerHTML = '';
+      categories.forEach(c => {
+        const option = document.createElement('option');
+        option.value = c.slug || '';
+        option.textContent = c.name || '';
+        select.appendChild(option);
+      });
+    }
   } catch (e) {
     console.error('Failed to load categories:', e);
   }
 }
 
-// Load items
+// Load items for a content type
 async function loadItems(type) {
+  const config = contentTypes[type];
+  if (!config || !config.hasList) return;
+
   try {
-    let endpoint;
-    if (type === 'posts') {
-      endpoint = '/api/admin/posts';
-    } else if (type === 'messages') {
-      endpoint = '/api/admin/messages';
-    } else {
-      endpoint = `/api/admin/${type}`;
-    }
-    const res = await fetch(endpoint);
+    const res = await fetch(config.endpoint);
     items[type] = await res.json();
     renderItemsList();
+
+    // Update unread badge for messages
+    if (type === 'messages') {
+      const unread = items[type].filter(m => !m.read).length;
+      const badge = document.getElementById('unreadBadge');
+      if (badge) {
+        badge.textContent = unread;
+        badge.style.display = unread > 0 ? 'inline-block' : 'none';
+      }
+    }
   } catch (e) {
     showToast(`Failed to load ${type}`, 'error');
   }
 }
 
-// Render items list
+// Render items list in sidebar
 function renderItemsList() {
-  const data = items[currentType];
+  const data = items[currentType] || [];
+
   if (data.length === 0) {
-    itemsList.innerHTML = `<div class="empty-state">No ${escapeHtml(currentType)} yet. Create your first!</div>`;
+    itemsList.innerHTML = `<div class="empty-state">No ${escapeHtml(contentTypes[currentType]?.title || currentType)} yet.</div>`;
     return;
   }
 
-  // Clear existing items
   itemsList.innerHTML = '';
 
   data.forEach(item => {
     const id = currentType === 'posts' ? item.slug : item.id;
-    let title, subtitle;
-    
+    let title, subtitle, statusClass, statusText;
+
     if (currentType === 'messages') {
       title = item.name || 'Unknown';
-      subtitle = item.email || '';
+      subtitle = item.subject ? item.subject.substring(0, 30) : item.email;
+      statusClass = item.read ? 'read' : 'unread';
+      statusText = item.read ? 'Read' : 'New';
     } else if (currentType === 'posts') {
       title = item.title;
       subtitle = item.categoryName || 'Uncategorized';
+      statusClass = item.published ? 'published' : '';
+      statusText = item.published ? 'Published' : 'Draft';
     } else if (currentType === 'work') {
       title = item.industry;
       subtitle = item.problem ? item.problem.substring(0, 40) + '...' : '';
-    } else {
+      statusClass = item.published ? 'published' : '';
+      statusText = item.published ? 'Published' : 'Draft';
+    } else if (currentType === 'capabilities') {
       title = item.title;
+      subtitle = item.description?.substring(0, 40) || '';
+      statusClass = item.published ? 'published' : '';
+      statusText = item.published ? 'Published' : 'Draft';
+    } else if (currentType === 'navigation') {
+      title = item.label;
+      subtitle = `${item.location} - ${item.url}`;
+      statusClass = item.published ? 'published' : '';
+      statusText = item.published ? 'Published' : 'Hidden';
+    } else if (currentType === 'categories') {
+      title = item.name;
+      subtitle = item.type;
+      statusClass = 'published';
+      statusText = item.type;
+    } else if (currentType === 'testimonials') {
+      title = item.author_name;
+      subtitle = item.author_company || item.content?.substring(0, 30);
+      statusClass = item.published ? 'published' : '';
+      statusText = item.published ? 'Published' : 'Draft';
+    } else if (currentType === 'faqs') {
+      title = item.question?.substring(0, 40);
+      subtitle = item.category;
+      statusClass = item.published ? 'published' : '';
+      statusText = item.published ? 'Published' : 'Draft';
+    } else if (currentType === 'changelog') {
+      title = item.title;
+      const date = new Date(item.date);
+      subtitle = date.toLocaleDateString();
+      statusClass = 'published';
+      statusText = item.type;
+    } else {
+      title = item.title || item.name || item.id;
       subtitle = '';
+      statusClass = item.published ? 'published' : '';
+      statusText = item.published ? 'Published' : 'Draft';
     }
-    
-    const isActive = currentType === 'posts' ? currentItem?.slug === item.slug : currentItem?.id === item.id;
+
+    const isActive = currentType === 'posts'
+      ? currentItem?.slug === item.slug
+      : currentItem?.id === item.id;
 
     const div = document.createElement('div');
     div.className = `list-item ${isActive ? 'active' : ''} ${currentType === 'messages' && !item.read ? 'unread' : ''}`;
@@ -224,40 +292,22 @@ function renderItemsList() {
     const metaDiv = document.createElement('div');
     metaDiv.className = 'list-item-meta';
 
-    if (currentType === 'messages') {
-      const statusSpan = document.createElement('span');
-      statusSpan.className = `item-status ${item.read ? 'read' : 'unread'}`;
-      statusSpan.textContent = item.read ? 'Read' : 'New';
-      metaDiv.appendChild(statusSpan);
-      
-      if (item.subject) {
-        const subjectSpan = document.createElement('span');
-        subjectSpan.textContent = item.subject.substring(0, 30) + (item.subject.length > 30 ? '...' : '');
-        metaDiv.appendChild(subjectSpan);
-      }
-      
-      const dateSpan = document.createElement('span');
-      const date = new Date(item.createdAt);
-      dateSpan.textContent = date.toLocaleDateString();
-      metaDiv.appendChild(dateSpan);
-    } else {
-      const statusSpan = document.createElement('span');
-      statusSpan.className = `item-status ${item.published ? 'published' : ''}`;
-      statusSpan.textContent = item.published ? 'Published' : 'Draft';
-      metaDiv.appendChild(statusSpan);
+    const statusSpan = document.createElement('span');
+    statusSpan.className = `item-status ${statusClass}`;
+    statusSpan.textContent = statusText;
+    metaDiv.appendChild(statusSpan);
 
-      if (subtitle) {
-        const subtitleSpan = document.createElement('span');
-        subtitleSpan.textContent = subtitle;
-        metaDiv.appendChild(subtitleSpan);
-      }
+    if (subtitle) {
+      const subtitleSpan = document.createElement('span');
+      subtitleSpan.textContent = subtitle;
+      metaDiv.appendChild(subtitleSpan);
     }
 
     div.appendChild(titleDiv);
     div.appendChild(metaDiv);
 
     div.addEventListener('click', () => {
-      const foundItem = currentType === 'posts' 
+      const foundItem = currentType === 'posts'
         ? items[currentType].find(i => i.slug === id)
         : items[currentType].find(i => i.id === id);
       if (foundItem) selectItem(foundItem);
@@ -273,57 +323,46 @@ function switchType(type) {
   currentItem = null;
   isNewItem = false;
 
-  // Update tabs
-  document.querySelectorAll('.content-type-tab').forEach(t => {
-    t.classList.toggle('active', t.dataset.type === type);
+  // Update nav items
+  document.querySelectorAll('.nav-item').forEach(nav => {
+    nav.classList.toggle('active', nav.dataset.type === type);
   });
 
-  // Update sidebar title
-  const titles = { posts: 'Posts', work: 'Work', capabilities: 'Products', messages: 'Messages', changelog: 'Changelog' };
-  sidebarTitle.textContent = titles[type];
-
-  // Hide "New" button for messages and changelog (read-only)
-  const newItemBtn = document.getElementById('newItemBtn');
-  if (newItemBtn) {
-    newItemBtn.style.display = (type === 'messages' || type === 'changelog') ? 'none' : 'inline-flex';
-  }
-
-  // Hide all editors, show welcome
+  // Hide all editors
   document.querySelectorAll('.editor-form').forEach(f => f.style.display = 'none');
-  welcomeState.style.display = 'flex';
 
-  // Handle changelog type specially
-  if (type === 'changelog') {
-    welcomeState.style.display = 'none';
-    document.getElementById('changelogViewer').style.display = 'block';
-    itemsList.innerHTML = `
-      <div class="empty-state">
-        <p style="margin-bottom: 1rem;">View application updates and fixes</p>
-        <div class="timeline-key">
-          <div class="timeline-key-item">
-            <span class="timeline-key-dot timeline-key-dot--fix"></span>
-            <span>Bug Fix</span>
-          </div>
-          <div class="timeline-key-item">
-            <span class="timeline-key-dot timeline-key-dot--feature"></span>
-            <span>Feature</span>
-          </div>
-          <div class="timeline-key-item">
-            <span class="timeline-key-dot timeline-key-dot--improvement"></span>
-            <span>Improvement</span>
-          </div>
-          <div class="timeline-key-item">
-            <span class="timeline-key-dot timeline-key-dot--security"></span>
-            <span>Security</span>
-          </div>
-        </div>
-      </div>
-    `;
-    return;
+  const config = contentTypes[type];
+
+  // Show/hide sidebar list section
+  if (config?.hasList) {
+    sidebarListSection.style.display = 'flex';
+    sidebarTitle.textContent = config.title;
+    newItemBtn.style.display = config.hasNew ? 'inline-flex' : 'none';
+    loadItems(type);
+  } else {
+    sidebarListSection.style.display = 'none';
   }
 
-  // Load and render
-  loadItems(type);
+  // Handle special single-view types
+  if (type === 'settings') {
+    welcomeState.style.display = 'none';
+    document.getElementById('settingsEditor').style.display = 'block';
+    loadSettings();
+  } else if (type === 'homepage') {
+    welcomeState.style.display = 'none';
+    document.getElementById('homepageEditor').style.display = 'block';
+    loadHomepage();
+  } else if (type === 'media') {
+    welcomeState.style.display = 'none';
+    document.getElementById('mediaEditor').style.display = 'block';
+    loadMedia();
+  } else if (type === 'users') {
+    welcomeState.style.display = 'none';
+    document.getElementById('usersEditor').style.display = 'block';
+    loadUsers();
+  } else {
+    welcomeState.style.display = 'flex';
+  }
 }
 
 // Select item for editing
@@ -332,98 +371,176 @@ function selectItem(item) {
   isNewItem = false;
   welcomeState.style.display = 'none';
 
-  // Hide all editors
   document.querySelectorAll('.editor-form').forEach(f => f.style.display = 'none');
 
   if (currentType === 'posts') {
-    document.getElementById('postsEditor').style.display = 'block';
-    document.getElementById('postsEditorTitle').textContent = 'Edit Post';
-    document.getElementById('postTitle').value = item.title;
-    document.getElementById('postExcerpt').value = item.excerpt || '';
-    document.getElementById('postCategory').value = item.category || 'insights';
-    document.getElementById('postContent').value = item.content;
-    document.getElementById('postPublished').checked = item.published;
-    document.getElementById('slugPreview').textContent = item.slug;
-    document.getElementById('deletePostBtn').style.display = 'inline-flex';
+    showPostsEditor(item);
   } else if (currentType === 'work') {
-    document.getElementById('workEditor').style.display = 'block';
-    document.getElementById('workEditorTitle').textContent = 'Edit Work Item';
-    document.getElementById('workIndustry').value = item.industry || '';
-    document.getElementById('workClient').value = item.client || '';
-    document.getElementById('workProblem').value = item.problem || '';
-    document.getElementById('workSolution').value = item.solution || '';
-    document.getElementById('workDate').value = item.date || '';
-    document.getElementById('workImage').value = item.image || '';
-    document.getElementById('workCaseStudy').value = item.caseStudyUrl || '';
-    document.getElementById('workPublished').checked = item.published;
-    document.getElementById('deleteWorkBtn').style.display = 'inline-flex';
-    workTags = item.tags || [];
-    renderWorkTags();
+    showWorkEditor(item);
   } else if (currentType === 'capabilities') {
-    document.getElementById('capabilitiesEditor').style.display = 'block';
-    document.getElementById('capabilitiesEditorTitle').textContent = 'Edit Capability';
-    document.getElementById('capabilityTitle').value = item.title || '';
-    document.getElementById('capabilityDescription').value = item.description || '';
-    document.getElementById('capabilityLongDescription').value = item.longDescription || '';
-    document.getElementById('capabilityExternalUrl').value = item.externalUrl || '';
-    document.getElementById('capabilityOrder').value = item.order || '';
-    document.getElementById('capabilityPublished').checked = item.published;
-    document.getElementById('deleteCapabilityBtn').style.display = 'inline-flex';
-    
-    // Features
-    capabilityFeatures = item.features || [];
-    renderCapabilityFeatures();
-    
-    // Screenshots
-    capabilityScreenshots = item.screenshots || [];
-    renderCapabilityScreenshots();
-    
-    // Icon
-    const icon = item.icon || { type: 'preset', preset: '' };
-    selectedIconType = icon.type || 'preset';
-    selectedPresetIcon = icon.preset || '';
-    document.getElementById('capabilityIconSvg').value = icon.svg || '';
-    document.getElementById('capabilityIconLottieUrl').value = icon.lottieUrl || '';
-    
-    updateIconTypeTabs();
-    renderPresetIconGrid();
+    showCapabilitiesEditor(item);
   } else if (currentType === 'messages') {
-    document.getElementById('messagesViewer').style.display = 'block';
-    document.getElementById('messagesViewerTitle').textContent = item.subject || 'Message';
-    document.getElementById('messageFrom').textContent = item.name || 'Unknown';
-    document.getElementById('messageEmail').textContent = item.email || '';
-    document.getElementById('messageSubject').textContent = item.subject || '(No subject)';
-    const date = new Date(item.createdAt);
-    document.getElementById('messageDate').textContent = date.toLocaleString();
-    document.getElementById('messageContent').textContent = item.message || '';
-    
-    // Show/hide mark as read button
-    const markReadBtn = document.getElementById('markReadBtn');
-    if (!item.read) {
-      markReadBtn.style.display = 'inline-flex';
-    } else {
-      markReadBtn.style.display = 'none';
-    }
-    
-    // Mark as read when viewing
-    if (!item.read) {
-      markMessageAsRead(item.id);
-    }
+    showMessagesViewer(item);
+  } else if (currentType === 'navigation') {
+    showNavigationEditor(item);
+  } else if (currentType === 'categories') {
+    showCategoriesEditor(item);
+  } else if (currentType === 'testimonials') {
+    showTestimonialsEditor(item);
+  } else if (currentType === 'faqs') {
+    showFaqsEditor(item);
+  } else if (currentType === 'changelog') {
+    showChangelogEditor(item);
   }
 
   renderItemsList();
 }
 
+// Show Posts Editor
+function showPostsEditor(item) {
+  document.getElementById('postsEditor').style.display = 'block';
+  document.getElementById('postsEditorTitle').textContent = item ? 'Edit Post' : 'New Post';
+  document.getElementById('postTitle').value = item?.title || '';
+  document.getElementById('postExcerpt').value = item?.excerpt || '';
+  document.getElementById('postCategory').value = item?.category || categories[0]?.slug || 'insights';
+  document.getElementById('postContent').value = item?.content || '';
+  document.getElementById('postPublished').checked = item?.published || false;
+  document.getElementById('slugPreview').textContent = item?.slug || '-';
+  document.getElementById('deletePostBtn').style.display = item ? 'inline-flex' : 'none';
+}
+
+// Show Work Editor
+function showWorkEditor(item) {
+  document.getElementById('workEditor').style.display = 'block';
+  document.getElementById('workEditorTitle').textContent = item ? 'Edit Work Item' : 'New Work Item';
+  document.getElementById('workIndustry').value = item?.industry || '';
+  document.getElementById('workClient').value = item?.client || '';
+  document.getElementById('workProblem').value = item?.problem || '';
+  document.getElementById('workSolution').value = item?.solution || '';
+  document.getElementById('workDate').value = item?.date || '';
+  document.getElementById('workImage').value = item?.image || '';
+  document.getElementById('workCaseStudy').value = item?.caseStudyUrl || '';
+  document.getElementById('workPublished').checked = item?.published || false;
+  document.getElementById('deleteWorkBtn').style.display = item ? 'inline-flex' : 'none';
+  workTags = item?.tags || [];
+  renderWorkTags();
+}
+
+// Show Capabilities Editor
+function showCapabilitiesEditor(item) {
+  document.getElementById('capabilitiesEditor').style.display = 'block';
+  document.getElementById('capabilitiesEditorTitle').textContent = item ? 'Edit Product' : 'New Product';
+  document.getElementById('capabilityTitle').value = item?.title || '';
+  document.getElementById('capabilityDescription').value = item?.description || '';
+  document.getElementById('capabilityLongDescription').value = item?.longDescription || '';
+  document.getElementById('capabilityExternalUrl').value = item?.externalUrl || '';
+  document.getElementById('capabilityOrder').value = item?.order || '';
+  document.getElementById('capabilityPublished').checked = item?.published || false;
+  document.getElementById('deleteCapabilityBtn').style.display = item ? 'inline-flex' : 'none';
+
+  capabilityFeatures = item?.features || [];
+  renderCapabilityFeatures();
+
+  capabilityScreenshots = item?.screenshots || [];
+  renderCapabilityScreenshots();
+
+  const icon = item?.icon || { type: 'preset', preset: '' };
+  selectedIconType = icon.type || 'preset';
+  selectedPresetIcon = icon.preset || '';
+  document.getElementById('capabilityIconSvg').value = icon.svg || '';
+  document.getElementById('capabilityIconLottieUrl').value = icon.lottieUrl || '';
+
+  updateIconTypeTabs();
+  renderPresetIconGrid();
+}
+
+// Show Messages Viewer
+function showMessagesViewer(item) {
+  document.getElementById('messagesViewer').style.display = 'block';
+  document.getElementById('messagesViewerTitle').textContent = item.subject || 'Message';
+  document.getElementById('messageFrom').textContent = item.name || 'Unknown';
+  document.getElementById('messageEmail').textContent = item.email || '';
+  document.getElementById('messageSubject').textContent = item.subject || '(No subject)';
+  const date = new Date(item.createdAt);
+  document.getElementById('messageDate').textContent = date.toLocaleString();
+  document.getElementById('messageContent').textContent = item.message || '';
+
+  const markReadBtn = document.getElementById('markReadBtn');
+  markReadBtn.style.display = item.read ? 'none' : 'inline-flex';
+
+  if (!item.read) {
+    markMessageAsRead(item.id);
+  }
+}
+
+// Show Navigation Editor
+function showNavigationEditor(item) {
+  document.getElementById('navigationEditor').style.display = 'block';
+  document.getElementById('navigationEditorTitle').textContent = item ? 'Edit Navigation Item' : 'New Navigation Item';
+  document.getElementById('navLocation').value = item?.location || 'header';
+  document.getElementById('navLabel').value = item?.label || '';
+  document.getElementById('navUrl').value = item?.url || '';
+  document.getElementById('navOrder').value = item?.order ?? 0;
+  document.getElementById('navExternal').checked = item?.is_external || false;
+  document.getElementById('navPublished').checked = item?.published !== false;
+  document.getElementById('deleteNavigationBtn').style.display = item ? 'inline-flex' : 'none';
+}
+
+// Show Categories Editor
+function showCategoriesEditor(item) {
+  document.getElementById('categoriesEditor').style.display = 'block';
+  document.getElementById('categoriesEditorTitle').textContent = item ? 'Edit Category' : 'New Category';
+  document.getElementById('categoryName').value = item?.name || '';
+  document.getElementById('categoryType').value = item?.type || 'blog';
+  document.getElementById('categoryOrder').value = item?.order ?? 0;
+  document.getElementById('categorySlugPreview').textContent = item?.slug || '-';
+  document.getElementById('deleteCategoryBtn').style.display = item ? 'inline-flex' : 'none';
+}
+
+// Show Testimonials Editor
+function showTestimonialsEditor(item) {
+  document.getElementById('testimonialsEditor').style.display = 'block';
+  document.getElementById('testimonialsEditorTitle').textContent = item ? 'Edit Testimonial' : 'New Testimonial';
+  document.getElementById('testimonialContent').value = item?.content || '';
+  document.getElementById('testimonialAuthorName').value = item?.author_name || '';
+  document.getElementById('testimonialAuthorTitle').value = item?.author_title || '';
+  document.getElementById('testimonialAuthorCompany').value = item?.author_company || '';
+  document.getElementById('testimonialRating').value = item?.rating || 5;
+  document.getElementById('testimonialPublished').checked = item?.published || false;
+  document.getElementById('deleteTestimonialBtn').style.display = item ? 'inline-flex' : 'none';
+}
+
+// Show FAQs Editor
+function showFaqsEditor(item) {
+  document.getElementById('faqsEditor').style.display = 'block';
+  document.getElementById('faqsEditorTitle').textContent = item ? 'Edit FAQ' : 'New FAQ';
+  document.getElementById('faqQuestion').value = item?.question || '';
+  document.getElementById('faqAnswer').value = item?.answer || '';
+  document.getElementById('faqCategory').value = item?.category || 'general';
+  document.getElementById('faqOrder').value = item?.order ?? 0;
+  document.getElementById('faqPublished').checked = item?.published !== false;
+  document.getElementById('deleteFaqBtn').style.display = item ? 'inline-flex' : 'none';
+}
+
+// Show Changelog Editor
+function showChangelogEditor(item) {
+  document.getElementById('changelogEditor').style.display = 'block';
+  document.getElementById('changelogEditorTitle').textContent = item ? 'Edit Changelog Entry' : 'New Changelog Entry';
+  document.getElementById('changelogTitle').value = item?.title || '';
+  document.getElementById('changelogDescription').value = item?.description || '';
+  document.getElementById('changelogType').value = item?.type || 'fix';
+  document.getElementById('changelogDate').value = item?.date || new Date().toISOString().split('T')[0];
+  document.getElementById('deleteChangelogBtn').style.display = item ? 'inline-flex' : 'none';
+}
+
 // Mark message as read
 async function markMessageAsRead(messageId) {
   try {
-    const token = await getCsrfToken();
     const res = await authenticatedFetch(`/api/admin/messages/${messageId}/read`, {
       method: 'PUT',
       body: {}
     });
     if (res.ok) {
-      // Reload messages to update read status
       await loadItems('messages');
     }
   } catch (e) {
@@ -440,56 +557,21 @@ function newItem() {
   document.querySelectorAll('.editor-form').forEach(f => f.style.display = 'none');
 
   if (currentType === 'posts') {
-    document.getElementById('postsEditor').style.display = 'block';
-    document.getElementById('postsEditorTitle').textContent = 'New Post';
-    document.getElementById('postTitle').value = '';
-    document.getElementById('postExcerpt').value = '';
-    document.getElementById('postCategory').value = categories[0]?.slug || 'insights';
-    document.getElementById('postContent').value = '';
-    document.getElementById('postPublished').checked = false;
-    document.getElementById('slugPreview').textContent = '-';
-    document.getElementById('deletePostBtn').style.display = 'none';
+    showPostsEditor(null);
   } else if (currentType === 'work') {
-    document.getElementById('workEditor').style.display = 'block';
-    document.getElementById('workEditorTitle').textContent = 'New Work Item';
-    document.getElementById('workIndustry').value = '';
-    document.getElementById('workClient').value = '';
-    document.getElementById('workProblem').value = '';
-    document.getElementById('workSolution').value = '';
-    document.getElementById('workDate').value = '';
-    document.getElementById('workImage').value = '';
-    document.getElementById('workCaseStudy').value = '';
-    document.getElementById('workPublished').checked = false;
-    document.getElementById('deleteWorkBtn').style.display = 'none';
-    workTags = [];
-    renderWorkTags();
+    showWorkEditor(null);
   } else if (currentType === 'capabilities') {
-    document.getElementById('capabilitiesEditor').style.display = 'block';
-    document.getElementById('capabilitiesEditorTitle').textContent = 'New Capability';
-    document.getElementById('capabilityTitle').value = '';
-    document.getElementById('capabilityDescription').value = '';
-    document.getElementById('capabilityLongDescription').value = '';
-    document.getElementById('capabilityExternalUrl').value = '';
-    document.getElementById('capabilityOrder').value = '';
-    document.getElementById('capabilityPublished').checked = false;
-    document.getElementById('deleteCapabilityBtn').style.display = 'none';
-    
-    // Reset features
-    capabilityFeatures = [];
-    renderCapabilityFeatures();
-    
-    // Reset screenshots
-    capabilityScreenshots = [];
-    renderCapabilityScreenshots();
-    
-    // Reset icon
-    selectedIconType = 'preset';
-    selectedPresetIcon = '';
-    document.getElementById('capabilityIconSvg').value = '';
-    document.getElementById('capabilityIconLottieUrl').value = '';
-    
-    updateIconTypeTabs();
-    renderPresetIconGrid();
+    showCapabilitiesEditor(null);
+  } else if (currentType === 'navigation') {
+    showNavigationEditor(null);
+  } else if (currentType === 'categories') {
+    showCategoriesEditor(null);
+  } else if (currentType === 'testimonials') {
+    showTestimonialsEditor(null);
+  } else if (currentType === 'faqs') {
+    showFaqsEditor(null);
+  } else if (currentType === 'changelog') {
+    showChangelogEditor(null);
   }
 
   renderItemsList();
@@ -498,14 +580,13 @@ function newItem() {
 // Work tags
 function renderWorkTags() {
   const container = document.getElementById('workTagsContainer');
-  const input = document.getElementById('workTagInput');
-  container.innerHTML = workTags.map(tag => 
-    `<span class="tag">${tag}<button class="tag-remove" data-tag="${tag}">&times;</button></span>`
+  container.innerHTML = workTags.map(tag =>
+    `<span class="tag">${escapeHtml(tag)}<button class="tag-remove" data-tag="${escapeHtml(tag)}">&times;</button></span>`
   ).join('') + '<input type="text" class="tag-input" id="workTagInput" placeholder="Type and press Enter">';
-  
+
   const newInput = document.getElementById('workTagInput');
   newInput.addEventListener('keydown', handleTagInput);
-  
+
   container.querySelectorAll('.tag-remove').forEach(btn => {
     btn.addEventListener('click', () => {
       workTags = workTags.filter(t => t !== btn.dataset.tag);
@@ -524,6 +605,206 @@ function handleTagInput(e) {
     }
     e.target.value = '';
   }
+}
+
+// Capability Features
+function renderCapabilityFeatures() {
+  const container = document.getElementById('capabilityFeaturesContainer');
+  if (!container) return;
+
+  container.innerHTML = capabilityFeatures.map(feature =>
+    `<span class="tag">${escapeHtml(feature)}<button class="tag-remove" data-feature="${escapeHtml(feature)}">&times;</button></span>`
+  ).join('') + '<input type="text" class="tag-input" id="capabilityFeatureInput" placeholder="Type feature and press Enter">';
+
+  const newInput = document.getElementById('capabilityFeatureInput');
+  if (newInput) {
+    newInput.addEventListener('keydown', handleFeatureInput);
+  }
+
+  container.querySelectorAll('.tag-remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      capabilityFeatures = capabilityFeatures.filter(f => f !== btn.dataset.feature);
+      renderCapabilityFeatures();
+    });
+  });
+}
+
+function handleFeatureInput(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    const value = e.target.value.trim();
+    if (value && !capabilityFeatures.includes(value)) {
+      capabilityFeatures.push(value);
+      renderCapabilityFeatures();
+    }
+    e.target.value = '';
+  }
+}
+
+// Capability Screenshots
+function renderCapabilityScreenshots() {
+  const container = document.getElementById('capabilityScreenshotsList');
+  if (!container) return;
+
+  container.innerHTML = capabilityScreenshots.map((url, index) =>
+    `<div class="screenshot-item">
+      <img src="${escapeHtml(url)}" alt="Screenshot ${index + 1}" onerror="this.style.display='none'">
+      <span>${escapeHtml(url)}</span>
+      <button class="screenshot-remove" data-index="${index}">&times;</button>
+    </div>`
+  ).join('');
+
+  container.querySelectorAll('.screenshot-remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const index = parseInt(btn.dataset.index);
+      capabilityScreenshots.splice(index, 1);
+      renderCapabilityScreenshots();
+    });
+  });
+}
+
+async function uploadScreenshot(file) {
+  const formData = new FormData();
+  formData.append('screenshot', file);
+
+  const token = await getCsrfToken();
+  if (token) {
+    formData.append('csrfToken', token);
+  }
+
+  const uploadZone = document.getElementById('screenshotUploadZone');
+  uploadZone.classList.add('uploading');
+
+  try {
+    const res = await fetch('/api/upload/screenshot', {
+      method: 'POST',
+      headers: { 'X-CSRF-Token': token || '' },
+      body: formData
+    });
+
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || 'Upload failed');
+    }
+
+    const data = await res.json();
+    if (data.url && !capabilityScreenshots.includes(data.url)) {
+      capabilityScreenshots.push(data.url);
+      renderCapabilityScreenshots();
+      showToast('Screenshot uploaded successfully', 'success');
+    }
+  } catch (error) {
+    showToast(error.message || 'Failed to upload screenshot', 'error');
+  } finally {
+    uploadZone.classList.remove('uploading');
+  }
+}
+
+function addScreenshot() {
+  const input = document.getElementById('capabilityScreenshotInput');
+  if (!input) return;
+
+  let url = input.value.trim();
+  if (!url) return;
+
+  if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('/')) {
+    url = '/' + url;
+  }
+
+  if (url.includes('.') && !url.includes('/')) {
+    url = `/assets/products/${url}`;
+  }
+
+  if (url && !capabilityScreenshots.includes(url)) {
+    capabilityScreenshots.push(url);
+    renderCapabilityScreenshots();
+    input.value = '';
+  }
+}
+
+// Setup screenshot upload
+function setupScreenshotUpload() {
+  const uploadZone = document.getElementById('screenshotUploadZone');
+  const fileInput = document.getElementById('screenshotFileInput');
+
+  if (!uploadZone || !fileInput) return;
+
+  uploadZone.addEventListener('click', () => fileInput.click());
+
+  fileInput.addEventListener('change', (e) => {
+    Array.from(e.target.files).forEach(file => {
+      if (file.type.startsWith('image/')) {
+        uploadScreenshot(file);
+      }
+    });
+    fileInput.value = '';
+  });
+
+  uploadZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadZone.classList.add('dragover');
+  });
+
+  uploadZone.addEventListener('dragleave', () => {
+    uploadZone.classList.remove('dragover');
+  });
+
+  uploadZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadZone.classList.remove('dragover');
+    Array.from(e.dataTransfer.files).forEach(file => {
+      if (file.type.startsWith('image/')) {
+        uploadScreenshot(file);
+      }
+    });
+  });
+
+  document.addEventListener('paste', async (e) => {
+    const capabilitiesEditor = document.getElementById('capabilitiesEditor');
+    if (!capabilitiesEditor || capabilitiesEditor.style.display === 'none') return;
+
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (let item of items) {
+      if (item.type.startsWith('image/')) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (file) uploadScreenshot(file);
+      }
+    }
+  });
+}
+
+// Icon Type Tabs
+function updateIconTypeTabs() {
+  document.querySelectorAll('.icon-type-tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.iconType === selectedIconType);
+  });
+
+  document.getElementById('iconPresetContent').style.display = selectedIconType === 'preset' ? 'block' : 'none';
+  document.getElementById('iconSvgContent').style.display = selectedIconType === 'svg' ? 'block' : 'none';
+  document.getElementById('iconLottieContent').style.display = selectedIconType === 'lottie' ? 'block' : 'none';
+}
+
+// Preset Icon Grid
+function renderPresetIconGrid() {
+  const grid = document.getElementById('iconPresetGrid');
+  if (!grid) return;
+
+  grid.innerHTML = Object.entries(presetIcons).map(([name, svg]) =>
+    `<div class="icon-preset-item ${selectedPresetIcon === name ? 'selected' : ''}" data-icon="${name}" title="${name}">
+      ${svg}
+    </div>`
+  ).join('');
+
+  grid.querySelectorAll('.icon-preset-item').forEach(item => {
+    item.addEventListener('click', () => {
+      selectedPresetIcon = item.dataset.icon;
+      grid.querySelectorAll('.icon-preset-item').forEach(i => i.classList.remove('selected'));
+      item.classList.add('selected');
+    });
+  });
 }
 
 // Save functions
@@ -553,7 +834,7 @@ async function savePost() {
     });
     const result = await res.json();
     if (!res.ok) throw new Error(result.error);
-    
+
     showToast(isNewItem ? 'Post created!' : 'Post saved!');
     await loadItems('posts');
     const saved = items.posts.find(p => p.slug === result.slug);
@@ -596,7 +877,7 @@ async function saveWork() {
     });
     const result = await res.json();
     if (!res.ok) throw new Error(result.error);
-    
+
     showToast(isNewItem ? 'Work item created!' : 'Work item saved!');
     await loadItems('work');
     const saved = items.work.find(w => w.id === result.id);
@@ -610,7 +891,6 @@ async function saveWork() {
 }
 
 async function saveCapability() {
-  // Build icon object based on selected type
   const icon = {
     type: selectedIconType,
     preset: selectedIconType === 'preset' ? selectedPresetIcon : '',
@@ -647,16 +927,9 @@ async function saveCapability() {
       body: data
     });
     const result = await res.json();
-    if (!res.ok) {
-      // Show detailed validation errors if available
-      if (result.errors && Array.isArray(result.errors)) {
-        const errorMessages = result.errors.map(err => `${err.param}: ${err.msg}`).join(', ');
-        throw new Error(errorMessages || result.error || 'Validation failed');
-      }
-      throw new Error(result.error || 'Failed to save capability');
-    }
-    
-    showToast(isNewItem ? 'Capability created!' : 'Capability saved!');
+    if (!res.ok) throw new Error(result.error || 'Failed to save');
+
+    showToast(isNewItem ? 'Product created!' : 'Product saved!');
     await loadItems('capabilities');
     const saved = items.capabilities.find(c => c.id === result.id);
     if (saved) selectItem(saved);
@@ -668,26 +941,204 @@ async function saveCapability() {
   }
 }
 
+async function saveNavigation() {
+  const data = {
+    location: document.getElementById('navLocation').value,
+    label: document.getElementById('navLabel').value.trim(),
+    url: document.getElementById('navUrl').value.trim(),
+    order: parseInt(document.getElementById('navOrder').value) || 0,
+    is_external: document.getElementById('navExternal').checked,
+    published: document.getElementById('navPublished').checked
+  };
+
+  if (!data.label || !data.url) {
+    showToast('Label and URL are required', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('saveNavigationBtn');
+  btn.disabled = true;
+
+  try {
+    const url = isNewItem ? '/api/admin/navigation' : `/api/admin/navigation/${currentItem.id}`;
+    const res = await authenticatedFetch(url, {
+      method: isNewItem ? 'POST' : 'PUT',
+      body: data
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error);
+
+    showToast(isNewItem ? 'Navigation created!' : 'Navigation saved!');
+    await loadItems('navigation');
+    const saved = items.navigation.find(n => n.id === result.id);
+    if (saved) selectItem(saved);
+  } catch (e) {
+    showToast(e.message, 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function saveCategory() {
+  const data = {
+    name: document.getElementById('categoryName').value.trim(),
+    type: document.getElementById('categoryType').value,
+    order: parseInt(document.getElementById('categoryOrder').value) || 0
+  };
+
+  if (!data.name) {
+    showToast('Name is required', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('saveCategoryBtn');
+  btn.disabled = true;
+
+  try {
+    const url = isNewItem ? '/api/admin/categories' : `/api/admin/categories/${currentItem.id}`;
+    const res = await authenticatedFetch(url, {
+      method: isNewItem ? 'POST' : 'PUT',
+      body: data
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error);
+
+    showToast(isNewItem ? 'Category created!' : 'Category saved!');
+    await loadItems('categories');
+    await loadCategories(); // Refresh dropdown
+    const saved = items.categories.find(c => c.id === result.id);
+    if (saved) selectItem(saved);
+  } catch (e) {
+    showToast(e.message, 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function saveTestimonial() {
+  const data = {
+    content: document.getElementById('testimonialContent').value.trim(),
+    author_name: document.getElementById('testimonialAuthorName').value.trim(),
+    author_title: document.getElementById('testimonialAuthorTitle').value.trim(),
+    author_company: document.getElementById('testimonialAuthorCompany').value.trim(),
+    rating: parseInt(document.getElementById('testimonialRating').value) || 5,
+    published: document.getElementById('testimonialPublished').checked
+  };
+
+  if (!data.content || !data.author_name) {
+    showToast('Quote and author name are required', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('saveTestimonialBtn');
+  btn.disabled = true;
+
+  try {
+    const url = isNewItem ? '/api/admin/testimonials' : `/api/admin/testimonials/${currentItem.id}`;
+    const res = await authenticatedFetch(url, {
+      method: isNewItem ? 'POST' : 'PUT',
+      body: data
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error);
+
+    showToast(isNewItem ? 'Testimonial created!' : 'Testimonial saved!');
+    await loadItems('testimonials');
+    const saved = items.testimonials.find(t => t.id === result.id);
+    if (saved) selectItem(saved);
+  } catch (e) {
+    showToast(e.message, 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function saveFaq() {
+  const data = {
+    question: document.getElementById('faqQuestion').value.trim(),
+    answer: document.getElementById('faqAnswer').value.trim(),
+    category: document.getElementById('faqCategory').value,
+    order: parseInt(document.getElementById('faqOrder').value) || 0,
+    published: document.getElementById('faqPublished').checked
+  };
+
+  if (!data.question || !data.answer) {
+    showToast('Question and answer are required', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('saveFaqBtn');
+  btn.disabled = true;
+
+  try {
+    const url = isNewItem ? '/api/admin/faqs' : `/api/admin/faqs/${currentItem.id}`;
+    const res = await authenticatedFetch(url, {
+      method: isNewItem ? 'POST' : 'PUT',
+      body: data
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error);
+
+    showToast(isNewItem ? 'FAQ created!' : 'FAQ saved!');
+    await loadItems('faqs');
+    const saved = items.faqs.find(f => f.id === result.id);
+    if (saved) selectItem(saved);
+  } catch (e) {
+    showToast(e.message, 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function saveChangelog() {
+  const data = {
+    title: document.getElementById('changelogTitle').value.trim(),
+    description: document.getElementById('changelogDescription').value.trim(),
+    type: document.getElementById('changelogType').value,
+    date: document.getElementById('changelogDate').value
+  };
+
+  if (!data.title || !data.description) {
+    showToast('Title and description are required', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('saveChangelogBtn');
+  btn.disabled = true;
+
+  try {
+    const url = isNewItem ? '/api/admin/changelog' : `/api/admin/changelog/${currentItem.id}`;
+    const res = await authenticatedFetch(url, {
+      method: isNewItem ? 'POST' : 'PUT',
+      body: data
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error);
+
+    showToast(isNewItem ? 'Changelog created!' : 'Changelog saved!');
+    await loadItems('changelog');
+    const saved = items.changelog.find(c => c.id === result.id);
+    if (saved) selectItem(saved);
+  } catch (e) {
+    showToast(e.message, 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 // Delete functions
 async function deleteItem(type, id, name) {
   if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
 
   try {
-    let endpoint;
-    if (type === 'posts') {
-      endpoint = `/api/admin/posts/${id}`;
-    } else if (type === 'messages') {
-      endpoint = `/api/admin/messages/${id}`;
-    } else {
-      endpoint = `/api/admin/${type}/${id}`;
-    }
+    const config = contentTypes[type];
+    const endpoint = `${config.endpoint}/${id}`;
     const res = await authenticatedFetch(endpoint, { method: 'DELETE' });
     if (!res.ok) throw new Error('Failed to delete');
-    
+
     showToast('Deleted successfully');
     currentItem = null;
     document.querySelectorAll('.editor-form').forEach(f => f.style.display = 'none');
-    document.getElementById('messagesViewer').style.display = 'none';
     welcomeState.style.display = 'flex';
     await loadItems(type);
   } catch (e) {
@@ -695,253 +1146,357 @@ async function deleteItem(type, id, name) {
   }
 }
 
-// Capability Features
-function renderCapabilityFeatures() {
-  const container = document.getElementById('capabilityFeaturesContainer');
-  if (!container) return;
-  
-  container.innerHTML = capabilityFeatures.map(feature => 
-    `<span class="tag">${escapeHtml(feature)}<button class="tag-remove" data-feature="${escapeHtml(feature)}">&times;</button></span>`
-  ).join('') + '<input type="text" class="tag-input" id="capabilityFeatureInput" placeholder="Type feature and press Enter">';
-  
-  const newInput = document.getElementById('capabilityFeatureInput');
-  if (newInput) {
-    newInput.addEventListener('keydown', handleFeatureInput);
-  }
-  
-  container.querySelectorAll('.tag-remove').forEach(btn => {
-    btn.addEventListener('click', () => {
-      capabilityFeatures = capabilityFeatures.filter(f => f !== btn.dataset.feature);
-      renderCapabilityFeatures();
-    });
-  });
-}
+// Settings functions
+async function loadSettings() {
+  try {
+    const res = await fetch('/api/admin/settings');
+    const settings = await res.json();
 
-function handleFeatureInput(e) {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    const value = e.target.value.trim();
-    if (value && !capabilityFeatures.includes(value)) {
-      capabilityFeatures.push(value);
-      renderCapabilityFeatures();
-    }
-    e.target.value = '';
+    document.getElementById('settingSiteName').value = settings.site_name || '';
+    document.getElementById('settingTagline').value = settings.tagline || '';
+    document.getElementById('settingMetaDescription').value = settings.meta_description || '';
+    document.getElementById('settingContactEmail').value = settings.contact_email || '';
+
+    const social = settings.social_links || {};
+    document.getElementById('settingSocialGithub').value = social.github || '';
+    document.getElementById('settingSocialLinkedin').value = social.linkedin || '';
+    document.getElementById('settingSocialTwitter').value = social.twitter || '';
+    document.getElementById('settingSocialInstagram').value = social.instagram || '';
+  } catch (e) {
+    showToast('Failed to load settings', 'error');
   }
 }
 
-// Capability Screenshots
-function renderCapabilityScreenshots() {
-  const container = document.getElementById('capabilityScreenshotsList');
-  if (!container) return;
-  
-  container.innerHTML = capabilityScreenshots.map((url, index) => 
-    `<div class="screenshot-item">
-      <img src="${escapeHtml(url)}" alt="Screenshot ${index + 1}" onerror="this.style.display='none'">
-      <span>${escapeHtml(url)}</span>
-      <button class="screenshot-remove" data-index="${index}">&times;</button>
-    </div>`
-  ).join('');
-  
-  container.querySelectorAll('.screenshot-remove').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const index = parseInt(btn.dataset.index);
-      capabilityScreenshots.splice(index, 1);
-      renderCapabilityScreenshots();
-    });
-  });
-}
+async function saveSettings() {
+  const settings = [
+    { key: 'site_name', value: document.getElementById('settingSiteName').value.trim() },
+    { key: 'tagline', value: document.getElementById('settingTagline').value.trim() },
+    { key: 'meta_description', value: document.getElementById('settingMetaDescription').value.trim() },
+    { key: 'contact_email', value: document.getElementById('settingContactEmail').value.trim() },
+    { key: 'social_links', value: {
+      github: document.getElementById('settingSocialGithub').value.trim(),
+      linkedin: document.getElementById('settingSocialLinkedin').value.trim(),
+      twitter: document.getElementById('settingSocialTwitter').value.trim(),
+      instagram: document.getElementById('settingSocialInstagram').value.trim()
+    }}
+  ];
 
-async function uploadScreenshot(file) {
-  const formData = new FormData();
-  formData.append('screenshot', file);
-  
-  // Add CSRF token
-  const token = await getCsrfToken();
-  if (token) {
-    formData.append('csrfToken', token);
-  }
-
-  const uploadZone = document.getElementById('screenshotUploadZone');
-  uploadZone.classList.add('uploading');
+  const btn = document.getElementById('saveSettingsBtn');
+  btn.disabled = true;
 
   try {
-    const res = await fetch('/api/upload/screenshot', {
-      method: 'POST',
-      headers: {
-        'X-CSRF-Token': token || ''
-      },
-      body: formData
+    const res = await authenticatedFetch('/api/admin/settings', {
+      method: 'PUT',
+      body: { settings }
     });
-
-    if (!res.ok) {
-      const error = await res.json();
-      throw new Error(error.error || 'Upload failed');
-    }
-
-    const data = await res.json();
-    if (data.url && !capabilityScreenshots.includes(data.url)) {
-      capabilityScreenshots.push(data.url);
-      renderCapabilityScreenshots();
-      showToast('Screenshot uploaded successfully', 'success');
-    }
-  } catch (error) {
-    console.error('Upload error:', error);
-    showToast(error.message || 'Failed to upload screenshot', 'error');
+    if (!res.ok) throw new Error('Failed to save');
+    showToast('Settings saved!');
+  } catch (e) {
+    showToast(e.message, 'error');
   } finally {
-    uploadZone.classList.remove('uploading');
+    btn.disabled = false;
   }
 }
 
-function addScreenshot() {
-  const input = document.getElementById('capabilityScreenshotInput');
-  if (!input) return;
-  
-  let url = input.value.trim();
-  if (!url) return;
-  
-  // Normalize URL: ensure it starts with / for relative paths
-  // If it's already a full URL (http/https), keep it as is
-  if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('/')) {
-    url = '/' + url;
-  }
-  
-  // If it looks like just a filename, assume it's in /assets/products/
-  if (url.includes('.') && !url.includes('/')) {
-    url = `/assets/products/${url}`;
-  }
-  
-  if (url && !capabilityScreenshots.includes(url)) {
-    capabilityScreenshots.push(url);
-    renderCapabilityScreenshots();
-    input.value = '';
+// Homepage functions
+async function loadHomepage() {
+  try {
+    const res = await fetch('/api/admin/homepage');
+    const sections = await res.json();
+
+    const hero = sections.hero || {};
+    document.getElementById('homepageHeroTitle').value = hero.title || '';
+    document.getElementById('homepageHeroSubtitle').value = hero.subtitle || '';
+    document.getElementById('homepageHeroCta').value = hero.cta || '';
+
+    const about = sections.about || {};
+    document.getElementById('homepageAboutTitle').value = about.title || '';
+    document.getElementById('homepageAboutContent').value = about.content || '';
+
+    const values = sections.values || {};
+    document.getElementById('homepageValue1Title').value = values.value1?.title || '';
+    document.getElementById('homepageValue1Description').value = values.value1?.description || '';
+    document.getElementById('homepageValue2Title').value = values.value2?.title || '';
+    document.getElementById('homepageValue2Description').value = values.value2?.description || '';
+    document.getElementById('homepageValue3Title').value = values.value3?.title || '';
+    document.getElementById('homepageValue3Description').value = values.value3?.description || '';
+  } catch (e) {
+    showToast('Failed to load homepage content', 'error');
   }
 }
 
-// Drag and drop handlers
-function setupScreenshotUpload() {
-  const uploadZone = document.getElementById('screenshotUploadZone');
-  const fileInput = document.getElementById('screenshotFileInput');
-  
-  if (!uploadZone || !fileInput) return;
+async function saveHomepage() {
+  const sections = [
+    { section: 'hero', content: {
+      title: document.getElementById('homepageHeroTitle').value.trim(),
+      subtitle: document.getElementById('homepageHeroSubtitle').value.trim(),
+      cta: document.getElementById('homepageHeroCta').value.trim()
+    }},
+    { section: 'about', content: {
+      title: document.getElementById('homepageAboutTitle').value.trim(),
+      content: document.getElementById('homepageAboutContent').value.trim()
+    }},
+    { section: 'values', content: {
+      value1: { title: document.getElementById('homepageValue1Title').value.trim(), description: document.getElementById('homepageValue1Description').value.trim() },
+      value2: { title: document.getElementById('homepageValue2Title').value.trim(), description: document.getElementById('homepageValue2Description').value.trim() },
+      value3: { title: document.getElementById('homepageValue3Title').value.trim(), description: document.getElementById('homepageValue3Description').value.trim() }
+    }}
+  ];
 
-  // Click to browse
-  uploadZone.addEventListener('click', () => fileInput.click());
+  const btn = document.getElementById('saveHomepageBtn');
+  btn.disabled = true;
 
-  // File input change
-  fileInput.addEventListener('change', (e) => {
-    const files = Array.from(e.target.files);
-    files.forEach(file => {
-      if (file.type.startsWith('image/')) {
-        uploadScreenshot(file);
-      }
-    });
-    fileInput.value = ''; // Reset input
-  });
-
-  // Drag and drop
-  uploadZone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    uploadZone.classList.add('dragover');
-  });
-
-  uploadZone.addEventListener('dragleave', () => {
-    uploadZone.classList.remove('dragover');
-  });
-
-  uploadZone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    uploadZone.classList.remove('dragover');
-    
-    const files = Array.from(e.dataTransfer.files);
-    files.forEach(file => {
-      if (file.type.startsWith('image/')) {
-        uploadScreenshot(file);
-      }
-    });
-  });
-
-  // Paste from clipboard
-  document.addEventListener('paste', async (e) => {
-    // Only handle paste when in capabilities editor
-    const capabilitiesEditor = document.getElementById('capabilitiesEditor');
-    if (!capabilitiesEditor || capabilitiesEditor.style.display === 'none') return;
-    
-    const items = e.clipboardData?.items;
-    if (!items) return;
-
-    for (let item of items) {
-      if (item.type.startsWith('image/')) {
-        e.preventDefault();
-        const file = item.getAsFile();
-        if (file) {
-          uploadScreenshot(file);
-        }
-      }
+  try {
+    for (const { section, content } of sections) {
+      await authenticatedFetch(`/api/admin/homepage/${section}`, {
+        method: 'PUT',
+        body: { content }
+      });
     }
+    showToast('Homepage content saved!');
+  } catch (e) {
+    showToast(e.message, 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// Media functions
+async function loadMedia() {
+  try {
+    const res = await fetch('/api/admin/media');
+    const mediaItems = await res.json();
+
+    const grid = document.getElementById('mediaGrid');
+    if (mediaItems.length === 0) {
+      grid.innerHTML = '<div class="empty-state">No media uploaded yet</div>';
+      return;
+    }
+
+    grid.innerHTML = mediaItems.map(item => `
+      <div class="media-item" data-id="${item.id}">
+        <img src="${item.path}" alt="${escapeHtml(item.alt_text || item.original_filename)}" onerror="this.src='/assets/placeholder.svg'">
+        <div class="media-item-overlay">
+          <span class="media-item-name">${escapeHtml(item.original_filename)}</span>
+        </div>
+        <div class="media-item-actions">
+          <button class="media-item-btn copy" title="Copy URL" onclick="copyMediaUrl('${item.path}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+          <button class="media-item-btn delete" title="Delete" onclick="deleteMedia('${item.id}', '${escapeHtml(item.original_filename)}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    showToast('Failed to load media', 'error');
+  }
+}
+
+function copyMediaUrl(url) {
+  navigator.clipboard.writeText(url).then(() => {
+    showToast('URL copied to clipboard');
   });
 }
 
-// Icon Type Tabs
-function updateIconTypeTabs() {
-  document.querySelectorAll('.icon-type-tab').forEach(tab => {
-    tab.classList.toggle('active', tab.dataset.iconType === selectedIconType);
-  });
-  
-  document.getElementById('iconPresetContent').style.display = selectedIconType === 'preset' ? 'block' : 'none';
-  document.getElementById('iconSvgContent').style.display = selectedIconType === 'svg' ? 'block' : 'none';
-  document.getElementById('iconLottieContent').style.display = selectedIconType === 'lottie' ? 'block' : 'none';
+async function deleteMedia(id, name) {
+  if (!confirm(`Delete "${name}"?`)) return;
+
+  try {
+    const res = await authenticatedFetch(`/api/admin/media/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Failed to delete');
+    showToast('Media deleted');
+    loadMedia();
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
 }
 
-// Preset Icon Grid
-function renderPresetIconGrid() {
-  const grid = document.getElementById('iconPresetGrid');
-  if (!grid) return;
-  
-  grid.innerHTML = Object.entries(presetIcons).map(([name, svg]) => 
-    `<div class="icon-preset-item ${selectedPresetIcon === name ? 'selected' : ''}" data-icon="${name}" title="${name}">
-      ${svg}
-    </div>`
-  ).join('');
-  
-  grid.querySelectorAll('.icon-preset-item').forEach(item => {
-    item.addEventListener('click', () => {
-      selectedPresetIcon = item.dataset.icon;
-      grid.querySelectorAll('.icon-preset-item').forEach(i => i.classList.remove('selected'));
-      item.classList.add('selected');
+// Users functions
+async function loadUsers() {
+  try {
+    const res = await fetch('/api/auth/users');
+    const users = await res.json();
+
+    const panel = document.getElementById('usersListPanel');
+    if (users.length === 0) {
+      panel.innerHTML = '<div class="empty-state">No users found</div>';
+      return;
+    }
+
+    panel.innerHTML = users.map(user => `
+      <div class="user-card" data-id="${user.id}">
+        <div class="user-avatar">${user.username.charAt(0).toUpperCase()}</div>
+        <div class="user-info">
+          <div class="user-name">${escapeHtml(user.username)}</div>
+          <div class="user-meta">
+            ${user.hasPasskey ? '<span class="user-badge passkey">Passkey</span>' : '<span class="user-badge password">Password</span>'}
+          </div>
+        </div>
+        <div class="user-actions">
+          <button class="btn btn-ghost" onclick="resetUserPassword('${user.id}', '${escapeHtml(user.username)}')">Reset Password</button>
+          ${user.hasPasskey ? `<button class="btn btn-ghost" onclick="revokeUserPasskeys('${user.id}', '${escapeHtml(user.username)}')">Revoke Passkeys</button>` : ''}
+          <button class="btn btn-danger" onclick="deleteUser('${user.id}', '${escapeHtml(user.username)}')">Delete</button>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    showToast('Failed to load users', 'error');
+  }
+}
+
+async function resetUserPassword(id, username) {
+  const newPassword = prompt(`Enter new password for ${username}:`);
+  if (!newPassword) return;
+
+  if (newPassword.length < 8) {
+    showToast('Password must be at least 8 characters', 'error');
+    return;
+  }
+
+  try {
+    const res = await authenticatedFetch(`/api/auth/users/${id}/password`, {
+      method: 'PUT',
+      body: { password: newPassword }
     });
-  });
+    if (!res.ok) throw new Error('Failed to reset password');
+    showToast('Password reset successfully');
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
 }
 
-// Event listeners
-document.querySelectorAll('.content-type-tab').forEach(tab => {
-  tab.addEventListener('click', () => switchType(tab.dataset.type));
+async function revokeUserPasskeys(id, username) {
+  if (!confirm(`Revoke all passkeys for ${username}? They will need to use password login.`)) return;
+
+  try {
+    const res = await authenticatedFetch(`/api/auth/users/${id}/passkeys`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Failed to revoke passkeys');
+    showToast('Passkeys revoked');
+    loadUsers();
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
+}
+
+async function deleteUser(id, username) {
+  if (!confirm(`Delete user ${username}? This cannot be undone.`)) return;
+
+  try {
+    const res = await authenticatedFetch(`/api/auth/users/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Failed to delete user');
+    showToast('User deleted');
+    loadUsers();
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
+}
+
+function showNewUserForm() {
+  document.getElementById('usersEditor').style.display = 'none';
+  document.getElementById('newUserForm').style.display = 'block';
+  document.getElementById('newUsername').value = '';
+  document.getElementById('newPassword').value = '';
+}
+
+async function createUser() {
+  const username = document.getElementById('newUsername').value.trim();
+  const password = document.getElementById('newPassword').value;
+
+  if (!username || !password) {
+    showToast('Username and password are required', 'error');
+    return;
+  }
+
+  if (password.length < 8) {
+    showToast('Password must be at least 8 characters', 'error');
+    return;
+  }
+
+  try {
+    const res = await authenticatedFetch('/api/auth/users', {
+      method: 'POST',
+      body: { username, password }
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || 'Failed to create user');
+    }
+    showToast('User created');
+    document.getElementById('newUserForm').style.display = 'none';
+    document.getElementById('usersEditor').style.display = 'block';
+    loadUsers();
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
+}
+
+// Event listeners - Navigation
+document.querySelectorAll('.nav-item').forEach(nav => {
+  nav.addEventListener('click', () => switchType(nav.dataset.type));
 });
 
-document.getElementById('newItemBtn').addEventListener('click', newItem);
-document.getElementById('savePostBtn').addEventListener('click', savePost);
-document.getElementById('saveWorkBtn').addEventListener('click', saveWork);
-document.getElementById('saveCapabilityBtn').addEventListener('click', saveCapability);
+// Event listeners - Buttons
+newItemBtn?.addEventListener('click', newItem);
+document.getElementById('savePostBtn')?.addEventListener('click', savePost);
+document.getElementById('saveWorkBtn')?.addEventListener('click', saveWork);
+document.getElementById('saveCapabilityBtn')?.addEventListener('click', saveCapability);
+document.getElementById('saveNavigationBtn')?.addEventListener('click', saveNavigation);
+document.getElementById('saveCategoryBtn')?.addEventListener('click', saveCategory);
+document.getElementById('saveTestimonialBtn')?.addEventListener('click', saveTestimonial);
+document.getElementById('saveFaqBtn')?.addEventListener('click', saveFaq);
+document.getElementById('saveChangelogBtn')?.addEventListener('click', saveChangelog);
+document.getElementById('saveSettingsBtn')?.addEventListener('click', saveSettings);
+document.getElementById('saveHomepageBtn')?.addEventListener('click', saveHomepage);
 
-document.getElementById('deletePostBtn').addEventListener('click', () => {
+// Delete buttons
+document.getElementById('deletePostBtn')?.addEventListener('click', () => {
   if (currentItem) deleteItem('posts', currentItem.slug, currentItem.title);
 });
-document.getElementById('deleteWorkBtn').addEventListener('click', () => {
+document.getElementById('deleteWorkBtn')?.addEventListener('click', () => {
   if (currentItem) deleteItem('work', currentItem.id, currentItem.industry);
 });
-document.getElementById('deleteCapabilityBtn').addEventListener('click', () => {
+document.getElementById('deleteCapabilityBtn')?.addEventListener('click', () => {
   if (currentItem) deleteItem('capabilities', currentItem.id, currentItem.title);
 });
-document.getElementById('deleteMessageBtn').addEventListener('click', () => {
+document.getElementById('deleteMessageBtn')?.addEventListener('click', () => {
   if (currentItem) deleteItem('messages', currentItem.id, currentItem.name || 'Message');
 });
-document.getElementById('markReadBtn').addEventListener('click', () => {
-  if (currentItem && !currentItem.read) {
-    markMessageAsRead(currentItem.id);
-  }
+document.getElementById('deleteNavigationBtn')?.addEventListener('click', () => {
+  if (currentItem) deleteItem('navigation', currentItem.id, currentItem.label);
+});
+document.getElementById('deleteCategoryBtn')?.addEventListener('click', () => {
+  if (currentItem) deleteItem('categories', currentItem.id, currentItem.name);
+});
+document.getElementById('deleteTestimonialBtn')?.addEventListener('click', () => {
+  if (currentItem) deleteItem('testimonials', currentItem.id, currentItem.author_name);
+});
+document.getElementById('deleteFaqBtn')?.addEventListener('click', () => {
+  if (currentItem) deleteItem('faqs', currentItem.id, currentItem.question);
+});
+document.getElementById('deleteChangelogBtn')?.addEventListener('click', () => {
+  if (currentItem) deleteItem('changelog', currentItem.id, currentItem.title);
 });
 
-document.getElementById('postTitle').addEventListener('input', (e) => {
+document.getElementById('markReadBtn')?.addEventListener('click', () => {
+  if (currentItem && !currentItem.read) markMessageAsRead(currentItem.id);
+});
+
+// User management
+document.getElementById('newUserBtn')?.addEventListener('click', showNewUserForm);
+document.getElementById('cancelNewUserBtn')?.addEventListener('click', () => {
+  document.getElementById('newUserForm').style.display = 'none';
+  document.getElementById('usersEditor').style.display = 'block';
+});
+document.getElementById('createUserBtn')?.addEventListener('click', createUser);
+
+// Slug previews
+document.getElementById('postTitle')?.addEventListener('input', (e) => {
   document.getElementById('slugPreview').textContent = slugify(e.target.value) || '-';
+});
+document.getElementById('categoryName')?.addEventListener('input', (e) => {
+  document.getElementById('categorySlugPreview').textContent = slugify(e.target.value) || '-';
 });
 
 // Icon type tabs
@@ -952,7 +1507,7 @@ document.querySelectorAll('.icon-type-tab').forEach(tab => {
   });
 });
 
-// Screenshot add button
+// Screenshot handling
 document.getElementById('addScreenshotBtn')?.addEventListener('click', addScreenshot);
 document.getElementById('capabilityScreenshotInput')?.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
@@ -961,15 +1516,46 @@ document.getElementById('capabilityScreenshotInput')?.addEventListener('keydown'
   }
 });
 
-// Setup screenshot upload (drag, drop, paste)
+// Setup screenshot upload
 setupScreenshotUpload();
 
-document.getElementById('logoutBtn').addEventListener('click', async () => {
+// Media upload
+document.getElementById('mediaFileUpload')?.addEventListener('change', async (e) => {
+  const files = Array.from(e.target.files);
+  for (const file of files) {
+    if (file.type.startsWith('image/')) {
+      await uploadMediaFile(file);
+    }
+  }
+  e.target.value = '';
+});
+
+async function uploadMediaFile(file) {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const token = await getCsrfToken();
+  if (token) formData.append('csrfToken', token);
+
+  try {
+    const res = await fetch('/api/admin/media', {
+      method: 'POST',
+      headers: { 'X-CSRF-Token': token || '' },
+      body: formData
+    });
+    if (!res.ok) throw new Error('Upload failed');
+    showToast('File uploaded');
+    loadMedia();
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
+}
+
+// Logout
+document.getElementById('logoutBtn')?.addEventListener('click', async () => {
   try {
     await authenticatedFetch('/api/auth/logout', { method: 'POST' });
-  } catch (e) {
-    // Even if logout fails, redirect to login
-  }
+  } catch (e) {}
   window.location.href = '/admin/login';
 });
 
@@ -980,6 +1566,13 @@ document.addEventListener('keydown', (e) => {
     if (currentType === 'posts' && document.getElementById('postsEditor').style.display !== 'none') savePost();
     if (currentType === 'work' && document.getElementById('workEditor').style.display !== 'none') saveWork();
     if (currentType === 'capabilities' && document.getElementById('capabilitiesEditor').style.display !== 'none') saveCapability();
+    if (currentType === 'navigation' && document.getElementById('navigationEditor').style.display !== 'none') saveNavigation();
+    if (currentType === 'categories' && document.getElementById('categoriesEditor').style.display !== 'none') saveCategory();
+    if (currentType === 'testimonials' && document.getElementById('testimonialsEditor').style.display !== 'none') saveTestimonial();
+    if (currentType === 'faqs' && document.getElementById('faqsEditor').style.display !== 'none') saveFaq();
+    if (currentType === 'changelog' && document.getElementById('changelogEditor').style.display !== 'none') saveChangelog();
+    if (currentType === 'settings') saveSettings();
+    if (currentType === 'homepage') saveHomepage();
   }
 });
 
@@ -988,7 +1581,6 @@ checkAuth().then(authenticated => {
   if (authenticated) {
     loadCategories();
     loadItems('posts');
-    // Initialize preset icon grid
     renderPresetIconGrid();
   }
 });

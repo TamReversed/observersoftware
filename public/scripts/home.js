@@ -477,6 +477,105 @@
         }
     });
 
+    // Render testimonials
+    function renderTestimonials(items) {
+        const grid = document.getElementById('testimonialsGrid');
+        if (!grid) return;
+
+        grid.innerHTML = '';
+
+        if (items.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'testimonials__empty';
+            empty.textContent = 'No testimonials yet.';
+            grid.appendChild(empty);
+            return;
+        }
+
+        items.forEach(item => {
+            const article = document.createElement('article');
+            article.className = 'testimonial-card reveal';
+
+            // Quote mark
+            const quote = document.createElement('span');
+            quote.className = 'testimonial-card__quote';
+            quote.textContent = '"';
+            article.appendChild(quote);
+
+            // Content
+            const content = document.createElement('p');
+            content.className = 'testimonial-card__content';
+            content.textContent = item.content || '';
+            article.appendChild(content);
+
+            // Author section
+            const author = document.createElement('div');
+            author.className = 'testimonial-card__author';
+
+            // Avatar with initials
+            const avatar = document.createElement('div');
+            avatar.className = 'testimonial-card__avatar';
+            const initials = (item.author_name || '')
+                .split(' ')
+                .map(n => n[0])
+                .slice(0, 2)
+                .join('');
+            avatar.textContent = initials;
+            author.appendChild(avatar);
+
+            // Info
+            const info = document.createElement('div');
+            info.className = 'testimonial-card__info';
+
+            const name = document.createElement('div');
+            name.className = 'testimonial-card__name';
+            name.textContent = item.author_name || '';
+            info.appendChild(name);
+
+            if (item.author_title || item.author_company) {
+                const role = document.createElement('div');
+                role.className = 'testimonial-card__role';
+                const parts = [];
+                if (item.author_title) parts.push(item.author_title);
+                if (item.author_company) parts.push(item.author_company);
+                role.textContent = parts.join(' at ');
+                info.appendChild(role);
+            }
+
+            author.appendChild(info);
+
+            // Rating stars
+            if (item.rating && item.rating > 0) {
+                const rating = document.createElement('div');
+                rating.className = 'testimonial-card__rating';
+                for (let i = 1; i <= 5; i++) {
+                    const star = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                    star.setAttribute('viewBox', '0 0 24 24');
+                    star.setAttribute('fill', i <= item.rating ? 'currentColor' : 'none');
+                    star.setAttribute('stroke', 'currentColor');
+                    star.setAttribute('stroke-width', '1.5');
+                    star.classList.add('testimonial-card__star');
+                    if (i > item.rating) {
+                        star.classList.add('testimonial-card__star--empty');
+                    }
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    path.setAttribute('d', 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z');
+                    star.appendChild(path);
+                    rating.appendChild(star);
+                }
+                author.appendChild(rating);
+            }
+
+            article.appendChild(author);
+            grid.appendChild(article);
+        });
+
+        // Re-trigger reveal animations
+        if (typeof initRevealObserver === 'function') {
+            initRevealObserver();
+        }
+    }
+
     // Fetch and render content
     async function loadContent() {
         const workGrid = document.getElementById('workGrid');
@@ -554,6 +653,23 @@
                 window.SkeletonUtils.removeSkeletons(capabilitiesGrid);
             }
             renderCapabilities(fallbackCapabilities.slice(0, 4));
+        }
+
+        // Load testimonials
+        const testimonialsGrid = document.getElementById('testimonialsGrid');
+        if (testimonialsGrid) {
+            try {
+                const testimonialsRes = await fetch('/api/testimonials');
+                if (testimonialsRes.ok) {
+                    const testimonials = await testimonialsRes.json();
+                    // Limit to 3 on homepage
+                    renderTestimonials(testimonials.slice(0, 3));
+                } else {
+                    renderTestimonials([]);
+                }
+            } catch (e) {
+                renderTestimonials([]);
+            }
         }
     }
 

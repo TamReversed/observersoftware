@@ -419,6 +419,138 @@ async function finishWebAuthnLogin(req, res, next) {
   }
 }
 
+// ============================================
+// USER MANAGEMENT (Admin only)
+// ============================================
+
+// Get all users (admin)
+async function getUsers(req, res, next) {
+  try {
+    const users = await usersService.findAll();
+    // Remove sensitive data
+    const safeUsers = users.map(u => ({
+      id: u.id,
+      username: u.username,
+      hasPasskey: u.webauthnCredentials && u.webauthnCredentials.length > 0,
+      passkeyCount: u.webauthnCredentials ? u.webauthnCredentials.length : 0,
+      createdAt: u.createdAt
+    }));
+    res.json(safeUsers);
+  } catch (error) {
+    next(error);
+  }
+}
+
+// Create new user (admin)
+async function createUser(req, res, next) {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password are required' });
+    }
+
+    if (username.length < 3 || username.length > 50) {
+      return res.status(400).json({ error: 'Username must be 3-50 characters' });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    }
+
+    // Check for existing user
+    const users = await usersService.findAll();
+    if (users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
+      return res.status(400).json({ error: 'Username already exists' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+    const newUser = {
+      id: require('uuid').v4(),
+      username,
+      password: hashedPassword,
+      webauthnCredentials: []
+    };
+
+    await usersService.create(newUser);
+    res.json({ success: true, username: newUser.username });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// Reset user password (admin)
+async function resetPassword(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).json({ error: 'Password is required' });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    }
+
+    const user = await usersService.findById(id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+    await usersService.updateById(id, { password: hashedPassword });
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// Revoke all passkeys for a user (admin)
+async function revokePasskeys(req, res, next) {
+  try {
+    const { id } = req.params;
+
+    const user = await usersService.findById(id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    await usersService.updateById(id, { webauthnCredentials: [] });
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// Delete user (admin)
+async function deleteUser(req, res, next) {
+  try {
+    const { id } = req.params;
+
+    const user = await usersService.findById(id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Prevent deleting yourself
+    if (user.id === req.session.userId) {
+      return res.status(400).json({ error: 'Cannot delete your own account' });
+    }
+
+    // Ensure at least one admin remains
+    const users = await usersService.findAll();
+    if (users.length <= 1) {
+      return res.status(400).json({ error: 'Cannot delete the last admin user' });
+    }
+
+    await usersService.deleteById(id);
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   login,
   logout,
@@ -427,5 +559,11 @@ module.exports = {
   startWebAuthnRegistration,
   finishWebAuthnRegistration,
   startWebAuthnLogin,
-  finishWebAuthnLogin
+  finishWebAuthnLogin,
+  // User management
+  getUsers,
+  createUser,
+  resetPassword,
+  revokePasskeys,
+  deleteUser
 };

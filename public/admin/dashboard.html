@@ -25,21 +25,91 @@
 
   <main class="admin-layout">
     <aside class="sidebar">
-      <div class="sidebar-header">
-        <div class="content-type-tabs">
-          <button class="content-type-tab active" data-type="posts">Posts</button>
-          <button class="content-type-tab" data-type="work">Work</button>
-          <button class="content-type-tab" data-type="capabilities">Products</button>
-          <button class="content-type-tab" data-type="messages">Messages</button>
-          <button class="content-type-tab" data-type="changelog">Changelog</button>
-      </div>
-        <div class="sidebar-actions">
+      <!-- Grouped Navigation -->
+      <nav class="sidebar-nav">
+        <div class="nav-group">
+          <div class="nav-group-label">Content</div>
+          <button class="nav-item active" data-type="posts">
+            <svg viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Posts
+          </button>
+          <button class="nav-item" data-type="work">
+            <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            Work
+          </button>
+          <button class="nav-item" data-type="capabilities">
+            <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+            Products
+          </button>
+        </div>
+
+        <div class="nav-group">
+          <div class="nav-group-label">Site</div>
+          <button class="nav-item" data-type="settings">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            Settings
+          </button>
+          <button class="nav-item" data-type="homepage">
+            <svg viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Homepage
+          </button>
+          <button class="nav-item" data-type="navigation">
+            <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            Navigation
+          </button>
+          <button class="nav-item" data-type="categories">
+            <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            Categories
+          </button>
+        </div>
+
+        <div class="nav-group">
+          <div class="nav-group-label">Library</div>
+          <button class="nav-item" data-type="media">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            Media
+          </button>
+        </div>
+
+        <div class="nav-group">
+          <div class="nav-group-label">Engagement</div>
+          <button class="nav-item" data-type="messages">
+            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Messages
+            <span class="nav-badge" id="unreadBadge" style="display: none;">0</span>
+          </button>
+          <button class="nav-item" data-type="testimonials">
+            <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+            Testimonials
+          </button>
+          <button class="nav-item" data-type="faqs">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            FAQs
+          </button>
+        </div>
+
+        <div class="nav-group">
+          <div class="nav-group-label">System</div>
+          <button class="nav-item" data-type="users">
+            <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Users
+          </button>
+          <button class="nav-item" data-type="changelog">
+            <svg viewBox="0 0 24 24"><path d="M12 20V10M18 20V4M6 20v-4"/></svg>
+            Changelog
+          </button>
+        </div>
+      </nav>
+
+      <!-- Items List (shown for content types with lists) -->
+      <div class="sidebar-list-section" id="sidebarListSection">
+        <div class="sidebar-list-header">
           <span class="sidebar-title" id="sidebarTitle">Posts</span>
           <button class="btn btn-primary btn-sm" id="newItemBtn">+ New</button>
         </div>
-      </div>
-      <div class="items-list" id="itemsList">
-        <div class="empty-state">Loading...</div>
+        <div class="items-list" id="itemsList">
+          <div class="empty-state">Loading...</div>
+        </div>
       </div>
     </aside>
 
@@ -169,7 +239,7 @@
             <label class="form-label" for="capabilityDescription">Short Description</label>
             <textarea id="capabilityDescription" class="form-input form-textarea small" placeholder="Brief description shown on the card..."></textarea>
           </div>
-          
+
           <!-- Icon Selection -->
           <div class="form-group">
             <label class="form-label">Icon</label>
@@ -179,17 +249,17 @@
                 <button type="button" class="icon-type-tab" data-icon-type="svg">Custom SVG</button>
                 <button type="button" class="icon-type-tab" data-icon-type="lottie">Lottie</button>
               </div>
-              
+
               <div class="icon-type-content" id="iconPresetContent">
                 <div class="icon-preset-grid" id="iconPresetGrid"></div>
                 <input type="hidden" id="capabilityIconPreset" value="">
               </div>
-              
+
               <div class="icon-type-content" id="iconSvgContent" style="display: none;">
                 <textarea id="capabilityIconSvg" class="form-input form-textarea small" placeholder="Paste SVG code here..."></textarea>
                 <p class="form-hint">Paste a valid SVG element. It will be sanitized for security.</p>
               </div>
-              
+
               <div class="icon-type-content" id="iconLottieContent" style="display: none;">
                 <input type="text" id="capabilityIconLottieUrl" class="form-input" placeholder="https://assets.lottiefiles.com/...">
                 <p class="form-hint">Paste a URL to a Lottie JSON file</p>
@@ -288,160 +358,406 @@
         </div>
       </div>
 
-      <!-- Changelog Viewer -->
-      <div id="changelogViewer" class="editor-form" style="display: none;">
+      <!-- Settings Editor -->
+      <div id="settingsEditor" class="editor-form" style="display: none;">
         <div class="editor-header">
-          <h2>Application Changelog</h2>
+          <h2>Site Settings</h2>
+          <div class="editor-actions">
+            <button class="btn btn-primary" id="saveSettingsBtn">Save Settings</button>
+          </div>
         </div>
-        <div class="editor-content changelog-content">
-          <div class="vertical-timeline">
-
-            <!-- Application Review & Cleanup -->
-            <div class="timeline-element">
-              <div class="timeline-icon timeline-icon--improvement">
-                <svg viewBox="0 0 24 24"><path d="M12 20V10M18 20V4M6 20v-4"/></svg>
+        <div class="editor-content">
+          <div class="settings-section">
+            <h3 class="settings-section-title">General</h3>
+            <div class="form-group">
+              <label class="form-label" for="settingSiteName">Site Name</label>
+              <input type="text" id="settingSiteName" class="form-input" placeholder="Observer">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="settingTagline">Tagline</label>
+              <input type="text" id="settingTagline" class="form-input" placeholder="Purposeful Software">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="settingMetaDescription">Meta Description</label>
+              <textarea id="settingMetaDescription" class="form-input form-textarea small" placeholder="Site description for search engines..."></textarea>
+            </div>
+          </div>
+          <div class="settings-section">
+            <h3 class="settings-section-title">Contact</h3>
+            <div class="form-group">
+              <label class="form-label" for="settingContactEmail">Contact Email</label>
+              <input type="email" id="settingContactEmail" class="form-input" placeholder="hello@observer.dev">
+            </div>
+          </div>
+          <div class="settings-section">
+            <h3 class="settings-section-title">Social Links</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="settingSocialGithub">GitHub</label>
+                <input type="url" id="settingSocialGithub" class="form-input" placeholder="https://github.com/...">
               </div>
-              <div class="timeline-content">
-                <span class="timeline-date">December 28, 2025</span>
-                <h3 class="timeline-title">Application Review &amp; Cleanup</h3>
-                <div class="timeline-details">
-                  <p><strong>Issues Fixed:</strong></p>
-                  <ul>
-                    <li><strong>Stars not visible from blog:</strong> Page transitions now skip both TO and FROM blog/contact pages.</li>
-                    <li><strong>Changelog tab layout:</strong> Improved tab layout with flex-wrap for smaller screens.</li>
-                    <li><strong>Debug logging removed:</strong> Cleaned up console.log statements from production code.</li>
-                  </ul>
+              <div class="form-group">
+                <label class="form-label" for="settingSocialLinkedin">LinkedIn</label>
+                <input type="url" id="settingSocialLinkedin" class="form-input" placeholder="https://linkedin.com/in/...">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="settingSocialTwitter">Twitter/X</label>
+                <input type="url" id="settingSocialTwitter" class="form-input" placeholder="https://twitter.com/...">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="settingSocialInstagram">Instagram</label>
+                <input type="url" id="settingSocialInstagram" class="form-input" placeholder="https://instagram.com/...">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Homepage Editor -->
+      <div id="homepageEditor" class="editor-form" style="display: none;">
+        <div class="editor-header">
+          <h2>Homepage Content</h2>
+          <div class="editor-actions">
+            <button class="btn btn-primary" id="saveHomepageBtn">Save All</button>
+          </div>
+        </div>
+        <div class="editor-content">
+          <div class="settings-section">
+            <h3 class="settings-section-title">Hero Section</h3>
+            <div class="form-group">
+              <label class="form-label" for="homepageHeroTitle">Hero Title</label>
+              <input type="text" id="homepageHeroTitle" class="form-input" placeholder="Building Software That Fits">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="homepageHeroSubtitle">Hero Subtitle</label>
+              <textarea id="homepageHeroSubtitle" class="form-input form-textarea small" placeholder="Custom solutions that emerge from watching how you actually work..."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="homepageHeroCta">CTA Button Text</label>
+              <input type="text" id="homepageHeroCta" class="form-input" placeholder="Let's Talk">
+            </div>
+          </div>
+          <div class="settings-section">
+            <h3 class="settings-section-title">About Section</h3>
+            <div class="form-group">
+              <label class="form-label" for="homepageAboutTitle">Title</label>
+              <input type="text" id="homepageAboutTitle" class="form-input" placeholder="About Observer">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="homepageAboutContent">Content (Markdown)</label>
+              <textarea id="homepageAboutContent" class="form-input form-textarea content" placeholder="About section content..."></textarea>
+            </div>
+          </div>
+          <div class="settings-section">
+            <h3 class="settings-section-title">Values (Seek / Learn / Integrate)</h3>
+            <div class="form-group">
+              <label class="form-label" for="homepageValue1Title">Value 1 Title</label>
+              <input type="text" id="homepageValue1Title" class="form-input" placeholder="Seek">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="homepageValue1Description">Value 1 Description</label>
+              <textarea id="homepageValue1Description" class="form-input form-textarea small" placeholder="Value 1 description..."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="homepageValue2Title">Value 2 Title</label>
+              <input type="text" id="homepageValue2Title" class="form-input" placeholder="Learn">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="homepageValue2Description">Value 2 Description</label>
+              <textarea id="homepageValue2Description" class="form-input form-textarea small" placeholder="Value 2 description..."></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="homepageValue3Title">Value 3 Title</label>
+              <input type="text" id="homepageValue3Title" class="form-input" placeholder="Integrate">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="homepageValue3Description">Value 3 Description</label>
+              <textarea id="homepageValue3Description" class="form-input form-textarea small" placeholder="Value 3 description..."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Editor -->
+      <div id="navigationEditor" class="editor-form" style="display: none;">
+        <div class="editor-header">
+          <h2 id="navigationEditorTitle">New Navigation Item</h2>
+          <div class="editor-actions">
+            <button class="btn btn-danger" id="deleteNavigationBtn" style="display: none;">Delete</button>
+            <button class="btn btn-primary" id="saveNavigationBtn">Save Navigation</button>
+          </div>
+        </div>
+        <div class="editor-content">
+          <div class="form-group">
+            <label class="form-label" for="navLocation">Location</label>
+            <select id="navLocation" class="form-select">
+              <option value="header">Header</option>
+              <option value="footer_nav">Footer Navigation</option>
+              <option value="footer_links">Footer Links</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="navLabel">Label</label>
+              <input type="text" id="navLabel" class="form-input" placeholder="Link text">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="navUrl">URL</label>
+              <input type="text" id="navUrl" class="form-input" placeholder="/page or https://...">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="navOrder">Order</label>
+              <input type="number" id="navOrder" class="form-input" placeholder="1" min="0">
+            </div>
+            <div class="form-group">
+              <label class="form-toggle" style="margin-top: 1.75rem;">
+                <div class="toggle-switch">
+                  <input type="checkbox" id="navExternal">
+                  <span class="toggle-slider"></span>
                 </div>
-                <div class="timeline-files"><strong>Files:</strong> page-transitions.js, skeletons.js, products.js, home.js, admin.css</div>
-              </div>
+                <span class="toggle-label">External Link</span>
+              </label>
             </div>
+          </div>
+          <div class="form-group">
+            <label class="form-toggle">
+              <div class="toggle-switch">
+                <input type="checkbox" id="navPublished" checked>
+                <span class="toggle-slider"></span>
+              </div>
+              <span class="toggle-label">Published</span>
+            </label>
+          </div>
+        </div>
+      </div>
 
-            <!-- WebAuthn PublicKey Format Fix -->
-            <div class="timeline-element">
-              <div class="timeline-icon timeline-icon--security">
-                <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-              </div>
-              <div class="timeline-content">
-                <span class="timeline-date">December 28, 2025</span>
-                <h3 class="timeline-title">WebAuthn PublicKey Format Fix (COSE vs SPKI)</h3>
-                <div class="timeline-details">
-                  <p><strong>Issue:</strong> Passkey login failing with <code>cosePublicKey.get is not a function</code></p>
-                  <p><strong>Root Cause:</strong> Code was using SPKI format publicKey instead of COSE format required by SimpleWebAuthn v11+.</p>
-                  <p><strong>Fix:</strong> Updated to use <code>registrationInfo.credential.publicKey</code> (base64url COSE key).</p>
-                </div>
-                <div class="timeline-files"><strong>Files:</strong> services/webauthnService.js</div>
-              </div>
+      <!-- Categories Editor -->
+      <div id="categoriesEditor" class="editor-form" style="display: none;">
+        <div class="editor-header">
+          <h2 id="categoriesEditorTitle">New Category</h2>
+          <div class="editor-actions">
+            <button class="btn btn-danger" id="deleteCategoryBtn" style="display: none;">Delete</button>
+            <button class="btn btn-primary" id="saveCategoryBtn">Save Category</button>
+          </div>
+        </div>
+        <div class="editor-content">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="categoryName">Name</label>
+              <input type="text" id="categoryName" class="form-input" placeholder="Category name">
+              <p class="form-hint">Slug: <span id="categorySlugPreview">-</span></p>
             </div>
-
-            <!-- WebAuthn RP ID Mismatch Fix -->
-            <div class="timeline-element">
-              <div class="timeline-icon timeline-icon--fix">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-              </div>
-              <div class="timeline-content">
-                <span class="timeline-date">December 28, 2025</span>
-                <h3 class="timeline-title">WebAuthn RP ID Mismatch Fix</h3>
-                <div class="timeline-details">
-                  <p><strong>Issue:</strong> Passkey login failing with <code>Unexpected RP ID hash</code></p>
-                  <p><strong>Root Cause:</strong> Registration used dynamic origin but login used static config value.</p>
-                  <p><strong>Fix:</strong> Login now derives RP ID from request origin, matching registration.</p>
-                </div>
-                <div class="timeline-files"><strong>Files:</strong> controllers/authController.js</div>
-              </div>
+            <div class="form-group">
+              <label class="form-label" for="categoryType">Type</label>
+              <select id="categoryType" class="form-select">
+                <option value="blog">Blog</option>
+                <option value="work">Work</option>
+              </select>
             </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="categoryOrder">Order</label>
+            <input type="number" id="categoryOrder" class="form-input" placeholder="0" min="0">
+          </div>
+        </div>
+      </div>
 
-            <!-- WebAuthn Authentication Fix -->
-            <div class="timeline-element">
-              <div class="timeline-icon timeline-icon--fix">
-                <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-              </div>
-              <div class="timeline-content">
-                <span class="timeline-date">December 28, 2025</span>
-                <h3 class="timeline-title">WebAuthn Authentication Fix</h3>
-                <div class="timeline-details">
-                  <p><strong>Issue:</strong> <code>input.replace is not a function</code> error during passkey login.</p>
-                  <p><strong>Root Cause:</strong> SimpleWebAuthn v10+ expects base64url strings, not Buffers.</p>
-                  <p><strong>Fix:</strong> Pass credential IDs as base64url strings directly.</p>
-                </div>
-                <div class="timeline-files"><strong>Files:</strong> services/webauthnService.js</div>
-              </div>
+      <!-- Media Library -->
+      <div id="mediaEditor" class="editor-form" style="display: none;">
+        <div class="editor-header">
+          <h2>Media Library</h2>
+          <div class="editor-actions">
+            <label class="btn btn-primary" for="mediaFileUpload">Upload Files</label>
+            <input type="file" id="mediaFileUpload" multiple accept="image/*" style="display: none;">
+          </div>
+        </div>
+        <div class="editor-content">
+          <div class="media-upload-zone" id="mediaUploadZone">
+            <div class="screenshot-upload-content">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 0.5rem; opacity: 0.5;">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" x2="12" y1="3" y2="15"></line>
+              </svg>
+              <p class="screenshot-upload-text">Drag & drop files here, or <span class="screenshot-upload-link">click to browse</span></p>
             </div>
+          </div>
+          <div class="media-grid" id="mediaGrid">
+            <div class="empty-state">Loading media...</div>
+          </div>
+        </div>
+      </div>
 
-            <!-- Blog Script Loading Fix -->
-            <div class="timeline-element">
-              <div class="timeline-icon timeline-icon--fix">
-                <svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-              </div>
-              <div class="timeline-content">
-                <span class="timeline-date">December 28, 2025</span>
-                <h3 class="timeline-title">Blog Script Loading Fix</h3>
-                <div class="timeline-details">
-                  <p><strong>Issue:</strong> <code>Identifier 'isDevelopment' has already been declared</code></p>
-                  <p><strong>Root Cause:</strong> Debug code was re-loading blog.js causing duplicate declarations.</p>
-                  <p><strong>Fix:</strong> Removed duplicate script loading and cleaned up debug code.</p>
-                </div>
-                <div class="timeline-files"><strong>Files:</strong> public/blog.html, public/scripts/blog.js</div>
-              </div>
+      <!-- Testimonials Editor -->
+      <div id="testimonialsEditor" class="editor-form" style="display: none;">
+        <div class="editor-header">
+          <h2 id="testimonialsEditorTitle">New Testimonial</h2>
+          <div class="editor-actions">
+            <button class="btn btn-danger" id="deleteTestimonialBtn" style="display: none;">Delete</button>
+            <button class="btn btn-primary" id="saveTestimonialBtn">Save Testimonial</button>
+          </div>
+        </div>
+        <div class="editor-content">
+          <div class="form-group">
+            <label class="form-label" for="testimonialContent">Quote</label>
+            <textarea id="testimonialContent" class="form-input form-textarea" placeholder="The testimonial quote..."></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="testimonialAuthorName">Author Name</label>
+              <input type="text" id="testimonialAuthorName" class="form-input" placeholder="John Doe">
             </div>
-
-            <!-- JSONB Serialization Fix -->
-            <div class="timeline-element">
-              <div class="timeline-icon timeline-icon--feature">
-                <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 12V7a9 3 0 0 1 18 0v5M3 12a9 3 0 0 0 9 3 9 3 0 0 0 9-3"/></svg>
-              </div>
-              <div class="timeline-content">
-                <span class="timeline-date">December 28, 2025</span>
-                <h3 class="timeline-title">JSONB Serialization &amp; Blog Posts Migration</h3>
-                <div class="timeline-details">
-                  <p><strong>Issue:</strong> Blog posts not appearing on production site.</p>
-                  <p><strong>Root Cause:</strong> posts.json excluded from git, not available for Railway migration.</p>
-                  <p><strong>Fix:</strong> Updated .gitignore to track posts.json for database migration.</p>
-                </div>
-                <div class="timeline-files"><strong>Files:</strong> .gitignore, data/posts.json</div>
-              </div>
+            <div class="form-group">
+              <label class="form-label" for="testimonialAuthorTitle">Author Title</label>
+              <input type="text" id="testimonialAuthorTitle" class="form-input" placeholder="CEO">
             </div>
-
-            <!-- Product Modal Fix -->
-            <div class="timeline-element">
-              <div class="timeline-icon timeline-icon--fix">
-                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
-              </div>
-              <div class="timeline-content">
-                <span class="timeline-date">December 28, 2025</span>
-                <h3 class="timeline-title">Product Modal &amp; Screenshot Display Fixes</h3>
-                <div class="timeline-details">
-                  <p><strong>Issue:</strong> Product modals not opening, screenshots not displaying.</p>
-                  <p><strong>Root Cause:</strong> Canvas intercepting clicks; screenshot paths not normalized.</p>
-                  <p><strong>Fix:</strong> Added pointer-events: none to canvas; improved URL handling.</p>
-                </div>
-                <div class="timeline-files"><strong>Files:</strong> styles.css, products.js, home.js</div>
-              </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="testimonialAuthorCompany">Company</label>
+              <input type="text" id="testimonialAuthorCompany" class="form-input" placeholder="Acme Inc">
             </div>
-
-            <!-- Database Mode Fix -->
-            <div class="timeline-element">
-              <div class="timeline-icon timeline-icon--feature">
-                <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-              </div>
-              <div class="timeline-content">
-                <span class="timeline-date">December 28, 2025</span>
-                <h3 class="timeline-title">Database Mode for All Controllers</h3>
-                <div class="timeline-details">
-                  <p><strong>Issue:</strong> Controllers hardcoded to JSON instead of PostgreSQL.</p>
-                  <p><strong>Root Cause:</strong> Controllers not checking database config flag.</p>
-                  <p><strong>Fix:</strong> All controllers now use DbService or DataService based on config.</p>
-                </div>
-                <div class="timeline-files"><strong>Files:</strong> postsController.js, workController.js, authController.js, initService.js</div>
-              </div>
+            <div class="form-group">
+              <label class="form-label" for="testimonialRating">Rating</label>
+              <select id="testimonialRating" class="form-select">
+                <option value="5">5 Stars</option>
+                <option value="4">4 Stars</option>
+                <option value="3">3 Stars</option>
+                <option value="2">2 Stars</option>
+                <option value="1">1 Star</option>
+              </select>
             </div>
-
-            <!-- Timeline end marker -->
-            <div class="timeline-end">
-              <div class="timeline-end-icon">
-                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <div class="form-group">
+            <label class="form-toggle">
+              <div class="toggle-switch">
+                <input type="checkbox" id="testimonialPublished">
+                <span class="toggle-slider"></span>
               </div>
-            </div>
+              <span class="toggle-label">Published</span>
+            </label>
+          </div>
+        </div>
+      </div>
 
+      <!-- FAQs Editor -->
+      <div id="faqsEditor" class="editor-form" style="display: none;">
+        <div class="editor-header">
+          <h2 id="faqsEditorTitle">New FAQ</h2>
+          <div class="editor-actions">
+            <button class="btn btn-danger" id="deleteFaqBtn" style="display: none;">Delete</button>
+            <button class="btn btn-primary" id="saveFaqBtn">Save FAQ</button>
+          </div>
+        </div>
+        <div class="editor-content">
+          <div class="form-group">
+            <label class="form-label" for="faqQuestion">Question</label>
+            <input type="text" id="faqQuestion" class="form-input" placeholder="What is the question?">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="faqAnswer">Answer</label>
+            <textarea id="faqAnswer" class="form-input form-textarea" placeholder="The answer to the question..."></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="faqCategory">Category</label>
+              <select id="faqCategory" class="form-select">
+                <option value="general">General</option>
+                <option value="services">Services</option>
+                <option value="pricing">Pricing</option>
+                <option value="process">Process</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="faqOrder">Order</label>
+              <input type="number" id="faqOrder" class="form-input" placeholder="1" min="0">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-toggle">
+              <div class="toggle-switch">
+                <input type="checkbox" id="faqPublished" checked>
+                <span class="toggle-slider"></span>
+              </div>
+              <span class="toggle-label">Published</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Users Editor -->
+      <div id="usersEditor" class="editor-form" style="display: none;">
+        <div class="editor-header">
+          <h2 id="usersEditorTitle">User Management</h2>
+          <div class="editor-actions">
+            <button class="btn btn-primary" id="newUserBtn">+ New User</button>
+          </div>
+        </div>
+        <div class="editor-content">
+          <div class="users-list" id="usersListPanel">
+            <div class="empty-state">Loading users...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- New User Form (modal-like) -->
+      <div id="newUserForm" class="editor-form" style="display: none;">
+        <div class="editor-header">
+          <h2>Create New User</h2>
+          <div class="editor-actions">
+            <button class="btn btn-ghost" id="cancelNewUserBtn">Cancel</button>
+            <button class="btn btn-primary" id="createUserBtn">Create User</button>
+          </div>
+        </div>
+        <div class="editor-content">
+          <div class="form-group">
+            <label class="form-label" for="newUsername">Username</label>
+            <input type="text" id="newUsername" class="form-input" placeholder="Enter username">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="newPassword">Password</label>
+            <input type="password" id="newPassword" class="form-input" placeholder="Enter password">
+            <p class="form-hint">Minimum 8 characters. The user can set up a passkey after first login.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Changelog Viewer -->
+      <div id="changelogEditor" class="editor-form" style="display: none;">
+        <div class="editor-header">
+          <h2 id="changelogEditorTitle">New Changelog Entry</h2>
+          <div class="editor-actions">
+            <button class="btn btn-danger" id="deleteChangelogBtn" style="display: none;">Delete</button>
+            <button class="btn btn-primary" id="saveChangelogBtn">Save Entry</button>
+          </div>
+        </div>
+        <div class="editor-content">
+          <div class="form-group">
+            <label class="form-label" for="changelogTitle">Title</label>
+            <input type="text" id="changelogTitle" class="form-input" placeholder="Brief title of the change">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="changelogDescription">Description (Markdown)</label>
+            <textarea id="changelogDescription" class="form-input form-textarea content" placeholder="Detailed description of what changed..."></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="changelogType">Type</label>
+              <select id="changelogType" class="form-select">
+                <option value="fix">Bug Fix</option>
+                <option value="feature">Feature</option>
+                <option value="improvement">Improvement</option>
+                <option value="security">Security</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="changelogDate">Date</label>
+              <input type="date" id="changelogDate" class="form-input">
+            </div>
           </div>
         </div>
       </div>
