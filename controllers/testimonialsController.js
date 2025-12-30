@@ -32,9 +32,9 @@ async function getAllTestimonials(req, res, next) {
 // Create testimonial
 async function createTestimonial(req, res, next) {
   try {
-    const { content, authorName, authorTitle, authorCompany, authorImage, rating, published } = req.body;
+    const { content, author_name, author_title, author_company, author_image, rating, published } = req.body;
 
-    if (!content || !authorName) {
+    if (!content || !author_name) {
       return res.status(400).json({ error: 'Content and author name are required' });
     }
 
@@ -44,10 +44,10 @@ async function createTestimonial(req, res, next) {
     const newTestimonial = {
       id: uuidv4(),
       content,
-      authorName,
-      authorTitle: authorTitle || '',
-      authorCompany: authorCompany || '',
-      authorImage: authorImage || '',
+      author_name,
+      author_title: author_title || '',
+      author_company: author_company || '',
+      author_image: author_image || '',
       rating: Math.min(5, Math.max(1, rating || 5)),
       order: maxOrder + 1,
       published: !!published
@@ -64,7 +64,7 @@ async function createTestimonial(req, res, next) {
 async function updateTestimonial(req, res, next) {
   try {
     const { id } = req.params;
-    const { content, authorName, authorTitle, authorCompany, authorImage, rating, order, published } = req.body;
+    const { content, author_name, author_title, author_company, author_image, rating, order, published } = req.body;
 
     const testimonial = await testimonialsService.findById(id);
     if (!testimonial) {
@@ -73,10 +73,10 @@ async function updateTestimonial(req, res, next) {
 
     const updates = {};
     if (content !== undefined) updates.content = content;
-    if (authorName !== undefined) updates.authorName = authorName;
-    if (authorTitle !== undefined) updates.authorTitle = authorTitle;
-    if (authorCompany !== undefined) updates.authorCompany = authorCompany;
-    if (authorImage !== undefined) updates.authorImage = authorImage;
+    if (author_name !== undefined) updates.author_name = author_name;
+    if (author_title !== undefined) updates.author_title = author_title;
+    if (author_company !== undefined) updates.author_company = author_company;
+    if (author_image !== undefined) updates.author_image = author_image;
     if (rating !== undefined) updates.rating = Math.min(5, Math.max(1, rating));
     if (order !== undefined) updates.order = order;
     if (published !== undefined) updates.published = published;
