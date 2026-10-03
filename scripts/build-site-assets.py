@@ -88,7 +88,7 @@ for s in ('404', 'offline'):
     cover(load(f'state-{s}'), 1000, 1000).save(f'{out("states")}/{s}.webp', quality=80, method=6)
 
 # --- hero art (first screen; dissolves into the film on scroll)
-cover(load('hero-art-4k'), 2880, 1632).save(f'{out("film")}/hero-art.webp', quality=82, method=6)
+cover(load('hero-art-4k'), 4096, 2323).save(f'{out("film")}/hero-art.webp', quality=82, method=6)
 cover(load('hero-art-mobile-4k'), 1440, 1800).save(f'{out("film")}/hero-art-mobile.webp', quality=82, method=6)
 
 # --- fingerprint the placeholders so the site can tell when the owner has replaced one
