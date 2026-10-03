@@ -60,23 +60,52 @@
       dirty = true;
     }
     var rt;
-    window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(size, 120); });
+    window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(function () { dropBitmaps(); size(); }, 120); });
+
+    // Decoded copies of the frames around the current position. Drawing an undecoded frame makes the browser
+    // decode a 2560 px image on the main thread in the middle of scrolling, which shows up as stutter.
+    // Bitmaps are decoded off the main thread ahead of time, at the size the canvas actually needs.
+    var bitmaps = {}, making = {}, canBitmap = typeof createImageBitmap === 'function';
+    var BACK = 4, AHEAD = 6, lastWarm = 0, warmAt = -1;
+    function warm(center) {
+      if (!canBitmap) return;
+      var lo = Math.max(0, center - BACK), hi = Math.min(N - 1, center + AHEAD);
+      Object.keys(bitmaps).forEach(function (k) {
+        if (+k < lo - 2 || +k > hi + 2) { try { bitmaps[k].close(); } catch (e) {} delete bitmaps[k]; }
+      });
+      for (var i = lo; i <= hi; i++) {
+        if (!frames[i] || bitmaps[i] || making[i]) continue;
+        (function (idx) {
+          var im = frames[idx];
+          var need = Math.min(im.naturalWidth, Math.round(Math.max(canvas.width, canvas.height * im.naturalWidth / im.naturalHeight)));
+          making[idx] = 1;
+          createImageBitmap(im, { resizeWidth: need, resizeQuality: 'medium' }).then(function (b) {
+            delete making[idx];
+            if (idx < center - BACK - 2 || idx > center + AHEAD + 2) { b.close(); return; }
+            bitmaps[idx] = b;
+          }).catch(function () { delete making[idx]; });
+        })(i);
+      }
+    }
+    function dropBitmaps() { Object.keys(bitmaps).forEach(function (k) { try { bitmaps[k].close(); } catch (e) {} }); bitmaps = {}; }
+    function pic(i) { return bitmaps[i] || frames[i]; }
 
     function cover(img, alpha) {
-      var s = Math.max(canvas.width / img.naturalWidth, canvas.height / img.naturalHeight);
-      var w = img.naturalWidth * s, h = img.naturalHeight * s;
+      var iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+      var s = Math.max(canvas.width / iw, canvas.height / ih);
+      var w = iw * s, h = ih * s;
       ctx.globalAlpha = alpha;
       ctx.drawImage(img, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
       ctx.globalAlpha = 1;
     }
 
     function nearest(i) {
-      if (frames[i]) return frames[i];
-      for (var d = 1; d < N; d++) { var f = frames[i - d] || frames[i + d]; if (f) return f; }
+      if (frames[i]) return pic(i);
+      for (var d = 1; d < N; d++) { if (frames[i - d]) return pic(i - d); if (frames[i + d]) return pic(i + d); }
       return null;
     }
     function after(i) { // next loaded frame, so a gap (lean mode) still glides
-      for (var j = i + 1; j < N && j <= i + 3; j++) if (frames[j]) return { img: frames[j], at: j };
+      for (var j = i + 1; j < N && j <= i + 3; j++) if (frames[j]) return { img: pic(j), at: j };
       return null;
     }
 
@@ -86,7 +115,7 @@
       var i = Math.floor(pos), a = pos - i;
       var base = frames[i] ? i : -1;
       if (base < 0) { for (var d = 1; d < N; d++) { if (frames[i - d]) { base = i - d; break; } } }
-      var img = base >= 0 ? frames[base] : nearest(i);
+      var img = base >= 0 ? pic(base) : nearest(i);
       if (img) cover(img, 1);
       var nx = after(base >= 0 ? base : i);
       if (img && nx) {
@@ -131,6 +160,8 @@
         dirty = dirty || Math.abs(target - current) > 0.01;
       } else { current = target; }
       var q = Math.round(current * 12); // redraw only when the position moves by 1/12 of a frame
+      var wf = Math.floor(current);
+      if ((wf !== warmAt || now - lastWarm > 400) && root.classList.contains('film--ready')) { warmAt = wf; lastWarm = now; warm(wf); }
       if ((q !== shown || fade !== shownFade) && root.classList.contains('film--ready')) { draw(q / 12, fade); shown = q; shownFade = fade; }
       requestAnimationFrame(tick);
     }
