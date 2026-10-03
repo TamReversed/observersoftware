@@ -12,6 +12,16 @@ function handleValidationErrors(req, res, next) {
   next();
 }
 
+// Images must be files that live on this site (an upload or a bundled asset), never an external address
+const LOCAL_IMAGE = /^\/(uploads|assets)\/[A-Za-z0-9._\/-]{1,200}$/;
+const localImage = (field) => body(field)
+  .optional({ checkFalsy: true })
+  .trim()
+  .custom((v) => {
+    if (!LOCAL_IMAGE.test(v) || v.includes('..')) throw new Error('Image must be uploaded here (not an external link)');
+    return true;
+  });
+
 // Common validation rules
 const titleValidation = body('title')
   .trim()
@@ -81,6 +91,7 @@ const validatePost = [
   descriptionValidation.optional(),
   contentValidation,
   body('category').optional().trim().isLength({ max: 50 }),
+  localImage('coverImage'),
   body('published').optional().isBoolean(),
   handleValidationErrors
 ];
@@ -144,6 +155,7 @@ const validateWork = [
   stringArrayValidation('tags', 50, 10),
   body('date').optional().trim().isLength({ max: 20 }),
   body('metrics').optional().isArray({ max: 6 }).withMessage('At most 6 metrics'),
+  localImage('image'),
   body('order').optional().isInt({ min: 0 }),
   body('published').optional().isBoolean(),
   handleValidationErrors

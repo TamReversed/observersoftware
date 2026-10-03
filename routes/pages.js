@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const config = require('../config');
 const content = require('../services/contentService');
+const siteContent = require('../services/siteContentService');
 const { asyncHandler } = require('../middleware/errorHandler');
 
 const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '');
@@ -9,7 +10,17 @@ const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('en-US', { year: 'num
 // Locals every page needs
 router.use(asyncHandler(async (req, res, next) => {
   const settings = await content.getSettings();
-  res.locals.site = { url: config.siteUrl, social: settings.social, legal: settings, year: new Date().getFullYear() };
+  // ?preview=1 shows unpublished changes, but only to a signed-in admin
+  const preview = req.query.preview === '1' && !!(req.session && req.session.userId);
+  if (preview) {
+    res.set('Cache-Control', 'no-store');
+    res.set('X-Robots-Tag', 'noindex, nofollow');
+  }
+  res.locals.preview = preview;
+  res.locals.site = {
+    url: config.siteUrl, social: settings.social, legal: settings, year: new Date().getFullYear(),
+    content: await siteContent.resolved({ draft: preview })
+  };
   res.locals.path = req.path;
   res.locals.fmtDate = fmtDate;
   next();
@@ -36,9 +47,15 @@ router.get('/', asyncHandler(async (req, res) => {
   const [work, products, blog, testimonials] = await Promise.all([
     content.getWork(), content.getProducts(), content.getPosts({ limit: 3 }), content.getTestimonials()
   ]);
+  const c = res.locals.site.content;
+  const team = [
+    c.images.team1 || (content.isPlaceholder('team/team-01.jpg') ? '' : '/assets/team/team-01.jpg'),
+    c.images.team2 || (content.isPlaceholder('team/team-02.jpg') ? '' : '/assets/team/team-02.jpg')
+  ].filter(Boolean);
   res.render('home', {
-    title: 'Observer | Software shaped by real work',
-    description: 'Observer is a small senior studio that watches real workflows, finds friction and removes steps. Consulting and products from the same habit.',
+    title: c.seo.homeTitle,
+    description: c.seo.homeDescription,
+    c, founderImage: c.images.founder || '/assets/team/founder.jpg', team,
     ogImage: '/assets/og/og-home.jpg',
     jsonLd: [orgLd(res.locals.site)],
     navOver: true,
@@ -100,7 +117,7 @@ router.get('/blog', asyncHandler(async (req, res) => {
 }));
 
 router.get('/blog/:slug', asyncHandler(async (req, res, next) => {
-  const post = await content.getPost(req.params.slug);
+  const post = await content.getPost(req.params.slug, { preview: res.locals.preview });
   if (!post) return next();
   const site = res.locals.site;
   const cover = post.coverImage || '';

@@ -192,7 +192,7 @@ app.use('/api', (req, res) => {
 });
 app.use(async (req, res, next) => {
   try {
-    res.locals.site = res.locals.site || { url: config.siteUrl, social: { linkedin: '', github: '' }, legal: {}, year: new Date().getFullYear() };
+    res.locals.site = res.locals.site || { url: config.siteUrl, social: { linkedin: '', github: '' }, legal: {}, year: new Date().getFullYear(), content: require('./services/siteContentService').resolve({}) };
     res.locals.path = req.path;
     res.status(404).render('404', {
       title: 'Page not found | Observer', description: 'This page does not exist.', ogImage: '/assets/og/og-home.jpg', noindex: true

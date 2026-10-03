@@ -56,6 +56,7 @@ const contentTypes = {
   faqs: { title: 'FAQs', hasList: true, hasNew: true, endpoint: '/api/admin/faqs' },
   changelog: { title: 'Changelog', hasList: true, hasNew: true, endpoint: '/api/admin/changelog' },
   // Single-view types (no list)
+  sitecontent: { title: 'Site content', hasList: false, hasNew: false },
   settings: { title: 'Settings', hasList: false, hasNew: false },
   homepage: { title: 'Homepage', hasList: false, hasNew: false },
   media: { title: 'Media', hasList: false, hasNew: false },
@@ -69,6 +70,8 @@ let categories = [];
 let currentItem = null;
 let isNewItem = false;
 let workTags = [];
+let scData = null;   // site content editor state
+let scDirty = false; // unsaved edits in the site content form
 
 // Capability-specific state
 let capabilityFeatures = [];
@@ -319,6 +322,7 @@ function renderItemsList() {
 
 // Switch content type
 function switchType(type) {
+  if (currentType === 'sitecontent' && type !== 'sitecontent' && scDirty && !confirm('You have unsaved changes in Site content. Leave without saving?')) return;
   currentType = type;
   currentItem = null;
   isNewItem = false;
@@ -344,7 +348,11 @@ function switchType(type) {
   }
 
   // Handle special single-view types
-  if (type === 'settings') {
+  if (type === 'sitecontent') {
+    welcomeState.style.display = 'none';
+    document.getElementById('sitecontentEditor').style.display = 'block';
+    loadSiteContent();
+  } else if (type === 'settings') {
     welcomeState.style.display = 'none';
     document.getElementById('settingsEditor').style.display = 'block';
     loadSettings();
@@ -404,6 +412,11 @@ function showPostsEditor(item) {
   document.getElementById('postExcerpt').value = item?.excerpt || '';
   document.getElementById('postCategory').value = item?.category || categories[0]?.slug || 'insights';
   document.getElementById('postContent').value = item?.content || '';
+  document.getElementById('postCoverImage').value = item?.coverImage || '';
+  syncUploadPreview('postCoverImage');
+  const previewBtn = document.getElementById('previewPostBtn');
+  previewBtn.style.display = item ? 'inline-flex' : 'none';
+  if (item) previewBtn.href = `/blog/${encodeURIComponent(item.slug)}?preview=1`;
   document.getElementById('postPublished').checked = item?.published || false;
   document.getElementById('slugPreview').textContent = item?.slug || '-';
   document.getElementById('deletePostBtn').style.display = item ? 'inline-flex' : 'none';
@@ -419,6 +432,7 @@ function showWorkEditor(item) {
   document.getElementById('workSolution').value = item?.solution || '';
   document.getElementById('workDate').value = item?.date || '';
   document.getElementById('workImage').value = item?.image || '';
+  syncUploadPreview('workImage');
   document.getElementById('workCaseStudy').value = item?.caseStudyUrl || '';
   document.getElementById('workMetrics').value = (item?.metrics || []).map(m => `${m.value} | ${m.label}`).join('\n');
   document.getElementById('workPublished').checked = item?.published || false;
@@ -815,6 +829,7 @@ async function savePost() {
     excerpt: document.getElementById('postExcerpt').value.trim(),
     category: document.getElementById('postCategory').value,
     content: document.getElementById('postContent').value.trim(),
+    coverImage: document.getElementById('postCoverImage').value.trim(),
     published: document.getElementById('postPublished').checked
   };
 
@@ -1155,18 +1170,11 @@ async function deleteItem(type, id, name) {
 async function loadSettings() {
   try {
     const res = await fetch('/api/admin/settings');
+    if (!res.ok) throw new Error('load failed');
     const settings = await res.json();
-
-    document.getElementById('settingSiteName').value = settings.site_name || '';
-    document.getElementById('settingTagline').value = settings.tagline || '';
-    document.getElementById('settingMetaDescription').value = settings.meta_description || '';
-    document.getElementById('settingContactEmail').value = settings.contact_email || '';
-
     const social = settings.social_links || {};
-    document.getElementById('settingSocialGithub').value = social.github || '';
     document.getElementById('settingSocialLinkedin').value = social.linkedin || '';
-    document.getElementById('settingSocialTwitter').value = social.twitter || '';
-    document.getElementById('settingSocialInstagram').value = social.instagram || '';
+    document.getElementById('settingSocialGithub').value = social.github || '';
   } catch (e) {
     showToast('Failed to load settings', 'error');
   }
@@ -1174,15 +1182,9 @@ async function loadSettings() {
 
 async function saveSettings() {
   const settings = [
-    { key: 'site_name', value: document.getElementById('settingSiteName').value.trim() },
-    { key: 'tagline', value: document.getElementById('settingTagline').value.trim() },
-    { key: 'meta_description', value: document.getElementById('settingMetaDescription').value.trim() },
-    { key: 'contact_email', value: document.getElementById('settingContactEmail').value.trim() },
     { key: 'social_links', value: {
-      github: document.getElementById('settingSocialGithub').value.trim(),
       linkedin: document.getElementById('settingSocialLinkedin').value.trim(),
-      twitter: document.getElementById('settingSocialTwitter').value.trim(),
-      instagram: document.getElementById('settingSocialInstagram').value.trim()
+      github: document.getElementById('settingSocialGithub').value.trim()
     }}
   ];
 
@@ -1194,8 +1196,9 @@ async function saveSettings() {
       method: 'PUT',
       body: { settings }
     });
-    if (!res.ok) throw new Error('Failed to save');
-    showToast('Settings saved!');
+    const result = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(result.error || 'Failed to save');
+    showToast('Settings saved');
   } catch (e) {
     showToast(e.message, 'error');
   } finally {
@@ -1556,6 +1559,307 @@ async function uploadMediaFile(file) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Image uploads (one shared helper for every image field)
+// ---------------------------------------------------------------------------
+async function uploadImageFile(file) {
+  const formData = new FormData();
+  formData.append('screenshot', file);
+  const token = await getCsrfToken();
+  if (token) formData.append('csrfToken', token);
+  const res = await fetch('/api/upload/screenshot', {
+    method: 'POST',
+    headers: { 'X-CSRF-Token': token || '' },
+    body: formData,
+    credentials: 'same-origin'
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.url) throw new Error(data.error || 'Upload failed');
+  return data.url;
+}
+
+function syncUploadPreview(inputId) {
+  const input = document.getElementById(inputId);
+  const img = document.getElementById(inputId + 'Preview');
+  if (!input || !img) return;
+  if (input.value) { img.src = input.value; img.hidden = false; } else { img.removeAttribute('src'); img.hidden = true; }
+}
+
+document.addEventListener('change', async (e) => {
+  const input = e.target.closest && e.target.closest('input[data-upload-target]');
+  if (!input || !input.files || !input.files[0]) return;
+  const target = document.getElementById(input.dataset.uploadTarget);
+  try {
+    target.value = await uploadImageFile(input.files[0]);
+    syncUploadPreview(target.id);
+    target.dispatchEvent(new Event('input', { bubbles: true }));
+    showToast('Image uploaded');
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    input.value = '';
+  }
+});
+
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest && e.target.closest('[data-clear-target]');
+  if (!btn) return;
+  const target = document.getElementById(btn.dataset.clearTarget);
+  target.value = '';
+  syncUploadPreview(target.id);
+  target.dispatchEvent(new Event('input', { bubbles: true }));
+});
+
+// ---------------------------------------------------------------------------
+// Backup
+// ---------------------------------------------------------------------------
+function downloadBackup() { window.location.href = '/api/admin/export'; }
+document.getElementById('exportBackupBtn')?.addEventListener('click', downloadBackup);
+document.getElementById('settingsBackupBtn')?.addEventListener('click', downloadBackup);
+
+// ---------------------------------------------------------------------------
+// Site content: edit as a draft, preview, then publish. Version history for restore.
+// ---------------------------------------------------------------------------
+const scPath = (obj, path) => path.split('.').reduce((o, k) => (o && typeof o === 'object' ? o[k] : undefined), obj);
+
+function scSetStatus() {
+  const el = document.getElementById('scStatus');
+  if (!scData) { el.textContent = ''; return; }
+  if (scDirty) el.textContent = 'You have edits in this form that are not saved yet.';
+  else if (scData.unpublished) el.textContent = 'Draft saved. It is not live yet: preview it, then press Publish.';
+  else el.textContent = 'The live site matches this page.';
+  el.dataset.state = scDirty ? 'dirty' : (scData.unpublished ? 'draft' : 'live');
+  document.getElementById('scPublishBtn').disabled = !scData.unpublished && !scDirty;
+  document.getElementById('scDiscardBtn').disabled = !scData.unpublished && !scDirty;
+}
+
+function scShowErrors(errors) {
+  const box = document.getElementById('scErrors');
+  box.replaceChildren();
+  if (!errors || !errors.length) { box.hidden = true; return; }
+  errors.forEach((msg) => { const p = document.createElement('p'); p.textContent = msg; box.appendChild(p); });
+  box.hidden = false;
+  box.scrollIntoView({ block: 'nearest' });
+}
+
+function scMarkDirty() { scDirty = true; scSetStatus(); }
+
+function scRender() {
+  const wrap = document.getElementById('scFields');
+  wrap.replaceChildren();
+  const groups = [...new Set(scData.fields.map((f) => f.group))];
+  groups.forEach((group) => {
+    const set = document.createElement('fieldset');
+    set.className = 'sc-group';
+    const legend = document.createElement('legend');
+    legend.textContent = group;
+    set.appendChild(legend);
+
+    scData.fields.filter((f) => f.group === group).forEach((f) => {
+      const id = 'sc-' + f.path.replace(/\./g, '-');
+      const value = scPath(scData.draft, f.path) || '';
+      const row = document.createElement('div');
+      row.className = 'form-group sc-field';
+
+      const label = document.createElement('label');
+      label.className = 'form-label';
+      label.htmlFor = id;
+      label.textContent = f.label;
+      row.appendChild(label);
+
+      let input;
+      if (f.type === 'image') {
+        input = document.createElement('input');
+        input.type = 'text';
+        input.readOnly = true;
+        input.placeholder = 'No image uploaded (using the default)';
+      } else if (f.type === 'textarea') {
+        input = document.createElement('textarea');
+        input.rows = 3;
+        input.placeholder = f.default;
+      } else {
+        input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = f.default;
+      }
+      input.id = id;
+      input.className = 'form-input';
+      input.dataset.scPath = f.path;
+      input.value = value;
+      if (f.type !== 'image') input.maxLength = f.max;
+      row.appendChild(input);
+
+      if (f.type === 'image') {
+        const actions = document.createElement('div');
+        actions.className = 'upload-row';
+        const up = document.createElement('label');
+        up.className = 'btn btn-ghost btn-sm upload-btn';
+        up.textContent = 'Upload image';
+        const file = document.createElement('input');
+        file.type = 'file';
+        file.accept = 'image/png,image/jpeg,image/webp,image/gif';
+        file.hidden = true;
+        file.dataset.uploadTarget = id;
+        up.appendChild(file);
+        const clear = document.createElement('button');
+        clear.type = 'button';
+        clear.className = 'btn btn-ghost btn-sm';
+        clear.textContent = 'Remove';
+        clear.dataset.clearTarget = id;
+        actions.append(up, clear);
+        row.appendChild(actions);
+        const img = document.createElement('img');
+        img.id = id + 'Preview';
+        img.className = 'upload-preview';
+        img.alt = '';
+        img.hidden = true;
+        row.appendChild(img);
+        if (value) { img.src = value; img.hidden = false; }
+        input.addEventListener('input', scMarkDirty); // fired after an upload or remove
+      } else {
+        const meta = document.createElement('div');
+        meta.className = 'sc-meta';
+        const count = document.createElement('span');
+        const update = () => { count.textContent = `${input.value.length} / ${f.max}`; };
+        update();
+        input.addEventListener('input', () => { update(); scMarkDirty(); });
+        const reset = document.createElement('button');
+        reset.type = 'button';
+        reset.className = 'sc-reset';
+        reset.textContent = 'Use original text';
+        reset.addEventListener('click', () => { input.value = ''; update(); scMarkDirty(); });
+        meta.append(count, reset);
+        row.appendChild(meta);
+      }
+      set.appendChild(row);
+    });
+    wrap.appendChild(set);
+  });
+  scSetStatus();
+}
+
+function scCollect() {
+  const content = {};
+  document.querySelectorAll('#scFields [data-sc-path]').forEach((el) => {
+    const keys = el.dataset.scPath.split('.');
+    let o = content;
+    keys.slice(0, -1).forEach((k) => { o[k] = o[k] || {}; o = o[k]; });
+    o[keys[keys.length - 1]] = el.value;
+  });
+  return content;
+}
+
+async function loadSiteContent() {
+  try {
+    const res = await fetch('/api/admin/site-content', { credentials: 'same-origin' });
+    if (!res.ok) throw new Error('Failed to load site content');
+    scData = await res.json();
+    scDirty = false;
+    scShowErrors();
+    document.getElementById('scHistory').hidden = true;
+    scRender();
+  } catch (e) {
+    showToast(e.message, 'error');
+  }
+}
+
+async function scRequest(url, method, body) {
+  const res = await authenticatedFetch(url, { method, body: body || {} });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    scShowErrors(data.errors && data.errors.length ? data.errors : [data.error || 'Something went wrong']);
+    throw new Error(data.error || 'Request failed');
+  }
+  return data;
+}
+
+async function saveSiteDraft() {
+  if (!scData) return false;
+  const btn = document.getElementById('scSaveBtn');
+  btn.disabled = true;
+  try {
+    const data = await scRequest('/api/admin/site-content/draft', 'PUT', { content: scCollect() });
+    scData = { ...scData, ...data };
+    scDirty = false;
+    scShowErrors();
+    scRender();
+    showToast('Draft saved');
+    return true;
+  } catch (e) {
+    return false;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function publishSiteContent() {
+  if (!confirm('Publish these changes to the live site?')) return;
+  if (!(await saveSiteDraft())) return;
+  try {
+    const data = await scRequest('/api/admin/site-content/publish', 'POST');
+    scData = { ...scData, ...data };
+    scRender();
+    showToast(data.unchanged ? 'Nothing new to publish' : 'Published. The live site is updated.');
+  } catch (e) { /* errors are shown inline */ }
+}
+
+async function discardSiteDraft() {
+  if (!confirm('Discard your draft and go back to what is live?')) return;
+  try {
+    await scRequest('/api/admin/site-content/discard', 'POST');
+    await loadSiteContent();
+    showToast('Draft discarded');
+  } catch (e) { /* shown inline */ }
+}
+
+async function previewSiteContent() {
+  if (scDirty && !(await saveSiteDraft())) return;
+  window.open('/?preview=1', '_blank', 'noopener');
+}
+
+function scToggleHistory() {
+  const box = document.getElementById('scHistory');
+  if (!box.hidden) { box.hidden = true; return; }
+  box.replaceChildren();
+  const title = document.createElement('h3');
+  title.textContent = 'Earlier live versions';
+  box.appendChild(title);
+  if (!scData.history.length) {
+    const p = document.createElement('p');
+    p.className = 'form-hint';
+    p.textContent = 'No earlier versions yet. A version is kept each time you publish.';
+    box.appendChild(p);
+  }
+  scData.history.forEach((h) => {
+    const row = document.createElement('div');
+    row.className = 'sc-history-row';
+    const when = document.createElement('span');
+    when.textContent = `${new Date(h.savedAt).toLocaleString()} (published over by ${h.savedBy})`;
+    const restore = document.createElement('button');
+    restore.type = 'button';
+    restore.className = 'btn btn-ghost btn-sm';
+    restore.textContent = 'Restore to draft';
+    restore.addEventListener('click', async () => {
+      if (!confirm('Replace your draft with this earlier version? Nothing goes live until you publish.')) return;
+      try {
+        await scRequest(`/api/admin/site-content/restore/${encodeURIComponent(h.id)}`, 'POST');
+        await loadSiteContent();
+        showToast('Restored to draft. Preview it, then publish.');
+      } catch (e) { /* shown inline */ }
+    });
+    row.append(when, restore);
+    box.appendChild(row);
+  });
+  box.hidden = false;
+}
+
+document.getElementById('scSaveBtn')?.addEventListener('click', saveSiteDraft);
+document.getElementById('scPublishBtn')?.addEventListener('click', publishSiteContent);
+document.getElementById('scDiscardBtn')?.addEventListener('click', discardSiteDraft);
+document.getElementById('scPreviewBtn')?.addEventListener('click', previewSiteContent);
+document.getElementById('scHistoryBtn')?.addEventListener('click', scToggleHistory);
+window.addEventListener('beforeunload', (e) => { if (scDirty) { e.preventDefault(); e.returnValue = ''; } });
+
 // Logout
 document.getElementById('logoutBtn')?.addEventListener('click', async () => {
   try {
@@ -1568,6 +1872,7 @@ document.getElementById('logoutBtn')?.addEventListener('click', async () => {
 document.addEventListener('keydown', (e) => {
   if ((e.metaKey || e.ctrlKey) && e.key === 's') {
     e.preventDefault();
+    if (currentType === 'sitecontent') saveSiteDraft();
     if (currentType === 'posts' && document.getElementById('postsEditor').style.display !== 'none') savePost();
     if (currentType === 'work' && document.getElementById('workEditor').style.display !== 'none') saveWork();
     if (currentType === 'capabilities' && document.getElementById('capabilitiesEditor').style.display !== 'none') saveCapability();
