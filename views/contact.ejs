@@ -10,15 +10,38 @@
         <p class="lead" style="color: var(--text)">Send a note with the workflow, the constraints, and where people get stuck.</p>
         <p class="lead" style="margin-top: 16px">We reply with a simple next step.</p>
       </div>
-      <form class="contact__form" id="contact-form" novalidate>
-        <div class="field"><label for="c-name">Name</label><input id="c-name" name="name" type="text" autocomplete="name" required maxlength="100"></div>
-        <div class="field"><label for="c-email">Email</label><input id="c-email" name="email" type="email" autocomplete="email" required maxlength="254"></div>
-        <div class="field"><label for="c-subject">Subject <span class="muted">(optional)</span></label><input id="c-subject" name="subject" type="text" maxlength="200"></div>
-        <div class="field"><label for="c-message">Message</label><textarea id="c-message" name="message" required maxlength="5000"></textarea></div>
-        <div class="hp" aria-hidden="true"><label for="c-website">Website</label><input id="c-website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
-        <div><button class="cta-primary" type="submit" id="contact-submit">Send message <%- include('partials/arrow') %></button></div>
-        <p class="form-status" id="contact-status" role="status" aria-live="polite"></p>
-      </form>
+      <div class="contact__panel">
+        <form class="contact__form" id="contact-form" novalidate>
+          <div class="form-error" id="contact-error" role="alert" hidden></div>
+          <div class="field">
+            <label for="c-name">Name</label>
+            <input id="c-name" name="name" type="text" autocomplete="name" required maxlength="100" aria-describedby="c-name-error">
+            <p class="field-error" id="c-name-error" hidden></p>
+          </div>
+          <div class="field">
+            <label for="c-email">Email</label>
+            <input id="c-email" name="email" type="email" autocomplete="email" required maxlength="254" aria-describedby="c-email-error">
+            <p class="field-error" id="c-email-error" hidden></p>
+          </div>
+          <div class="field">
+            <label for="c-subject">Subject <span class="muted">(optional)</span></label>
+            <input id="c-subject" name="subject" type="text" maxlength="200" aria-describedby="c-subject-error">
+            <p class="field-error" id="c-subject-error" hidden></p>
+          </div>
+          <div class="field">
+            <label for="c-message">Message</label>
+            <textarea id="c-message" name="message" required maxlength="5000" aria-describedby="c-message-error"></textarea>
+            <p class="field-error" id="c-message-error" hidden></p>
+          </div>
+          <div class="hp" aria-hidden="true"><label for="c-website">Website</label><input id="c-website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
+          <div><button class="cta-primary" type="submit" id="contact-submit">Send message <%- include('partials/arrow') %></button></div>
+        </form>
+        <div class="contact__success" id="contact-success" tabindex="-1" role="status" hidden>
+          <h2 class="subtitle">Thank you.</h2>
+          <p class="lead">Your message is on its way. We reply with a simple next step.</p>
+          <button class="cta-framed" type="button" id="contact-again">Send another message</button>
+        </div>
+      </div>
     </div>
     <% if (faqs.length) { %>
     <section class="faq" aria-labelledby="faq-title">

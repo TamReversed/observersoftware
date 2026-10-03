@@ -23,7 +23,10 @@
     var N = m.count;
     var frames = new Array(N);
     var art = null; // hero image shown first, dissolves into the film as you scroll
-    var OUTRO_START = 0.84; // fraction of the scroll where the film starts dissolving into the page
+    // Timings come from the manifest so they always match how the frames were cut (scripts/build-film-frames.py)
+    var HOLD_FROM = m.holdFrom || 0.9;      // scroll fraction where the last frame is held
+    var OUTRO_START = m.outroStart || 0.9;  // where the film starts dissolving into the page
+    var STARTS = m.chapters || [0, 0.25, 0.5, 0.75]; // scroll fraction where each headline begins
     var FADE_END = 0.2; // fraction of the scroll over which the hero image fades out
     var url = function (i) { return tpl.replace('{n}', String(i + 1).padStart(m.pad || 3, '0')) + (m.v ? '?v=' + m.v : ''); };
 
@@ -64,12 +67,19 @@
       ctx.globalAlpha = 1;
     }
 
-    function draw(i, fade) {
-      var img = frames[i];
-      if (!img) { // nearest loaded frame
-        for (var d = 1; d < N; d++) { img = frames[i - d] || frames[i + d]; if (img) break; }
-      }
+    function nearest(i) {
+      if (frames[i]) return frames[i];
+      for (var d = 1; d < N; d++) { var f = frames[i - d] || frames[i + d]; if (f) return f; }
+      return null;
+    }
+
+    // pos is fractional: draw the frame before it, then the frame after it at partial opacity,
+    // so slow scrolling glides between frames instead of stepping
+    function draw(pos, fade) {
+      var i = Math.floor(pos), a = pos - i;
+      var img = nearest(i);
       if (img) cover(img, 1);
+      if (a > 0.03 && i + 1 < N) { var nx = frames[i + 1]; if (nx) cover(nx, a); }
       if (art && fade > 0) cover(art, fade);
     }
 
@@ -86,10 +96,11 @@
       var dt = Math.min(64, now - last); last = now;
       if (dirty) {
         var p = progress();
-        target = p * (N - 1);
+        target = Math.min(1, p / HOLD_FROM) * (N - 1);
         var f = Math.max(0, 1 - p / FADE_END);
         fade = Math.round(f * f * (3 - 2 * f) * 100) / 100; // smoothstep, 1% steps
-        var c = Math.min(chapters.length - 1, Math.floor(p * chapters.length));
+        var c = 0;
+        for (var ci = 0; ci < chapters.length; ci++) if (p >= (STARTS[ci] || 0)) c = ci;
         if (c !== lastChapter) {
           chapters.forEach(function (el, idx) { el.classList.toggle('is-active', idx === c); });
           lastChapter = c;
@@ -105,8 +116,8 @@
         current += diff * (1 - Math.pow(0.001, dt / 1000)); // frame-rate independent ease
         dirty = dirty || Math.abs(target - current) > 0.01;
       } else { current = target; }
-      var idx = Math.round(current);
-      if ((idx !== shown || fade !== shownFade) && root.classList.contains('film--ready')) { draw(idx, fade); shown = idx; shownFade = fade; }
+      var q = Math.round(current * 12); // redraw only when the position moves by 1/12 of a frame
+      if ((q !== shown || fade !== shownFade) && root.classList.contains('film--ready')) { draw(q / 12, fade); shown = q; shownFade = fade; }
       requestAnimationFrame(tick);
     }
 

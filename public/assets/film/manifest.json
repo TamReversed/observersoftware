@@ -1,7 +1,15 @@
 {
-  "count": 150,
+  "count": 220,
   "desktop": "/assets/film/desktop/f_{n}.webp",
   "mobile": "/assets/film/mobile/f_{n}.webp",
   "pad": 3,
-  "v": 1791003216
+  "v": 1791006635,
+  "holdFrom": 0.9,
+  "chapters": [
+    0,
+    0.22,
+    0.46,
+    0.68
+  ],
+  "outroStart": 0.9
 }

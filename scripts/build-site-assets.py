@@ -77,7 +77,8 @@ for src, dst in (('team-founder', 'founder'), ('team-01', 'team-01'), ('team-02'
 # --- product screenshot placeholders (fixed filenames, owner replaces) 1600x1000 PNG
 for prod in ('datadragon', 'tableflow'):
     for i in (1, 2, 3):
-        cover(load(f'{prod}-0{i}'), 1600, 1000).save(f'{out("products")}/{prod}-0{i}.png', optimize=True)
+        # flat UI mockups compress well as a 256-colour PNG (about a quarter of the size, no visible loss)
+        cover(load(f'{prod}-0{i}'), 1600, 1000).quantize(256, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.FLOYDSTEINBERG).save(f'{out("products")}/{prod}-0{i}.png', optimize=True)
 
 # --- plates, diagram, state art
 for p in ('plate-haze', 'plate-curve'):

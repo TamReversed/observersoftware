@@ -43,3 +43,7 @@ refs/raw/
 
 # iCloud sync conflict copies (e.g. "file 2.webp")
 * [0-9].*
+
+# generated image cache and uploads (live on the data volume)
+data/cache/
+data/uploads/

@@ -8,7 +8,7 @@
     </header>
     <div class="product-stack" style="margin-bottom: clamp(72px, 10vw, 140px)">
       <% if (!products.length) { %><p class="empty">Products are coming soon.</p><% } %>
-      <% products.forEach(function (p) { %><%- include('partials/product-panel', { p: p }) %><% }); %>
+      <% products.forEach(function (p, i) { %><%- include('partials/product-panel', { p: p, level: 2, priority: i === 0 }) %><% }); %>
     </div>
   </div>
 </main>
