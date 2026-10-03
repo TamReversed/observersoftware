@@ -23,17 +23,19 @@ World grammar: matte dark ground, fine luminous threads in the text tone, haze, 
 
 Delivery budget: desktop frames at most 15 MB, mobile frames at most 6 MB.
 
-## Palette (locked after owner pick)
+## Palette (LOCKED: option B, Smoke + Signal Coral, picked by owner)
 
-Status: PENDING. Candidates, one hero board each:
+| Role | Hex | Contrast on ground |
+|---|---|---|
+| Ground | #121113 | |
+| Surface | #1B1A1C | |
+| Text | #ECE8E4 | 15.5:1 |
+| Muted | #A39E99 | 7.1:1 (6.5:1 on surface) |
+| Accent | #E0565B | 5.1:1 |
 
-| Option | Ground | Surface | Text | Muted | Accent | Defense |
-|---|---|---|---|---|---|---|
-| A Ink + Celadon | #0F1211 | #171B19 | #E9ECE6 | #9AA39D | #9CC5B0 | Calm clinical clarity; green-grey reads "healthy system" |
-| B Smoke + Signal Coral | #121113 | #1B1A1C | #ECE8E4 | #A39E99 | #E0565B | One warm decisive signal on neutral smoke; "we point at the problem" |
-| C Night Moss + Chartreuse | #0E0F0C | #171914 | #EDEEE6 | #9EA195 | #C6D35A | Unexpected, confident, instrument-panel feel |
+Defense: one warm decisive signal on neutral smoke. In the film the whole tangle is neutral white and ONLY the resolved line is coral, so the accent means "the answer".
 
-Rules: exactly one accent, used sparingly (CTAs, the clean line, focus rings). Muted text must pass WCAG AA (4.5:1) on ground. Banned: near-black plus orange/amber, near-black plus neon cyan/blue/green, purple/violet glow, beige plus brass, and the legacy steel-blue (#7c9bdd) scheme.
+Rules: exactly one accent, used sparingly (CTAs, the resolved line, focus rings). Button label on the accent is the ground colour #121113 (5.1:1), never white (3.7:1 fails AA). Coral never signals errors; form errors use text colour plus an icon and message, not red. Banned: near-black plus orange/amber, near-black plus neon cyan/blue/green, purple/violet glow, beige plus brass, and the legacy steel-blue (#7c9bdd) scheme.
 
 ## Type
 
