@@ -143,6 +143,7 @@ const validateWork = [
   arrayValidation('tags', 10),
   stringArrayValidation('tags', 50, 10),
   body('date').optional().trim().isLength({ max: 20 }),
+  body('metrics').optional().isArray({ max: 6 }).withMessage('At most 6 metrics'),
   body('order').optional().isInt({ min: 0 }),
   body('published').optional().isBoolean(),
   handleValidationErrors

@@ -64,10 +64,10 @@ Most software fails because it treats workflows as diagrams instead of lived rou
 
 ### What We Look For
 
-- **Shortcuts people take** — they exist for a reason
-- **Shadow notes** — the unofficial records that matter
-- **Re-entered data** — signs of broken connections
-- **Colleague questions** — gaps the system won't answer
+- **Shortcuts people take** - they exist for a reason
+- **Shadow notes** - the unofficial records that matter
+- **Re-entered data** - signs of broken connections
+- **Colleague questions** - gaps the system won't answer
 
 These patterns are the real requirements.
 
@@ -93,11 +93,11 @@ Every line of code is a liability. Every feature is a promise to maintain.
 
 When we add a feature, we're not just writing code. We're committing to:
 
-- **Testing** — every new path needs verification
-- **Documentation** — users need to understand it
-- **Support** — questions will come
-- **Maintenance** — bugs will surface
-- **Complexity** — the system becomes harder to reason about
+- **Testing** - every new path needs verification
+- **Documentation** - users need to understand it
+- **Support** - questions will come
+- **Maintenance** - bugs will surface
+- **Complexity** - the system becomes harder to reason about
 
 ## The Observer Approach
 
@@ -133,7 +133,7 @@ When you ask someone how they do their job, they'll describe the official proces
 
 ## Designing for Reality
 
-Good design starts with observation. Not interviews, not surveys — watching.
+Good design starts with observation. Not interviews, not surveys - watching.
 
 The patterns people create organically are the real requirements. Our job is to formalize what already works, not impose what we think should work.`,
         author: 'tamreversed',

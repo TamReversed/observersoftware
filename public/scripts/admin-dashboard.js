@@ -420,6 +420,7 @@ function showWorkEditor(item) {
   document.getElementById('workDate').value = item?.date || '';
   document.getElementById('workImage').value = item?.image || '';
   document.getElementById('workCaseStudy').value = item?.caseStudyUrl || '';
+  document.getElementById('workMetrics').value = (item?.metrics || []).map(m => `${m.value} | ${m.label}`).join('\n');
   document.getElementById('workPublished').checked = item?.published || false;
   document.getElementById('deleteWorkBtn').style.display = item ? 'inline-flex' : 'none';
   workTags = item?.tags || [];
@@ -856,6 +857,10 @@ async function saveWork() {
     date: document.getElementById('workDate').value,
     image: document.getElementById('workImage').value.trim(),
     caseStudyUrl: document.getElementById('workCaseStudy').value.trim(),
+    metrics: document.getElementById('workMetrics').value.split('\n').map(line => {
+      const i = line.indexOf('|');
+      return i < 0 ? null : { value: line.slice(0, i).trim(), label: line.slice(i + 1).trim() };
+    }).filter(m => m && m.value && m.label).slice(0, 6),
     tags: workTags,
     published: document.getElementById('workPublished').checked
   };

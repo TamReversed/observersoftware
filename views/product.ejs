@@ -1,0 +1,36 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+<main id="main">
+  <div class="wrap">
+    <header class="page-head">
+      <p class="mono"><a href="/products" class="cta-text">Products</a></p>
+      <div class="product-hero" style="margin-top: 20px">
+        <div>
+          <h1 class="display"><%= product.title %></h1>
+          <p class="lead"><%= product.description %></p>
+          <p style="margin-top: 28px; display: flex; flex-wrap: wrap; gap: 16px">
+            <a class="cta-primary" href="/contact">Start a conversation <%- include('partials/arrow') %></a>
+            <% if (product.externalUrl) { %><a class="cta-framed" href="<%= product.externalUrl %>" rel="noopener" target="_blank">Visit <%= product.title %></a><% } %>
+          </p>
+        </div>
+        <% if (product.screenshots[0]) { %><div class="product-gallery"><img src="<%= product.screenshots[0] %>" alt="<%= product.title %> interface" width="1600" height="1000"></div><% } %>
+      </div>
+    </header>
+    <div class="contact" style="padding-top: 24px; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr)">
+      <div class="prose"><%- longHtml %></div>
+      <% if (product.features.length) { %>
+      <div>
+        <h2 class="subtitle">What it does</h2>
+        <ul class="feature-list"><% product.features.forEach(function (f) { %><li><%= typeof f === 'string' ? f : (f.title || f.name || '') %></li><% }); %></ul>
+      </div>
+      <% } %>
+    </div>
+    <% if (product.screenshots.length > 1) { %>
+    <div class="product-gallery" style="padding-bottom: clamp(72px, 10vw, 140px)">
+      <% product.screenshots.slice(1).forEach(function (s) { %><img src="<%= s %>" alt="<%= product.title %> interface" width="1600" height="1000" loading="lazy"><% }); %>
+    </div>
+    <% } %>
+  </div>
+</main>
+<%- include('partials/footer') %>
+<%- include('partials/end') %>

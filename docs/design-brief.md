@@ -6,7 +6,7 @@ Contract for every later phase. Edit this file (and say why) before deviating fr
 
 **Concept spine:** Noise resolving into a clear path. Observer watches messy real workflows and removes steps. Motifs: tangled threads that untangle into one line; an eye bringing something into focus; a precision instrument. Dividers are single clean lines. Case-study art shows "before tangle, after line".
 
-**Delivery tier:** cinema (Lenis + GSAP ScrollTrigger, scroll-scrub hero, scroll chapters).
+**Delivery tier:** cinema (scroll-scrub hero, scroll chapters). As built: native scroll plus requestAnimationFrame easing on a canvas of pre-rendered frames. No GSAP, Lenis or any third-party script, which keeps the page light and CSP-safe.
 
 **Animation mode:** animated-website. Journey shape: single-shot (one ~15 second continuous film, scrubbed end to end).
 
@@ -77,3 +77,12 @@ One signature effect: the scroll film. Everything else is transform-only reveals
 ## Asset plan
 
 Logo family (SVG), head kit, icon set (9 glyphs), OG cards (home, work, products, blog, contact), founder and team placeholders, DataDragon and TableFlow screenshot placeholders, case-study art per work item, blog covers, two section plates, engagement diagram, state art (404, offline, coming soon), hero film frames. Paths are listed in docs/REDESIGN_PLAN.md section 6.
+
+## As built (deviations and additions)
+
+- Hero film: single 15s take (Seedance 2.5, 1080p), encoded to 150 webp frames per size (desktop 1600px, mobile 720px 4:5 crop), neutral colour grade applied in post. The first frame matches the poster; the other 149 load after the page is idle.
+- Layout: the scrubbing layout renders from first paint (`html.film-live`, set by a tiny inline script only when motion is allowed). Reduced motion or a failed manifest falls back to a static stacked layout with the final frame.
+- Pages are server-rendered (EJS) for search engines. Blog search, category filters and pagination are plain query-string pages with no client JavaScript.
+- Nav "About" links to `/#about`. Footer social links and testimonials render only when real data exists.
+- Contact email is deliberately not printed on the site; the form is the channel.
+- Case-study art exists for the first 8 work items; the other 12 render text-only.

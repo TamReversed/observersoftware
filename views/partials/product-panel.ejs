@@ -1,0 +1,12 @@
+<article class="product-panel" id="<%= p.slug %>">
+  <div class="product-panel__text">
+    <% const icon = { datadragon: 'data', tableflow: 'flow' }[p.slug]; %>
+    <% if (icon) { %><img class="product-panel__icon" src="/assets/icons/<%= icon %>.svg" alt="" width="48" height="48" loading="lazy"><% } %>
+    <h3 class="title"><%= p.title %></h3>
+    <p class="lead"><%= p.description %></p>
+    <a class="cta-framed" href="/products/<%= p.slug %>">Explore <%= p.title %> <%- include('arrow') %></a>
+  </div>
+  <% if (p.screenshots[0]) { %>
+  <div class="product-panel__shot"><img src="<%= p.screenshots[0] %>" alt="<%= p.title %> interface" width="1600" height="1000" loading="lazy"></div>
+  <% } %>
+</article>

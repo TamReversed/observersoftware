@@ -1,0 +1,16 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+<main id="main">
+  <div class="wrap">
+    <header class="page-head">
+      <h1 class="display">Products</h1>
+      <p class="lead">Systems that fit the work. Built from the same habit of watching real workflows and removing steps.</p>
+    </header>
+    <div class="product-stack" style="margin-bottom: clamp(72px, 10vw, 140px)">
+      <% if (!products.length) { %><p class="empty">Products are coming soon.</p><% } %>
+      <% products.forEach(function (p) { %><%- include('partials/product-panel', { p: p }) %><% }); %>
+    </div>
+  </div>
+</main>
+<%- include('partials/footer') %>
+<%- include('partials/end') %>

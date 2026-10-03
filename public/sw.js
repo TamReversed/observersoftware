@@ -1,33 +1,16 @@
 // Service Worker for PWA
 // Cache static assets and API responses
 
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v5';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const API_CACHE = `api-${CACHE_VERSION}`;
 
 const STATIC_ASSETS = [
-  '/',
-  '/blog',
-  '/styles/styles.css',
-  '/styles/blog.css',
-  '/styles/post.css',
-  '/styles/skeletons.css',
-  '/styles/transitions.css',
-  '/scripts/main.js',
-  '/scripts/blog.js',
-  '/scripts/post.js',
-  '/scripts/home.js',
-  '/scripts/work.js',
-  '/scripts/skeletons.js',
-  '/scripts/magnetic-buttons.js',
-  '/scripts/reading-progress.js',
-  '/scripts/share.js',
-  '/scripts/table-of-contents.js',
-  '/scripts/theme-toggle.js',
-  '/scripts/page-transitions.js',
-  '/scripts/logo.js',
-  '/scripts/icons.js',
-  '/favicon-eye.svg'
+  '/offline.html',
+  '/styles/site.css',
+  '/scripts/site.js',
+  '/assets/brand/observer-wordmark.svg',
+  '/assets/states/offline.webp'
 ];
 
 // Install: Cache static assets

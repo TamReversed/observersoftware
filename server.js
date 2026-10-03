@@ -17,8 +17,8 @@ const routes = require('./routes');
 const { errorHandler } = require('./middleware/errorHandler');
 const { initializeData } = require('./services/initService');
 const { initializeSchema, isDatabaseEmpty, pool, query } = require('./services/database');
-const postsStore = require('./services/postsStore');
 const seoRoutes = require('./routes/seo');
+const pageRoutes = require('./routes/pages');
 const { migrate } = require('./scripts/migrate-to-postgres');
 
 // Validate environment variables
@@ -32,6 +32,11 @@ if (config.isProduction) {
 }
 
 app.use(compression());
+
+// Server-rendered pages (EJS)
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+app.disable('x-powered-by');
 
 // Security headers with Helmet
 app.use(helmet({
@@ -79,8 +84,11 @@ const CLEAN_URLS = {
   '/work.html': '/work',
   '/products.html': '/products',
   '/blog.html': '/blog',
+  '/post.html': '/blog',
   '/contact.html': '/contact',
-  '/terms.html': '/terms'
+  '/terms.html': '/terms',
+  '/coming-soon': '/',
+  '/coming-soon.html': '/'
 };
 app.use((req, res, next) => {
   const target = CLEAN_URLS[req.path];
@@ -91,14 +99,20 @@ app.use((req, res, next) => {
 // Static files come before sessions so asset requests never create a session
 const publicDir = path.join(__dirname, 'public');
 app.use(express.static(publicDir, {
-  maxAge: '7d',
+  index: false,
+  maxAge: 0, // always revalidate (ETag): deploys and replaced images show up immediately
   setHeaders: (res, filePath) => {
-    if (filePath.endsWith('.html') || filePath.endsWith('sw.js')) {
+    if (filePath.includes(`${path.sep}assets${path.sep}fonts${path.sep}`)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    } else if (/[\\/]assets[\\/]film[\\/](desktop|mobile)[\\/]/.test(filePath)) {
+      // frames are versioned via ?v= in the manifest, so they can be cached hard
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    } else {
       res.setHeader('Cache-Control', 'no-cache');
     }
   }
 }));
-app.use('/uploads', express.static(config.paths.uploadsDir, { maxAge: '30d' }));
+app.use('/uploads', express.static(config.paths.uploadsDir, { maxAge: '30d', immutable: true }));
 
 // Request size limits
 app.use(express.json({ limit: '1mb' }));
@@ -161,25 +175,8 @@ app.use(seoRoutes);
 
 const sendPage = (file) => (req, res) => res.sendFile(path.join(publicDir, file));
 
-app.get('/work', sendPage('work.html'));
-app.get('/products', sendPage('products.html'));
-app.get('/blog', sendPage('blog.html'));
-app.get('/contact', sendPage('contact.html'));
-app.get('/terms', sendPage('terms.html'));
-app.get('/coming-soon', sendPage('coming-soon.html'));
-
-// Posts that do not exist (or are unpublished) return a real 404
-app.get('/blog/:slug', async (req, res, next) => {
-  try {
-    const post = await postsStore.findBySlug(req.params.slug);
-    if (!post || !post.published) {
-      return res.status(404).sendFile(path.join(publicDir, '404.html'));
-    }
-    res.sendFile(path.join(publicDir, 'post.html'));
-  } catch (err) {
-    next(err);
-  }
-});
+// Public pages
+app.use(pageRoutes);
 
 app.get('/admin', sendPage('admin/dashboard.html'));
 app.get('/observe', sendPage('admin/login.html'));
@@ -193,8 +190,14 @@ app.get('/admin/login', (req, res) => {
 app.use('/api', (req, res) => {
   res.status(404).json({ error: 'Not found' });
 });
-app.use((req, res) => {
-  res.status(404).sendFile(path.join(publicDir, '404.html'));
+app.use(async (req, res, next) => {
+  try {
+    res.locals.site = res.locals.site || { url: config.siteUrl, social: { linkedin: '', github: '' }, legal: {}, year: new Date().getFullYear() };
+    res.locals.path = req.path;
+    res.status(404).render('404', {
+      title: 'Page not found | Observer', description: 'This page does not exist.', ogImage: '/assets/og/og-home.jpg', noindex: true
+    });
+  } catch (err) { next(err); }
 });
 
 // Error handler
