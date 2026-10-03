@@ -9,6 +9,7 @@
  * It needs shell access to the project/database, which is the point: only someone who can already
  * control the server can run it.
  */
+require('./_use-public-db');
 const DataService = require('../services/dataService');
 const DbService = require('../services/dbService');
 const config = require('../config');

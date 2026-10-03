@@ -752,6 +752,12 @@
             </div>
           </section>
 
+          <section class="totp-card" id="passkeyCard" aria-labelledby="passkeyTitle">
+            <h3 id="passkeyTitle">Passkey</h3>
+            <p class="form-hint" id="passkeyState">Loading...</p>
+            <div><button class="btn btn-ghost" id="passkeyAddBtn" type="button">Add a passkey on this device</button></div>
+          </section>
+
           <div class="users-list" id="usersListPanel">
             <div class="empty-state">Loading users...</div>
           </div>
@@ -820,6 +826,7 @@
 
   <div class="toast" id="toast"></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@9.0.1/dist/bundle/index.umd.min.js" integrity="sha384-9+Bm5pUMP2324xMjhRahdomA9HaTxP6JcMhbl3tUAcV2+Jiohq8/T+dGj/rx/MaM" crossorigin="anonymous"></script>
   <script src="/scripts/admin-dashboard.js"></script>
 </body>
 </html>

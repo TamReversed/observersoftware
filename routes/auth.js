@@ -29,6 +29,7 @@ router.delete('/users/:id/totp', requireAuth, validateCsrfToken, validateId, asy
 router.post('/logout', validateCsrfToken, authController.logout);
 router.get('/status', authController.getStatus);
 router.get('/csrf-token', authController.getCsrfToken);
+router.get('/signin-config', authController.getSigninConfig);
 
 // User management (admin only)
 router.get('/users', requireAuth, asyncHandler(authController.getUsers));

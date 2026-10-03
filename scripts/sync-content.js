@@ -13,6 +13,7 @@
  *         node scripts/sync-content.js --apply    (writes the changes)
  * Needs DATABASE_URL (e.g. `railway run node scripts/sync-content.js --apply`).
  */
+require('./_use-public-db');
 const fs = require('fs');
 const path = require('path');
 const { query, pool } = require('../services/database');

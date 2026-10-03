@@ -38,6 +38,26 @@ async function initializeData() {
     }
   }
 
+  // Recovery from Railway settings: set RESET_ADMIN_PASSWORD=true together with ADMIN_PASSWORD, redeploy, sign in,
+  // then DELETE the RESET_ADMIN_PASSWORD variable. (ADMIN_PASSWORD alone is only used when the site is first set up.)
+  if (process.env.RESET_ADMIN_PASSWORD === 'true') {
+    const newPass = process.env.ADMIN_PASSWORD || '';
+    if (newPass.length < 8) {
+      console.error('RESET_ADMIN_PASSWORD is set but ADMIN_PASSWORD is missing or shorter than 8 characters. Nothing was changed.');
+    } else {
+      const all = await usersService.findAll();
+      const admin = all.find((u) => u.username === config.admin.defaultUsername);
+      const hash = await bcrypt.hash(newPass, 12);
+      if (admin) {
+        await usersService.updateById(admin.id, { password: hash, totpEnabled: false, totpSecret: null, totpRecovery: [], totpLastStep: 0, totpFailures: 0, totpLockedUntil: null });
+        console.warn(`PASSWORD RESET: "${admin.username}" can now sign in with the current ADMIN_PASSWORD (one-time codes were turned off). Remove the RESET_ADMIN_PASSWORD variable in Railway now.`);
+      } else {
+        await usersService.create({ id: uuidv4(), username: config.admin.defaultUsername, password: hash, webauthnCredentials: [], createdAt: new Date().toISOString() });
+        console.warn(`PASSWORD RESET: created "${config.admin.defaultUsername}" with the current ADMIN_PASSWORD. Remove the RESET_ADMIN_PASSWORD variable in Railway now.`);
+      }
+    }
+  }
+
   // Sample content is seeded only when SEED_SAMPLE_CONTENT=true (never re-created after deletion)
   if (process.env.SEED_SAMPLE_CONTENT !== 'true') {
     return;
