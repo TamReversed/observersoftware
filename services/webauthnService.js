@@ -25,21 +25,6 @@ function getRpIDFromOrigin(originUrl) {
   }
 }
 
-// Helper to get origin from request
-function getOriginFromRequest(req) {
-  // Check for Railway's public domain env var first
-  if (process.env.RAILWAY_PUBLIC_DOMAIN) {
-    return process.env.RAILWAY_PUBLIC_DOMAIN.startsWith('http') 
-      ? process.env.RAILWAY_PUBLIC_DOMAIN 
-      : `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
-  }
-  
-  // Fall back to request origin
-  const protocol = req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
-  const host = req.headers.host || req.get('host');
-  return `${protocol}://${host}`;
-}
-
 /**
  * Generate registration options for a new passkey
  * @param {string} userId - User ID
@@ -83,7 +68,7 @@ async function generateRegistrationOptionsForUser(userId, username, existingCred
     }).filter(Boolean); // Remove any null entries
 
     // Get rpID from origin
-    const rpID = getRpIDFromOrigin(origin || config.webauthn.origin);
+    const rpID = config.webauthn.rpID;
 
     const options = await generateRegistrationOptions({
       rpName,
@@ -158,7 +143,7 @@ async function verifyRegistration(options, response, expectedOrigin) {
     throw new Error('Challenge is required for verification');
   }
   
-  console.log('Verifying registration:', {
+  if (!config.isProduction) console.log('Verifying registration:', {
     rpID,
     expectedOrigin,
     hasChallenge: !!options.challenge,
@@ -184,14 +169,14 @@ async function verifyRegistration(options, response, expectedOrigin) {
           const flags = authData[32];
           const userPresent = !!(flags & 0x01);
           const userVerified = !!(flags & 0x04);
-          console.log('Authenticator data flags:', {
+          if (!config.isProduction) console.log('Authenticator data flags:', {
             userPresent,
             userVerified,
             flags: flags.toString(2).padStart(8, '0')
           });
         }
       } catch (e) {
-        console.log('Could not parse authenticator data:', e.message);
+        if (!config.isProduction) console.log('Could not parse authenticator data:', e.message);
       }
     }
     
@@ -202,7 +187,7 @@ async function verifyRegistration(options, response, expectedOrigin) {
       expectedRPID: rpID
     });
 
-    console.log('Verification result:', {
+    if (!config.isProduction) console.log('Verification result:', {
       verified: verification.verified,
       hasRegistrationInfo: !!verification.registrationInfo,
       registrationInfoKeys: verification.registrationInfo ? Object.keys(verification.registrationInfo) : [],
@@ -220,7 +205,7 @@ async function verifyRegistration(options, response, expectedOrigin) {
     // Log the actual structure of registrationInfo (handling Buffers)
     if (verification.registrationInfo) {
       const info = verification.registrationInfo;
-      console.log('RegistrationInfo structure:', {
+      if (!config.isProduction) console.log('RegistrationInfo structure:', {
         keys: Object.keys(info),
         credentialID: info.credentialID ? (Buffer.isBuffer(info.credentialID) ? `<Buffer: ${info.credentialID.length} bytes>` : typeof info.credentialID) : 'MISSING',
         credentialPublicKey: info.credentialPublicKey ? (Buffer.isBuffer(info.credentialPublicKey) ? `<Buffer: ${info.credentialPublicKey.length} bytes>` : typeof info.credentialPublicKey) : 'MISSING',
@@ -246,7 +231,7 @@ async function verifyRegistration(options, response, expectedOrigin) {
 
       // SimpleWebAuthn v11+ structure: registrationInfo.credential.{id, publicKey} as base64url strings
       // v10 structure: registrationInfo.{credentialID, credentialPublicKey} as Uint8Arrays
-      console.log('RegistrationInfo structure (v11+ check):', {
+      if (!config.isProduction) console.log('RegistrationInfo structure (v11+ check):', {
         hasCredentialObj: !!registrationInfo.credential,
         credentialKeys: registrationInfo.credential ? Object.keys(registrationInfo.credential) : [],
         topLevelKeys: Object.keys(registrationInfo)
@@ -257,13 +242,13 @@ async function verifyRegistration(options, response, expectedOrigin) {
 
       // Check for v11+ structure first (credential sub-object with base64url strings)
       if (registrationInfo.credential && registrationInfo.credential.id && registrationInfo.credential.publicKey) {
-        console.log('Using SimpleWebAuthn v11+ structure (registrationInfo.credential)');
+        if (!config.isProduction) console.log('Using SimpleWebAuthn v11+ structure (registrationInfo.credential)');
         // In v11+, these are already base64url strings
         credentialIDBase64url = registrationInfo.credential.id;
         credentialPublicKeyBase64url = registrationInfo.credential.publicKey;
       } else {
         // Fall back to v10 structure (direct properties as Uint8Arrays)
-        console.log('Falling back to SimpleWebAuthn v10 structure');
+        if (!config.isProduction) console.log('Falling back to SimpleWebAuthn v10 structure');
         let credentialID = registrationInfo.credentialID || registrationInfo.credentialId;
         let credentialPublicKey = registrationInfo.credentialPublicKey;
 
@@ -293,7 +278,7 @@ async function verifyRegistration(options, response, expectedOrigin) {
           : Buffer.from(credentialPublicKey).toString('base64url');
       }
 
-      console.log('Credential data extracted:', {
+      if (!config.isProduction) console.log('Credential data extracted:', {
         credentialIDBase64url: credentialIDBase64url.substring(0, 30) + '...',
         publicKeyLength: credentialPublicKeyBase64url.length,
         publicKeyPreview: credentialPublicKeyBase64url.substring(0, 30) + '...'
@@ -359,7 +344,7 @@ async function generateAuthenticationOptionsForUser(userId, credentials = [], or
   }
 
   // Get rpID from origin
-  const rpID = getRpIDFromOrigin(origin || config.webauthn.origin);
+  const rpID = config.webauthn.rpID;
 
   // Map credentials for SimpleWebAuthn
   // Note: SimpleWebAuthn v10+ expects id as base64url STRING, not Buffer
@@ -450,6 +435,5 @@ module.exports = {
   generateAuthenticationOptionsForUser,
   verifyAuthentication,
   getRpIDFromOrigin,
-  getOriginFromRequest
 };
 

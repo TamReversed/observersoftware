@@ -28,9 +28,17 @@ async function getAllWork(req, res, next) {
   }
 }
 
+// Metrics are real, owner-entered figures: [{ value, label }], at most 6
+function cleanMetrics(input) {
+  if (!Array.isArray(input)) return undefined;
+  return input.slice(0, 6)
+    .map((m) => ({ value: String((m && m.value) || '').trim().slice(0, 40), label: String((m && m.label) || '').trim().slice(0, 80) }))
+    .filter((m) => m.value && m.label);
+}
+
 async function createWork(req, res, next) {
   try {
-    const { industry, problem, solution, tags, image, client, date, caseStudyUrl, published } = req.body;
+    const { industry, problem, solution, tags, image, client, date, caseStudyUrl, published, metrics } = req.body;
 
     if (!industry || !problem || !solution) {
       return res.status(400).json({ error: 'Industry, problem, and solution are required' });
@@ -49,6 +57,7 @@ async function createWork(req, res, next) {
       client: client || '',
       date: date || '',
       caseStudyUrl: caseStudyUrl || '',
+      metrics: cleanMetrics(metrics) || [],
       order: maxOrder + 1,
       published: !!published
     };
@@ -62,7 +71,7 @@ async function createWork(req, res, next) {
 
 async function updateWork(req, res, next) {
   try {
-    const { industry, problem, solution, tags, image, client, date, caseStudyUrl, order, published } = req.body;
+    const { industry, problem, solution, tags, image, client, date, caseStudyUrl, order, published, metrics } = req.body;
     const work = await workService.findById(req.params.id);
 
     if (!work) {
@@ -80,6 +89,7 @@ async function updateWork(req, res, next) {
     if (caseStudyUrl !== undefined) updates.caseStudyUrl = caseStudyUrl;
     if (order !== undefined) updates.order = order;
     if (published !== undefined) updates.published = published;
+    if (metrics !== undefined) updates.metrics = cleanMetrics(metrics) || [];
 
     const updatedWork = await workService.updateById(req.params.id, updates);
     res.json(updatedWork);

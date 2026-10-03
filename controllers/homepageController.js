@@ -4,7 +4,7 @@ const config = require('../config');
 
 const homepageService = config.database.useDatabase
   ? new DbService('homepage_content')
-  : new DataService(config.paths.homepageFile || './data/homepage.json');
+  : new DataService(config.paths.homepageFile);
 
 // Get all homepage sections (public)
 async function getHomepage(req, res, next) {

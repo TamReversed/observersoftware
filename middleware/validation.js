@@ -143,6 +143,7 @@ const validateWork = [
   arrayValidation('tags', 10),
   stringArrayValidation('tags', 50, 10),
   body('date').optional().trim().isLength({ max: 20 }),
+  body('metrics').optional().isArray({ max: 6 }).withMessage('At most 6 metrics'),
   body('order').optional().isInt({ min: 0 }),
   body('published').optional().isBoolean(),
   handleValidationErrors
@@ -179,8 +180,23 @@ const validateSlug = [
   handleValidationErrors
 ];
 
+// Public contact form
+const validateMessage = [
+  body('name').isString().withMessage('Name is required').bail().trim()
+    .isLength({ min: 1, max: 100 }).withMessage('Name must be 1-100 characters'),
+  body('email').isString().withMessage('Email is required').bail().trim()
+    .isEmail().withMessage('Invalid email address').bail()
+    .isLength({ max: 254 }).withMessage('Email is too long'),
+  body('subject').optional({ values: 'falsy' }).isString().bail().trim()
+    .isLength({ max: 200 }).withMessage('Subject must be less than 200 characters'),
+  body('message').isString().withMessage('Message is required').bail().trim()
+    .isLength({ min: 1, max: 5000 }).withMessage('Message must be 1-5000 characters'),
+  handleValidationErrors
+];
+
 module.exports = {
   validatePost,
+  validateMessage,
   validateCapability,
   validateWork,
   validateLogin,

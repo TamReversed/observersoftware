@@ -7,7 +7,7 @@ const config = require('../config');
 
 const mediaService = config.database.useDatabase
   ? new DbService('media')
-  : new DataService(config.paths.mediaFile || './data/media.json');
+  : new DataService(config.paths.mediaFile);
 
 // Get all media (public - for display)
 async function getMedia(req, res, next) {

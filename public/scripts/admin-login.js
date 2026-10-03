@@ -699,6 +699,16 @@ registerPasskeyButton.addEventListener('click', async () => {
     return;
   }
 
+  // Registering a passkey requires proving who you are with your password
+  const registerPassword = document.getElementById('password').value;
+  if (!registerPassword) {
+    const legacy = document.querySelector('details');
+    if (legacy) legacy.open = true;
+    showError('Enter your password below, then select Register Passkey.');
+    document.getElementById('password').focus();
+    return;
+  }
+
   clearError();
   registerPasskeyButton.disabled = true;
   registerPasskeyButton.textContent = 'Registering...';
@@ -716,7 +726,7 @@ registerPasskeyButton.addEventListener('click', async () => {
         'Content-Type': 'application/json',
         'X-CSRF-Token': csrfToken
       },
-      body: JSON.stringify({ username, csrfToken })
+      body: JSON.stringify({ username, password: registerPassword, csrfToken })
     });
 
     if (!startRes.ok) {
@@ -748,6 +758,7 @@ registerPasskeyButton.addEventListener('click', async () => {
     const result = await finishRes.json();
 
     if (finishRes.ok && result.success) {
+      document.getElementById('password').value = '';
       showError('Passkey registered successfully! You can now sign in with your passkey.');
       registerPasskeyButton.textContent = 'Passkey Registered ✓';
       setTimeout(() => {

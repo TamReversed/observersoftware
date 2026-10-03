@@ -1,0 +1,31 @@
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer__grid">
+      <div class="footer__brand">
+        <img src="/assets/brand/observer-wordmark.svg" alt="Observer" width="110" height="30">
+        <p>Software shaped by real work. Observer is a Techademy LLC company.</p>
+      </div>
+      <div>
+        <h2 class="mono">Explore</h2>
+        <ul><li><a href="/work">Work</a></li><li><a href="/products">Products</a></li><li><a href="/blog">Insights</a></li></ul>
+      </div>
+      <div>
+        <h2 class="mono">Company</h2>
+        <ul>
+          <li><a href="/#about">About</a></li>
+          <li><a href="/contact">Contact</a></li>
+          <% if (site.social.linkedin) { %><li><a href="<%= site.social.linkedin %>" rel="noopener" target="_blank">LinkedIn</a></li><% } %>
+          <% if (site.social.github) { %><li><a href="<%= site.social.github %>" rel="noopener" target="_blank">GitHub</a></li><% } %>
+        </ul>
+      </div>
+      <div>
+        <h2 class="mono">Legal</h2>
+        <ul><li><a href="/privacy">Privacy</a></li><li><a href="/terms">Terms</a></li></ul>
+      </div>
+    </div>
+    <div class="footer__legal">
+      <span>&copy; <%= site.year %> Techademy LLC. All rights reserved.</span>
+    </div>
+  </div>
+</footer>
+<script src="/scripts/site.js" defer></script>

@@ -274,7 +274,7 @@ ON CONFLICT (slug) DO NOTHING;
 INSERT INTO homepage_content (section, content) VALUES
   ('hero', '{"eyebrow": "Software, observed", "title": "Software shaped by real work.", "subtitle": "Observer watches real workflows, finds friction, and removes steps. The result is clear, lightweight systems that stay maintainable."}'),
   ('facts', '[{"label": "Method", "value": "Observe workflows"}, {"label": "Focus", "value": "Remove steps"}, {"label": "Output", "value": "Maintainable systems"}]'),
-  ('philosophy', '{"intro": "Observer exists because its founders noticed people working around technology instead of with it.", "body": ["The work starts with watching—sitting with teams, mapping actual steps, and listening for the phrases that reveal friction.", "Many tools fail by treating workflows as diagrams on a whiteboard. Observer treats them as real behavior that changes under pressure."]}'),
+  ('philosophy', '{"intro": "Observer exists because its founders noticed people working around technology instead of with it.", "body": ["The work starts with watching - sitting with teams, mapping actual steps, and listening for the phrases that reveal friction.", "Many tools fail by treating workflows as diagrams on a whiteboard. Observer treats them as real behavior that changes under pressure."]}'),
   ('values', '[{"icon": "seek", "title": "Seek"}, {"icon": "learn", "title": "Learn"}, {"icon": "integrate", "title": "Integrate"}]'),
   ('about', '{"label": "About", "title": "A small, autonomous team", "lead": "Observer operates as a subsidiary of Techademy LLC, focusing exclusively on workflow software.", "body": ["Engagements are senior-led and deliberate.", "The output is software that feels obvious once in use, and stays maintainable as requirements change."], "established": "2024"}')
 ON CONFLICT (section) DO NOTHING;
@@ -294,3 +294,7 @@ INSERT INTO navigation (location, label, url, "order", is_external, published) V
   ('footer_links', 'GitHub', '', 2, true, false)
 ON CONFLICT DO NOTHING;
 
+
+-- Redesign additions (additive, safe to re-run)
+ALTER TABLE work ADD COLUMN IF NOT EXISTS metrics JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS cover_image VARCHAR(500) DEFAULT '';

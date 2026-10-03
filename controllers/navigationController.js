@@ -5,7 +5,7 @@ const config = require('../config');
 
 const navigationService = config.database.useDatabase
   ? new DbService('navigation')
-  : new DataService(config.paths.navigationFile || './data/navigation.json');
+  : new DataService(config.paths.navigationFile);
 
 // Get all published navigation (public)
 async function getNavigation(req, res, next) {

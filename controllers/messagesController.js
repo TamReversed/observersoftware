@@ -2,6 +2,7 @@ const { v4: uuidv4 } = require('uuid');
 const DataService = require('../services/dataService');
 const DbService = require('../services/dbService');
 const config = require('../config');
+const { notifyNewMessage } = require('../services/notifyService');
 
 // Use database if available, otherwise fall back to JSON files
 const messagesService = config.database.useDatabase
@@ -41,19 +42,13 @@ exports.getMessageById = async (req, res) => {
 // Create a new message (public)
 exports.createMessage = async (req, res) => {
   try {
-    const { name, email, subject, message } = req.body;
-    
-    // Basic validation
-    if (!name || !email || !message) {
-      return res.status(400).json({ error: 'Name, email, and message are required' });
+    const { name, email, subject, message, website } = req.body;
+
+    // Honeypot: real visitors never fill this hidden field
+    if (website) {
+      return res.status(201).json({ success: true, message: 'Message sent successfully' });
     }
-    
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ error: 'Invalid email address' });
-    }
-    
+
     const newMessage = {
       id: uuidv4(),
       name: name.trim(),
@@ -70,7 +65,10 @@ exports.createMessage = async (req, res) => {
     }
     
     await messagesService.create(newMessage);
-    
+
+    // Email the owner; a notification failure must not fail the request
+    notifyNewMessage(newMessage).catch((err) => console.error('Contact notification error:', err));
+
     res.status(201).json({ 
       success: true, 
       message: 'Message sent successfully',

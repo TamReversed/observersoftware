@@ -1,0 +1,165 @@
+<%- include('partials/head', { bodyClass: 'home', headExtra: '<link rel="preload" as="image" href="/assets/film/poster-start-mobile.webp" media="(max-width: 760px)" fetchpriority="high">\n  <link rel="preload" as="image" href="/assets/film/poster-start.webp" media="(min-width: 761px)" fetchpriority="high">' }) %>
+<%- include('partials/nav') %>
+<main id="main">
+
+  <section class="film" data-film data-manifest="/assets/film/manifest.json" data-poster-end="/assets/film/poster-end.webp" data-poster-end-mobile="/assets/film/poster-end-mobile.webp" aria-label="Introduction">
+    <div class="film__stage">
+      <picture><source media="(max-width: 760px)" srcset="/assets/film/poster-start-mobile.webp"><img class="film__poster" src="/assets/film/poster-start.webp" alt="" width="1600" height="900" fetchpriority="high"></picture>
+      <canvas class="film__canvas" aria-hidden="true"></canvas>
+      <div class="film__chapters wrap">
+        <article class="film__chapter is-active" data-chapter="0">
+          <h1 class="display">Software shaped by real work.</h1>
+          <p class="lead">A small senior studio building focused software for teams that make things happen.</p>
+          <a class="cta-primary" href="/contact">Start a conversation <%- include('partials/arrow') %></a>
+        </article>
+        <article class="film__chapter" data-chapter="1">
+          <h2 class="display">We watch how work actually happens.</h2>
+          <p class="lead">We sit with the people doing the work and map what really happens, not what the diagram says.</p>
+        </article>
+        <article class="film__chapter" data-chapter="2">
+          <h2 class="display">Then remove the steps that don't matter.</h2>
+          <p class="lead">Shadow notes and re-keyed data are requirements in disguise. We remove what does not earn its place.</p>
+        </article>
+        <article class="film__chapter" data-chapter="3">
+          <h2 class="display">What's left is clear and stays that way.</h2>
+          <p class="lead">Lightweight systems that people can read at a glance and maintain for years.</p>
+          <a class="cta-primary" href="/contact">Start a conversation <%- include('partials/arrow') %></a>
+        </article>
+      </div>
+      <div class="film__sr visually-hidden">
+        <h2>We watch how work actually happens.</h2><p>We sit with the people doing the work and map what really happens, not what the diagram says.</p>
+        <h2>Then remove the steps that don't matter.</h2><p>Shadow notes and re-keyed data are requirements in disguise. We remove what does not earn its place.</p>
+        <h2>What's left is clear and stays that way.</h2><p>Lightweight systems that people can read at a glance and maintain for years.</p>
+      </div>
+      <div class="film__progress" aria-hidden="true"><i></i></div>
+    </div>
+  </section>
+
+  <section class="practices" aria-label="What Observer does">
+    <div class="practice practice--consulting">
+      <img class="practice__plate" src="/assets/plates/haze.webp" alt="" loading="lazy" width="1920" height="1080">
+      <h2 class="title">Consulting</h2>
+      <p>We watch how your teams really work and remove the steps that do not matter.</p>
+      <a class="cta-inline" href="/work">See the work <%- include('partials/arrow') %></a>
+    </div>
+    <div class="practice practice--products">
+      <img class="practice__plate" src="/assets/plates/curve.webp" alt="" loading="lazy" width="1920" height="1080">
+      <h2 class="title">Products</h2>
+      <p>DataDragon and TableFlow, built from the same habit.</p>
+      <a class="cta-inline" href="/products">Explore the products <%- include('partials/arrow') %></a>
+    </div>
+  </section>
+
+  <% if (work.length) { %>
+  <section class="section" id="work">
+    <div class="wrap">
+      <div class="section__head"><h2 class="title">Selected work</h2></div>
+      <div class="worklist-layout">
+        <div>
+          <ul class="worklist" id="worklist">
+            <% work.forEach(function (w, i) { %>
+            <li><a class="worklist__row<%= i === 0 ? ' is-active' : '' %>" href="/work#<%= w.slug %>" data-image="<%= w.image || '' %>">
+              <span class="mono"><%= w.tags[0] || 'Engagement' %></span>
+              <h3><%= w.industry %></h3>
+              <span class="mono"><%= w.year %></span>
+            </a></li>
+            <% }); %>
+          </ul>
+          <p style="margin-top: 32px"><a class="cta-inline" href="/work">See the work <%- include('partials/arrow') %></a></p>
+        </div>
+        <div class="work-frame" aria-hidden="true"><img id="work-frame-img" src="<%= work[0].image || '/assets/plates/haze.webp' %>" alt="" width="1600" height="1000" loading="lazy"></div>
+      </div>
+    </div>
+  </section>
+  <% } %>
+
+  <% if (products.length) { %>
+  <section class="section" id="products" style="padding-top: 0">
+    <div class="wrap">
+      <div class="section__head"><span class="mono">Products</span><h2 class="title" style="margin-top: 14px">Systems that fit the work.</h2></div>
+      <div class="product-stack">
+        <% products.forEach(function (p) { %><%- include('partials/product-panel', { p: p }) %><% }); %>
+      </div>
+    </div>
+  </section>
+  <% } %>
+
+  <section class="section" id="engagement" style="padding-top: 0">
+    <div class="wrap">
+      <h2 class="title" style="text-align: center">How an engagement runs</h2>
+      <img class="engagement__art" src="/assets/diagrams/engagement.webp" width="2400" height="1029" loading="lazy" alt="A tangle of threads is examined under a lens, loosened, and resolved into one clean line.">
+      <div class="steps">
+        <div class="step"><img class="step__icon" src="/assets/icons/eye.svg" alt="" width="40" height="40" loading="lazy"><h3>Observe</h3><p>See the real workflow, not just the plan.</p></div>
+        <div class="step"><img class="step__icon" src="/assets/icons/friction.svg" alt="" width="40" height="40" loading="lazy"><h3>Find the friction</h3><p>Spot what slows people and progress.</p></div>
+        <div class="step"><img class="step__icon" src="/assets/icons/remove-step.svg" alt="" width="40" height="40" loading="lazy"><h3>Remove the steps</h3><p>Cut what is not essential and keep what works.</p></div>
+        <div class="step"><img class="step__icon" src="/assets/icons/delivery.svg" alt="" width="40" height="40" loading="lazy"><h3>Keep it clear</h3><p>A simpler path that stays maintainable.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <% if (testimonials.length) { %>
+  <section class="section" style="padding-top: 0">
+    <div class="wrap">
+      <div class="quote">
+        <blockquote>&ldquo;<%= testimonials[0].content %>&rdquo;</blockquote>
+        <p class="muted"><%= testimonials[0].author_name %><% if (testimonials[0].author_title) { %>, <%= testimonials[0].author_title %><% } %><% if (testimonials[0].author_company) { %>, <%= testimonials[0].author_company %><% } %></p>
+      </div>
+    </div>
+  </section>
+  <% } %>
+
+  <section class="section" id="about" style="padding-top: 0">
+    <div class="wrap about">
+      <div class="about__photo"><img src="/assets/team/founder.jpg" alt="Founder of Observer" width="1200" height="1500" loading="lazy"></div>
+      <div class="about__body">
+        <span class="mono">About</span>
+        <h2 class="title">A small senior team.</h2>
+        <p class="lead" style="color: var(--text)">We started Observer because people kept working around the software that was meant to help them.</p>
+        <p class="muted">Engagements are senior-led and deliberate. Scope stays tight, ownership stays clear, and decisions are recorded. Founded 2024. Observer is a Techademy LLC company.</p>
+        <% const team = ['team-01', 'team-02'].filter(function (n) { return !isPlaceholder('team/' + n + '.jpg'); }); %>
+        <% if (team.length) { %><div class="team"><% team.forEach(function (n) { %><img src="/assets/team/<%= n %>.jpg" alt="Observer team member" width="1200" height="1500" loading="lazy"><% }); %></div><% } %>
+      </div>
+    </div>
+  </section>
+
+  <% if (posts.length) { %>
+  <section class="section" id="insights" style="padding-top: 0">
+    <div class="wrap">
+      <div class="section__head"><h2 class="title">Insights</h2></div>
+      <div class="insights">
+        <a class="feature-post" href="/blog/<%= posts[0].slug %>">
+          <% if (posts[0].coverImage) { %><img src="<%= posts[0].coverImage %>" alt="" width="1600" height="900" loading="lazy"><% } %>
+          <span class="feature-post__text">
+            <span class="mono"><%= fmtDate(posts[0].date) %> &middot; <%= posts[0].readTime %> min read</span>
+            <span class="subtitle"><%= posts[0].title %></span>
+            <span class="cta-text">Read the note</span>
+          </span>
+        </a>
+        <div>
+          <ul class="post-rows">
+            <% posts.slice(1).forEach(function (p) { %>
+            <li><a class="post-row" href="/blog/<%= p.slug %>">
+              <% if (p.coverImage) { %><img src="<%= p.coverImage %>" alt="" width="1600" height="900" loading="lazy"><% } else { %><span></span><% } %>
+              <span><h3><%= p.title %></h3><span class="mono"><%= fmtDate(p.date) %></span></span>
+            </a></li>
+            <% }); %>
+          </ul>
+          <p style="margin-top: 24px"><a class="cta-text" href="/blog">All insights</a></p>
+        </div>
+      </div>
+    </div>
+  </section>
+  <% } %>
+
+  <section class="closing" aria-labelledby="closing-title">
+    <img class="closing__plate" src="/assets/plates/curve.webp" alt="" loading="lazy" width="1920" height="1080">
+    <div class="wrap">
+      <h2 id="closing-title">Tell us where the work gets stuck.</h2>
+      <a class="cta-primary" href="/contact">Start a conversation <%- include('partials/arrow') %></a>
+    </div>
+  </section>
+
+</main>
+<%- include('partials/footer') %>
+<script src="/scripts/film-scrub.js" defer></script>
+<%- include('partials/end') %>

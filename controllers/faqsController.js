@@ -5,7 +5,7 @@ const config = require('../config');
 
 const faqsService = config.database.useDatabase
   ? new DbService('faqs')
-  : new DataService(config.paths.faqsFile || './data/faqs.json');
+  : new DataService(config.paths.faqsFile);
 
 // Get published FAQs (public)
 async function getFaqs(req, res, next) {

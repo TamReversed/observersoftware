@@ -1,0 +1,31 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+<main id="main">
+  <div class="wrap">
+    <header class="page-head">
+      <h1 class="display">Work</h1>
+      <p class="lead">Where Observer has removed steps from complex workflows, platforms and teams.</p>
+    </header>
+    <div class="work-index">
+      <nav class="rail" aria-label="Filter by sector">
+        <a class="mono" href="/work" <%- !sector ? 'aria-current="true"' : '' %>>All</a>
+        <% sectors.forEach(function (s) { %><a class="mono" href="/work?sector=<%= encodeURIComponent(s) %>" <%- sector === s ? 'aria-current="true"' : '' %>><%= s %></a><% }); %>
+      </nav>
+      <div class="case-grid">
+        <% if (!items.length) { %><p class="empty">No work to show yet.</p><% } %>
+        <% items.forEach(function (w) { %>
+        <article class="case" id="<%= w.slug %>">
+          <% if (w.image) { %><img src="<%= w.image %>" alt="" width="1600" height="1000" loading="lazy"><% } %>
+          <div class="case__tags mono"><span><%= w.tags[0] || 'Engagement' %></span><% if (w.year) { %><span><%= w.year %></span><% } %></div>
+          <h2><%= w.industry %></h2>
+          <p><strong>The problem.</strong> <%= w.problem %></p>
+          <p><strong>What changed.</strong> <%= w.solution %></p>
+          <% if (w.metrics.length) { %><dl class="metrics"><% w.metrics.forEach(function (m) { %><div><dt><%= m.label %></dt><dd><%= m.value %></dd></div><% }); %></dl><% } %>
+        </article>
+        <% }); %>
+      </div>
+    </div>
+  </div>
+</main>
+<%- include('partials/footer') %>
+<%- include('partials/end') %>

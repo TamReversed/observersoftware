@@ -1,0 +1,42 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+<main id="main">
+  <div class="wrap">
+    <header class="page-head">
+      <h1 class="display">Insights</h1>
+      <p class="lead">Notes on software, design and building systems that work the way people actually do.</p>
+    </header>
+    <form class="search" role="search" action="/blog" method="get">
+      <% if (category) { %><input type="hidden" name="category" value="<%= category %>"><% } %>
+      <div class="field" style="flex: 1"><label class="visually-hidden" for="q">Search posts</label><input id="q" name="q" type="search" value="<%= q %>" placeholder="Search posts" autocomplete="off"></div>
+      <button class="cta-framed" type="submit">Search</button>
+    </form>
+    <nav class="filters" aria-label="Filter by category">
+      <a href="/blog" <%- !category ? 'aria-current="true"' : '' %>>All</a>
+      <% categories.forEach(function (c) { %><a href="/blog?category=<%= c.slug %>" <%- category === c.slug ? 'aria-current="true"' : '' %>><%= c.name %></a><% }); %>
+    </nav>
+    <ul class="post-list">
+      <% if (!posts.length) { %><li class="empty">No posts found.</li><% } %>
+      <% posts.forEach(function (p) { %>
+      <li><a class="post-row" href="/blog/<%= p.slug %>">
+        <% if (p.coverImage) { %><img src="<%= p.coverImage %>" alt="" width="1600" height="900" loading="lazy"><% } else { %><span></span><% } %>
+        <span>
+          <h2><%= p.title %></h2>
+          <span class="mono"><%= fmtDate(p.date) %> &middot; <%= p.categoryName %> &middot; <%= p.readTime %> min read</span>
+          <span class="muted" style="display: block; margin-top: 10px; max-width: 60ch"><%= p.excerpt %></span>
+        </span>
+      </a></li>
+      <% }); %>
+    </ul>
+    <% if (pages > 1) { %>
+    <nav class="pager" aria-label="Pagination">
+      <% const base = '/blog?' + (category ? 'category=' + category + '&' : '') + (q ? 'q=' + encodeURIComponent(q) + '&' : ''); %>
+      <% if (page > 1) { %><a class="cta-framed" href="<%= base %>page=<%= page - 1 %>">Newer</a><% } else { %><span></span><% } %>
+      <% if (page < pages) { %><a class="cta-framed" href="<%= base %>page=<%= page + 1 %>">Older</a><% } %>
+    </nav>
+    <% } %>
+    <div style="height: clamp(72px, 10vw, 140px)"></div>
+  </div>
+</main>
+<%- include('partials/footer') %>
+<%- include('partials/end') %>

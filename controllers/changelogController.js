@@ -5,7 +5,7 @@ const config = require('../config');
 
 const changelogService = config.database.useDatabase
   ? new DbService('changelog')
-  : new DataService(config.paths.changelogFile || './data/changelog.json');
+  : new DataService(config.paths.changelogFile);
 
 // Get all changelog entries (public)
 async function getChangelog(req, res, next) {

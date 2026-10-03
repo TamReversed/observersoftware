@@ -1,0 +1,50 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+<main id="main">
+  <div class="wrap">
+    <header class="page-head">
+      <h1 class="display"><%= doc === 'privacy' ? 'Privacy' : 'Terms' %></h1>
+      <p class="lead">Last updated October 3, 2026.</p>
+    </header>
+    <div class="prose" style="padding-bottom: clamp(72px, 10vw, 140px)">
+    <% if (doc === 'privacy') { %>
+      <h2>Who we are</h2>
+      <p>Observer is a Techademy LLC company. This policy explains what information this website collects and how it is used. In this policy, "we" means Techademy LLC doing business as Observer.<% if (site.legal.legalAddress) { %> Our address is <%= site.legal.legalAddress %>.<% } %></p>
+      <h2>What we collect</h2>
+      <p>The only information we collect through this site is what you send us in the contact form: your name, your email address, an optional subject and your message. We store the message so we can reply, and we email a copy to our team.</p>
+      <p>We do not run analytics, advertising or tracking scripts on this site, and we do not sell or share your information for marketing.</p>
+      <h2>Cookies</h2>
+      <p>Public pages do not set cookies. A session cookie is used only in the private administration area, for signed-in administrators.</p>
+      <h2>Server logs</h2>
+      <p>Our hosting provider may keep technical logs such as IP addresses and request times for security and reliability. We do not use these logs to identify or profile visitors.</p>
+      <h2>Service providers</h2>
+      <p>We use Railway to host the site and its database, and Resend to deliver the notification emails that tell us about new messages. They process information only to provide those services.</p>
+      <h2>How long we keep it</h2>
+      <p>We keep contact messages for as long as we need them to respond and to keep a record of the conversation. You can ask us to delete your message at any time.</p>
+      <h2>Your choices</h2>
+      <p>You can ask to see, correct or delete the information we hold about you. Send a request through the <a href="/contact">contact form</a> and we will respond.</p>
+      <h2>Changes</h2>
+      <p>If this policy changes, we will update the date above.</p>
+    <% } else { %>
+      <h2>Using this site</h2>
+      <p>This website is operated by Techademy LLC doing business as Observer. By using it you agree to these terms. If you do not agree, please do not use the site.</p>
+      <h2>Content and ownership</h2>
+      <p>The text, images, designs and software on this site belong to Techademy LLC or its licensors and are protected by intellectual property law. You may view and share pages for personal or business reference, but you may not copy, modify or redistribute the content without our written permission.</p>
+      <h2>Information, not advice</h2>
+      <p>Articles and descriptions on this site are general information about our work and our products. They are not professional advice for your specific situation. Any engagement with us is governed by a separate written agreement.</p>
+      <h2>No warranty</h2>
+      <p>The site is provided "as is" and "as available". We work to keep it accurate and available, but we do not guarantee that it will be uninterrupted or free of errors.</p>
+      <h2>Limit of liability</h2>
+      <p>To the fullest extent the law allows, Techademy LLC is not liable for indirect or consequential losses arising from your use of this site.</p>
+      <h2>Links</h2>
+      <p>This site may link to other websites. We do not control them and are not responsible for their content or practices.</p>
+      <% if (site.legal.governingState) { %><h2>Governing law</h2>
+      <p>These terms are governed by the laws of the State of <%= site.legal.governingState %>.</p><% } %>
+      <h2>Changes and contact</h2>
+      <p>We may update these terms from time to time; the date above shows the latest version. Questions about these terms can be sent through the <a href="/contact">contact form</a>. See also our <a href="/privacy">privacy policy</a>.</p>
+    <% } %>
+    </div>
+  </div>
+</main>
+<%- include('partials/footer') %>
+<%- include('partials/end') %>

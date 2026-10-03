@@ -1,0 +1,32 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+<main id="main">
+  <div class="wrap">
+    <header class="page-head">
+      <h1 class="display">Start a conversation.</h1>
+    </header>
+    <div class="contact">
+      <div>
+        <p class="lead" style="color: var(--text)">Send a note with the workflow, the constraints, and where people get stuck.</p>
+        <p class="lead" style="margin-top: 16px">We reply with a simple next step.</p>
+      </div>
+      <form class="contact__form" id="contact-form" novalidate>
+        <div class="field"><label for="c-name">Name</label><input id="c-name" name="name" type="text" autocomplete="name" required maxlength="100"></div>
+        <div class="field"><label for="c-email">Email</label><input id="c-email" name="email" type="email" autocomplete="email" required maxlength="254"></div>
+        <div class="field"><label for="c-subject">Subject <span class="muted">(optional)</span></label><input id="c-subject" name="subject" type="text" maxlength="200"></div>
+        <div class="field"><label for="c-message">Message</label><textarea id="c-message" name="message" required maxlength="5000"></textarea></div>
+        <div class="hp" aria-hidden="true"><label for="c-website">Website</label><input id="c-website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
+        <div><button class="cta-primary" type="submit" id="contact-submit">Send message <%- include('partials/arrow') %></button></div>
+        <p class="form-status" id="contact-status" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+    <% if (faqs.length) { %>
+    <section class="faq" aria-labelledby="faq-title">
+      <h2 class="subtitle" id="faq-title" style="margin-bottom: 28px">Common questions</h2>
+      <% faqs.forEach(function (f) { %><details><summary><%= f.question %></summary><p><%= f.answer %></p></details><% }); %>
+    </section>
+    <% } %>
+  </div>
+</main>
+<%- include('partials/footer') %>
+<%- include('partials/end') %>

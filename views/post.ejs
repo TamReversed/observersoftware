@@ -1,0 +1,31 @@
+<%- include('partials/head') %>
+<%- include('partials/nav') %>
+<main id="main">
+  <div class="wrap">
+    <article>
+      <header class="page-head" style="max-width: 56rem">
+        <div class="article__meta mono"><a class="cta-text" href="/blog?category=<%= post.category %>"><%= post.categoryName %></a><span><%= fmtDate(post.date) %></span><span><%= post.readTime %> min read</span></div>
+        <h1 class="display" style="font-size: clamp(2.25rem, 5.4vw, 4.5rem)"><%= post.title %></h1>
+        <% if (post.excerpt) { %><p class="lead"><%= post.excerpt %></p><% } %>
+      </header>
+      <% if (post.coverImage) { %><img class="article__cover" src="<%= post.coverImage %>" alt="" width="1600" height="900" fetchpriority="high"><% } %>
+      <div class="prose"><%- post.html %></div>
+    </article>
+    <% if (post.related.length) { %>
+    <aside class="related" aria-labelledby="related-title">
+      <h2 class="subtitle" id="related-title" style="margin-bottom: 24px">More notes</h2>
+      <ul class="post-rows">
+        <% post.related.forEach(function (p) { %>
+        <li><a class="post-row" href="/blog/<%= p.slug %>">
+          <% if (p.coverImage) { %><img src="<%= p.coverImage %>" alt="" width="1600" height="900" loading="lazy"><% } else { %><span></span><% } %>
+          <span><h3><%= p.title %></h3><span class="mono"><%= fmtDate(p.date) %></span></span>
+        </a></li>
+        <% }); %>
+      </ul>
+    </aside>
+    <% } %>
+    <div style="height: clamp(72px, 10vw, 140px)"></div>
+  </div>
+</main>
+<%- include('partials/footer') %>
+<%- include('partials/end') %>
