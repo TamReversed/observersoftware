@@ -55,7 +55,7 @@
     function size() {
       var dpr = Math.min(window.devicePixelRatio || 1, 2);
       cw = canvas.clientWidth; ch = canvas.clientHeight;
-      canvas.width = Math.min(Math.round(cw * dpr), 2880);
+      canvas.width = Math.min(Math.round(cw * dpr), 3840); // the frames are 3840 px wide: more would only be upscaling
       canvas.height = Math.round(canvas.width * ch / cw);
       dirty = true;
     }
@@ -66,7 +66,7 @@
     // decode a 2560 px image on the main thread in the middle of scrolling, which shows up as stutter.
     // Bitmaps are decoded off the main thread ahead of time, at the size the canvas actually needs.
     var bitmaps = {}, making = {}, canBitmap = typeof createImageBitmap === 'function';
-    var BACK = 4, AHEAD = 6, lastWarm = 0, warmAt = -1;
+    var BACK = 3, AHEAD = 5, lastWarm = 0, warmAt = -1;
     function warm(center) {
       if (!canBitmap) return;
       var lo = Math.max(0, center - BACK), hi = Math.min(N - 1, center + AHEAD);
