@@ -13,7 +13,7 @@ function walk(stack, prefix) {
     if (layer.route) {
       const names = layer.route.stack.map((l) => l.name || '');
       for (const method of Object.keys(layer.route.methods)) {
-        rows.push({ method: method.toUpperCase(), path: prefix + layer.route.path, auth: names.includes('requireAuth'), csrf: names.includes('validateCsrfToken') });
+        rows.push({ method: method.toUpperCase(), path: prefix + layer.route.path, auth: names.includes('requireAuth') || names.includes('requireAdmin'), admin: names.includes('requireAdmin'), csrf: names.includes('validateCsrfToken') });
       }
     } else if (layer.name === 'router' && layer.handle.stack) {
       const m = layer.regexp.source.match(/^\^((?:\\\/[^\\?()]+)+)/);
@@ -29,6 +29,9 @@ for (const r of rows) {
   const admin = /\/admin(\/|$)/.test(r.path) || /^\/api\/auth\/users/.test(r.path) || /^\/api\/upload/.test(r.path);
   const mutates = r.method !== 'GET';
   if (admin && !r.auth) problems.push(`${r.method} ${r.path}: admin route without login`);
+  // these hold other people's data or control accounts, so an editor must never reach them
+  const adminOnly = /^\/api\/auth\/users|\/admin\/(messages|settings|changelog|export)/.test(r.path);
+  if (adminOnly && !r.admin) problems.push(`${r.method} ${r.path}: should be admin-only (requireAdmin)`);
   if (admin && mutates && !r.csrf) problems.push(`${r.method} ${r.path}: changes data without CSRF check`);
   if (!admin && mutates && !r.auth) open.push(`${r.method} ${r.path}${r.csrf ? '  (CSRF)' : ''}`);
 }

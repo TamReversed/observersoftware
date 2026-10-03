@@ -59,7 +59,6 @@ const contentTypes = {
   sitecontent: { title: 'Site content', hasList: false, hasNew: false },
   settings: { title: 'Settings', hasList: false, hasNew: false },
   homepage: { title: 'Homepage', hasList: false, hasNew: false },
-  media: { title: 'Media', hasList: false, hasNew: false },
   users: { title: 'Users', hasList: false, hasNew: false }
 };
 
@@ -140,12 +139,29 @@ async function checkAuth() {
       return false;
     }
     adminUser.textContent = data.username;
+    window.__role = data.role || 'admin';
+    window.__me = data.id || null;
+    const badge = document.getElementById('adminRole');
+    if (badge) { badge.textContent = window.__role; badge.hidden = false; }
+    applyRole(window.__role);
     await getCsrfToken();
     return true;
   } catch {
     window.location.href = '/admin/login';
     return false;
   }
+}
+
+// Editors only see what they can use (the server enforces this too: hiding is just tidiness)
+function applyRole(role) {
+  if (role === 'admin') return;
+  ['messages', 'settings'].forEach((t) => { const b = document.querySelector(`.nav-item[data-type="${t}"]`); if (b) b.hidden = true; });
+  const backup = document.getElementById('exportBackupBtn'); if (backup) backup.hidden = true;
+  const users = document.querySelector('.nav-item[data-type="users"]');
+  if (users) users.lastChild.textContent = ' My sign-in';
+  const nb = document.getElementById('newUserBtn'); if (nb) nb.hidden = true;
+  const title = document.getElementById('usersEditorTitle'); if (title) title.textContent = 'My sign-in';
+  const list = document.getElementById('usersListPanel'); if (list) list.hidden = true;
 }
 
 // Show toast
@@ -163,9 +179,7 @@ function slugify(text) {
 // Escape HTML to prevent XSS
 function escapeHtml(str) {
   if (str == null) return '';
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
+  return String(str).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
 // Load categories
@@ -360,10 +374,6 @@ function switchType(type) {
     welcomeState.style.display = 'none';
     document.getElementById('homepageEditor').style.display = 'block';
     loadHomepage();
-  } else if (type === 'media') {
-    welcomeState.style.display = 'none';
-    document.getElementById('mediaEditor').style.display = 'block';
-    loadMedia();
   } else if (type === 'users') {
     welcomeState.style.display = 'none';
     document.getElementById('usersEditor').style.display = 'block';
@@ -1269,61 +1279,10 @@ async function saveHomepage() {
   }
 }
 
-// Media functions
-async function loadMedia() {
-  try {
-    const res = await fetch('/api/admin/media');
-    const mediaItems = await res.json();
-
-    const grid = document.getElementById('mediaGrid');
-    if (mediaItems.length === 0) {
-      grid.innerHTML = '<div class="empty-state">No media uploaded yet</div>';
-      return;
-    }
-
-    grid.innerHTML = mediaItems.map(item => `
-      <div class="media-item" data-id="${item.id}">
-        <img src="${item.path}" alt="${escapeHtml(item.alt_text || item.original_filename)}" onerror="this.src='/assets/placeholder.svg'">
-        <div class="media-item-overlay">
-          <span class="media-item-name">${escapeHtml(item.original_filename)}</span>
-        </div>
-        <div class="media-item-actions">
-          <button class="media-item-btn copy" title="Copy URL" onclick="copyMediaUrl('${item.path}')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          </button>
-          <button class="media-item-btn delete" title="Delete" onclick="deleteMedia('${item.id}', '${escapeHtml(item.original_filename)}')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-          </button>
-        </div>
-      </div>
-    `).join('');
-  } catch (e) {
-    showToast('Failed to load media', 'error');
-  }
-}
-
-function copyMediaUrl(url) {
-  navigator.clipboard.writeText(url).then(() => {
-    showToast('URL copied to clipboard');
-  });
-}
-
-async function deleteMedia(id, name) {
-  if (!confirm(`Delete "${name}"?`)) return;
-
-  try {
-    const res = await authenticatedFetch(`/api/admin/media/${id}`, { method: 'DELETE' });
-    if (!res.ok) throw new Error('Failed to delete');
-    showToast('Media deleted');
-    loadMedia();
-  } catch (e) {
-    showToast(e.message, 'error');
-  }
-}
-
 // Users functions
 async function loadUsers() {
   loadTotpCard();
+  if (window.__role === 'editor') return; // editors only see their own sign-in cards
   try {
     const res = await fetch('/api/auth/users');
     const users = await res.json();
@@ -1340,20 +1299,34 @@ async function loadUsers() {
         <div class="user-info">
           <div class="user-name">${escapeHtml(user.username)}</div>
           <div class="user-meta">
+            <span class="user-badge ${user.role === 'admin' ? 'role-admin' : 'role-editor'}">${user.role === 'admin' ? 'Admin' : 'Editor'}</span>
             ${user.hasTotp ? '<span class="user-badge passkey">One-time code</span>' : (user.hasPasskey ? '<span class="user-badge passkey">Passkey</span>' : '<span class="user-badge password">Password</span>')}
           </div>
         </div>
         <div class="user-actions">
-          <button class="btn btn-ghost" onclick="resetUserPassword('${user.id}', '${escapeHtml(user.username)}')">Reset Password</button>
-          ${user.hasTotp ? `<button class="btn btn-ghost" onclick="resetUserTotp('${user.id}', '${escapeHtml(user.username)}')">Reset one-time code</button>` : ''}
-          ${user.hasPasskey ? `<button class="btn btn-ghost" onclick="revokeUserPasskeys('${user.id}', '${escapeHtml(user.username)}')">Revoke Passkeys</button>` : ''}
-          <button class="btn btn-danger" onclick="deleteUser('${user.id}', '${escapeHtml(user.username)}')">Delete</button>
+          ${user.id !== window.__me ? `<button class="btn btn-ghost" data-user-action="role" data-id="${escapeHtml(user.id)}" data-username="${escapeHtml(user.username)}" data-role="${user.role === 'admin' ? 'editor' : 'admin'}">Make ${user.role === 'admin' ? 'editor' : 'admin'}</button>` : ''}
+          <button class="btn btn-ghost" data-user-action="password" data-id="${escapeHtml(user.id)}" data-username="${escapeHtml(user.username)}">Reset Password</button>
+          ${user.hasTotp ? `<button class="btn btn-ghost" data-user-action="totp" data-id="${escapeHtml(user.id)}" data-username="${escapeHtml(user.username)}">Reset one-time code</button>` : ''}
+          ${user.hasPasskey ? `<button class="btn btn-ghost" data-user-action="passkeys" data-id="${escapeHtml(user.id)}" data-username="${escapeHtml(user.username)}">Revoke Passkeys</button>` : ''}
+          <button class="btn btn-danger" data-user-action="delete" data-id="${escapeHtml(user.id)}" data-username="${escapeHtml(user.username)}">Delete</button>
         </div>
       </div>
     `).join('');
   } catch (e) {
     showToast('Failed to load users', 'error');
   }
+}
+
+async function changeUserRole(id, username, role) {
+  const what = role === 'admin' ? 'an admin (full access, including users, messages, settings and backups)' : 'an editor (content only)';
+  if (!confirm(`Make ${username} ${what}?`)) return;
+  try {
+    const res = await authenticatedFetch(`/api/auth/users/${id}/role`, { method: 'PUT', body: { role } });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Failed to change role');
+    showToast(`${username} is now ${role === 'admin' ? 'an admin' : 'an editor'}`);
+    loadUsers();
+  } catch (e) { showToast(e.message, 'error'); }
 }
 
 async function resetUserTotp(id, username) {
@@ -1438,7 +1411,7 @@ async function createUser() {
   try {
     const res = await authenticatedFetch('/api/auth/users', {
       method: 'POST',
-      body: { username, password }
+      body: { username, password, role: document.getElementById('newRole').value }
     });
     if (!res.ok) {
       const data = await res.json();
@@ -1539,38 +1512,6 @@ document.getElementById('capabilityScreenshotInput')?.addEventListener('keydown'
 
 // Setup screenshot upload
 setupScreenshotUpload();
-
-// Media upload
-document.getElementById('mediaFileUpload')?.addEventListener('change', async (e) => {
-  const files = Array.from(e.target.files);
-  for (const file of files) {
-    if (file.type.startsWith('image/')) {
-      await uploadMediaFile(file);
-    }
-  }
-  e.target.value = '';
-});
-
-async function uploadMediaFile(file) {
-  const formData = new FormData();
-  formData.append('file', file);
-
-  const token = await getCsrfToken();
-  if (token) formData.append('csrfToken', token);
-
-  try {
-    const res = await fetch('/api/admin/media', {
-      method: 'POST',
-      headers: { 'X-CSRF-Token': token || '' },
-      body: formData
-    });
-    if (!res.ok) throw new Error('Upload failed');
-    showToast('File uploaded');
-    loadMedia();
-  } catch (e) {
-    showToast(e.message, 'error');
-  }
-}
 
 // ---------------------------------------------------------------------------
 // Image uploads (one shared helper for every image field)
@@ -2036,4 +1977,18 @@ checkAuth().then(authenticated => {
     // Deep link from the public site's "Edit site" button
     if (location.hash === '#site-content') switchType('sitecontent');
   }
+});
+
+
+// Users list buttons (data attributes instead of inline handlers, so names can never break out of markup)
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-user-action]');
+  if (!b) return;
+  const { id, username, role } = b.dataset;
+  const act = b.dataset.userAction;
+  if (act === 'role') changeUserRole(id, username, role);
+  else if (act === 'password') resetUserPassword(id, username);
+  else if (act === 'totp') resetUserTotp(id, username);
+  else if (act === 'passkeys') revokeUserPasskeys(id, username);
+  else if (act === 'delete') deleteUser(id, username);
 });

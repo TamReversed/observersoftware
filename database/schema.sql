@@ -306,3 +306,6 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_last_step BIGINT DEFAULT 0;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_recovery JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_failures INTEGER DEFAULT 0;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_locked_until TIMESTAMP WITH TIME ZONE;
+
+-- Roles: 'admin' (everything) or 'editor' (content only). Existing accounts stay admins. (additive, safe to re-run)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'admin';

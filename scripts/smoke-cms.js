@@ -219,6 +219,76 @@ class Client {
   check('reset also cleared the lock', (await (async () => { const c = new Client(); await c.refreshCsrf(); return c.req('/api/auth/totp/login', { method: 'POST', body: { username: TU, code: '123456' } }); })()).status === 401);
   await admin.req(`/api/auth/users/${uid.id}`, { method: 'DELETE', body: {} });
 
+
+  console.log('\nEditor role');
+  const EU = 'smoke-editor-' + Date.now().toString(36);
+  const EP = 'Editor-test-pass-7!';
+  check('invalid role is rejected', (await admin.req('/api/auth/users', { method: 'POST', body: { username: EU, password: EP, role: 'superuser' } })).status === 400);
+  const mkEditor = await admin.req('/api/auth/users', { method: 'POST', body: { username: EU, password: EP } });
+  check('a new account with no role chosen becomes an editor', mkEditor.status === 200 && mkEditor.json.role === 'editor');
+  const eRow = ((await admin.req('/api/auth/users')).json || []).find((u) => u.username === EU);
+  check('the user list shows roles', eRow && eRow.role === 'editor' && ((await admin.req('/api/auth/users')).json || []).some((u) => u.username === USER && u.role === 'admin'));
+  const ed = new Client(); await ed.refreshCsrf();
+  check('editor signs in with a password', (await ed.req('/api/auth/login', { method: 'POST', body: { username: EU, password: EP } })).status === 200);
+  await ed.refreshCsrf();
+  const eStatus = (await ed.req('/api/auth/status')).json;
+  check('status reports the editor role', eStatus.authenticated === true && eStatus.role === 'editor' && eStatus.id === eRow.id);
+
+  // what an editor CAN do
+  check('editor can read posts', (await ed.req('/api/admin/posts')).status === 200);
+  check('editor can read work items', (await ed.req('/api/admin/work')).status === 200);
+  const ePost = await ed.req('/api/admin/posts', { method: 'POST', body: { title: 'Editor smoke post', content: 'Hello', published: false } });
+  check('editor can create a draft post', ePost.status === 200, `status ${ePost.status}`);
+  if (ePost.json && ePost.json.slug) await ed.req(`/api/admin/posts/${ePost.json.slug}`, { method: 'DELETE', body: {} });
+  check('editor can open the site content editor', (await ed.req('/api/admin/site-content')).status === 200);
+  check('editor can save a site content draft', (await ed.req('/api/admin/site-content/draft', { method: 'PUT', body: { content: {} } })).status === 200);
+  check('editor can use their own one-time code setup', (await ed.req('/api/auth/totp/setup', { method: 'POST', body: {} })).status === 200);
+
+  // what an editor CANNOT do
+  const denied = [
+    ['GET', '/api/auth/users'], ['POST', '/api/auth/users'], ['GET', '/api/admin/export'], ['GET', '/api/admin/messages'],
+    ['GET', '/api/admin/messages/unread-count'], ['GET', '/api/admin/settings'], ['PUT', '/api/admin/settings'],
+    ['GET', '/api/admin/changelog'], ['PUT', `/api/auth/users/${eRow.id}/role`], ['PUT', `/api/auth/users/${eRow.id}/password`],
+    ['DELETE', `/api/auth/users/${eRow.id}`], ['DELETE', `/api/auth/users/${eRow.id}/passkeys`], ['DELETE', `/api/auth/users/${eRow.id}/totp`]
+  ];
+  for (const [m, p] of denied) {
+    const r = await ed.req(p, { method: m, body: m === 'GET' ? undefined : (p.endsWith('/role') ? { role: 'admin' } : (p.endsWith('/password') ? { password: 'Whatever-123!' } : (p === '/api/auth/users' ? { username: 'sneaky-new-admin', password: 'Sneaky-pass-1!', role: 'admin' } : {}))) });
+    check(`editor blocked from ${m} ${p.replace(eRow.id, ':me')} (${r.status})`, r.status === 403);
+  }
+  check('editor cannot promote themselves (the account is still an editor)', (await ed.req('/api/auth/status')).json.role === 'editor');
+  check('no account was created by the editor', !((await admin.req('/api/auth/users')).json || []).some((u) => u.username === 'sneaky-new-admin'));
+
+  // roles take effect immediately
+  check('admin cannot change their own role', (await admin.req(`/api/auth/users/${((await admin.req('/api/auth/users')).json.find((u) => u.username === USER) || {}).id}/role`, { method: 'PUT', body: { role: 'editor' } })).status === 400);
+  check('promotion works', (await admin.req(`/api/auth/users/${eRow.id}/role`, { method: 'PUT', body: { role: 'admin' } })).status === 200);
+  check('...and applies to the existing session at once', (await ed.req('/api/auth/users')).status === 200);
+  check('demotion works', (await admin.req(`/api/auth/users/${eRow.id}/role`, { method: 'PUT', body: { role: 'editor' } })).status === 200);
+  check('...and applies to the existing session at once', (await ed.req('/api/auth/users')).status === 403);
+
+  // deleting an account ends its session immediately
+  const homeBefore = await ed.req('/');
+  check('a signed-in editor sees the Edit site button', /class="admin-pill"/.test(homeBefore.text));
+  check('admin deletes the editor', (await admin.req(`/api/auth/users/${eRow.id}`, { method: 'DELETE', body: {} })).status === 200);
+  check('the deleted account\'s open session stops working at once', (await ed.req('/api/admin/posts')).status === 401);
+  const homeAfter = await ed.req('/');
+  check('...and loses the Edit site button and preview', !/class="admin-pill"/.test(homeAfter.text) && !/preview-bar/.test((await ed.req('/?preview=1')).text));
+  check('...and status shows signed out', (await ed.req('/api/auth/status')).json.authenticated === false);
+
+  console.log('\nRemoved media API and user-management race');
+  check('the old media API is gone', (await admin.req('/api/admin/media')).status === 404 && (await admin.req('/api/admin/media', { method: 'POST', body: { path: '"><script>x</script>' } })).status === 404);
+  const rUsers = (await admin.req('/api/auth/users')).json;
+  const adminsNow = (Array.isArray(rUsers) ? rUsers : rUsers.users || []).filter((u) => u.role === 'admin');
+  if (adminsNow.length === 1) {
+    const mk = async (n) => (await admin.req('/api/auth/users', { method: 'POST', body: { username: n, password: 'racepass123', role: 'admin' } })).json;
+    await mk('race_a'); await mk('race_b');
+    const list = (await admin.req('/api/auth/users')).json; const all = Array.isArray(list) ? list : list.users;
+    const ids = all.filter((u) => u.username !== USER).map((u) => u.id);
+    // demote both extra admins plus delete them at once: the original admin must survive and so must at least one admin
+    const results = await Promise.all(ids.flatMap((id) => [admin.req('/api/auth/users/' + id + '/role', { method: 'PUT', body: { role: 'editor' } })]));
+    check('concurrent role changes leave at least one admin', ((await admin.req('/api/auth/users')).json.users || (await admin.req('/api/auth/users')).json).some((u) => u.role === 'admin') && results.every((r) => r.status === 200 || r.status === 400));
+    for (const id of ids) await admin.req('/api/auth/users/' + id, { method: 'DELETE' });
+  }
+
   console.log('\nBackup');
   const exp = await admin.req('/api/admin/export');
   check('backup downloads', exp.status === 200 && exp.json && Array.isArray(exp.json.posts));

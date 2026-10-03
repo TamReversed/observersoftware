@@ -3,7 +3,7 @@ const router = express.Router();
 const { asyncHandler } = require('../middleware/errorHandler');
 const { validateCsrfToken } = require('../middleware/csrf');
 const { validateLogin, validateId } = require('../middleware/validation');
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, requireAdmin } = require('../middleware/auth');
 const authController = require('../controllers/authController');
 const totpController = require('../controllers/totpController');
 
@@ -23,7 +23,7 @@ router.post('/totp/login', validateCsrfToken, asyncHandler(totpController.login)
 router.post('/totp/setup', requireAuth, validateCsrfToken, asyncHandler(totpController.setup));
 router.post('/totp/enable', requireAuth, validateCsrfToken, asyncHandler(totpController.enable));
 router.post('/totp/disable', requireAuth, validateCsrfToken, asyncHandler(totpController.disable));
-router.delete('/users/:id/totp', requireAuth, validateCsrfToken, validateId, asyncHandler(totpController.adminReset));
+router.delete('/users/:id/totp', requireAdmin, validateCsrfToken, validateId, asyncHandler(totpController.adminReset));
 
 // Other routes
 router.post('/logout', validateCsrfToken, authController.logout);
@@ -32,11 +32,12 @@ router.get('/csrf-token', authController.getCsrfToken);
 router.get('/signin-config', authController.getSigninConfig);
 
 // User management (admin only)
-router.get('/users', requireAuth, asyncHandler(authController.getUsers));
-router.post('/users', requireAuth, validateCsrfToken, asyncHandler(authController.createUser));
-router.put('/users/:id/password', requireAuth, validateCsrfToken, validateId, asyncHandler(authController.resetPassword));
-router.delete('/users/:id/passkeys', requireAuth, validateCsrfToken, validateId, asyncHandler(authController.revokePasskeys));
-router.delete('/users/:id', requireAuth, validateCsrfToken, validateId, asyncHandler(authController.deleteUser));
+router.get('/users', requireAdmin, asyncHandler(authController.getUsers));
+router.post('/users', requireAdmin, validateCsrfToken, asyncHandler(authController.createUser));
+router.put('/users/:id/role', requireAdmin, validateCsrfToken, validateId, asyncHandler(authController.updateRole));
+router.put('/users/:id/password', requireAdmin, validateCsrfToken, validateId, asyncHandler(authController.resetPassword));
+router.delete('/users/:id/passkeys', requireAdmin, validateCsrfToken, validateId, asyncHandler(authController.revokePasskeys));
+router.delete('/users/:id', requireAdmin, validateCsrfToken, validateId, asyncHandler(authController.deleteUser));
 
 module.exports = router;
 

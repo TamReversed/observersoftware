@@ -2,12 +2,41 @@
 
 Sign in at `/observe`. Everything you can change without touching code lives here.
 
+## Roles and creating accounts
+
+There are two roles.
+
+| | Admin | Editor |
+|---|---|---|
+| Posts, Work, Products, Categories, FAQs, Testimonials | yes | yes |
+| Site content (edit, preview, publish) and images | yes | yes |
+| Their own one-time code or passkey | yes | yes |
+| Users (create, delete, change roles, reset passwords) | yes | no |
+| Contact messages | yes | no |
+| Settings (social links) | yes | no |
+| Download backup | yes | no |
+
+**Create an account**: sign in as an admin, open **Users**, press **+ New User**, enter a username and a starting password (8+ characters), pick the role (Editor is pre-selected) and press **Create User**. Give the person those details; they sign in on the Password tab, then can add one-time codes or a passkey under **My sign-in**.
+
+**Change a role**: in the Users list press **Make editor** or **Make admin** next to the person. It takes effect on their very next click, even if they are signed in. You cannot change your own role, and there must always be at least one admin.
+
+**Remove someone**: **Delete**. Their open sessions stop working immediately.
+
+Accounts made before roles existed are admins, so nobody loses access.
+
 ## Signing in, and what to do when it will not let you in
 
 `/observe` has one form: type your **username**, pick **Password**, **One-time code** or **Passkey**, and press Sign in. The page remembers your last choice. Pick Password first if your password manager is not filling in.
 
 **Common causes, in the order to check them**
-1. **You changed `ADMIN_PASSWORD` in Railway and it did nothing.** That variable is only read the very first time the site starts. To change the password later: in Railway set `RESET_ADMIN_PASSWORD` to `true` and `ADMIN_PASSWORD` to the new password, redeploy, sign in, then **delete `RESET_ADMIN_PASSWORD`**. The boot log confirms with "PASSWORD RESET".
+1. **You changed `ADMIN_PASSWORD` in Railway and it did nothing.** That variable is only read the very first time the site starts. `RESET_ADMIN_PASSWORD` is **not a setting that already exists: you add it yourself**:
+   1. Open railway.com, then your project, then click the **service** that runs the website (not the database).
+   2. Open the **Variables** tab and press **New Variable** (or **Raw Editor**).
+   3. Add `RESET_ADMIN_PASSWORD` = `true`, and add or edit `ADMIN_PASSWORD` = your new password.
+   4. Press **Deploy** (Railway offers to apply the changes). Wait for it to finish.
+   5. Sign in as `admin` with the new password. In the deploy log you will see "PASSWORD RESET".
+   6. Go back to Variables and **delete `RESET_ADMIN_PASSWORD`** (otherwise the password resets on every deploy).
+   It resets the account named by `ADMIN_USERNAME` (default `admin`), makes it an admin, and turns off its one-time codes.
 2. **The account uses one-time codes.** Then only the One-time code tab works for it.
 3. **Passkeys on the wrong address.** A passkey only works on the exact address it was created for. Set `WEBAUTHN_RP_ID` (your domain, for example `observersoftware.io`) and `WEBAUTHN_ORIGIN` (`https://observersoftware.io`) in Railway. The Passkey tab tells you when you are on a different address. Password and one-time codes work on any address.
 4. **Too many wrong tries.** Five wrong passwords lock that account for 15 minutes; ten failures from one network pause that network for 15 minutes. Successful sign-ins never count. The message says how long to wait.
