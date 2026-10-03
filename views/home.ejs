@@ -1,10 +1,10 @@
-<%- include('partials/head', { bodyClass: 'home', headExtra: '<link rel="preload" as="image" href="/assets/film/poster-start-mobile.webp" media="(max-width: 760px)" fetchpriority="high">\n  <link rel="preload" as="image" href="/assets/film/poster-start.webp" media="(min-width: 761px)" fetchpriority="high">' }) %>
+<%- include('partials/head', { bodyClass: 'home', headExtra: '<link rel="preload" as="image" href="/assets/film/hero-art-mobile.webp" media="(max-width: 760px)" fetchpriority="high">\n  <link rel="preload" as="image" href="/assets/film/hero-art.webp" media="(min-width: 761px)" fetchpriority="high">' }) %>
 <%- include('partials/nav') %>
 <main id="main">
 
-  <section class="film" data-film data-manifest="/assets/film/manifest.json" data-poster-end="/assets/film/poster-end.webp" data-poster-end-mobile="/assets/film/poster-end-mobile.webp" aria-label="Introduction">
+  <section class="film" data-film data-manifest="/assets/film/manifest.json" data-art="/assets/film/hero-art.webp" data-art-mobile="/assets/film/hero-art-mobile.webp" aria-label="Introduction">
     <div class="film__stage">
-      <picture><source media="(max-width: 760px)" srcset="/assets/film/poster-start-mobile.webp"><img class="film__poster" src="/assets/film/poster-start.webp" alt="" width="1600" height="900" fetchpriority="high"></picture>
+      <picture><source media="(max-width: 760px)" srcset="/assets/film/hero-art-mobile.webp"><img class="film__poster" src="/assets/film/hero-art.webp" alt="" width="1600" height="900" fetchpriority="high"></picture>
       <canvas class="film__canvas" aria-hidden="true"></canvas>
       <div class="film__chapters wrap">
         <article class="film__chapter is-active" data-chapter="0">

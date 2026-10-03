@@ -5,19 +5,10 @@
   var root = document.querySelector('[data-film]');
   if (!root) return;
 
-  var poster = root.querySelector('.film__poster');
   var small = window.matchMedia('(max-width: 760px)').matches;
-  // The inline head script adds html.film-live only when motion is allowed
-  if (!document.documentElement.classList.contains('film-live')) {
-    // Static final frame, chapters stacked as normal content
-    var end = small ? root.dataset.posterEndMobile : root.dataset.posterEnd;
-    if (poster && end) {
-      var pic = poster.parentNode;
-      if (pic.tagName === 'PICTURE') { var src = pic.querySelector('source'); if (src) src.srcset = end; }
-      poster.src = end;
-    }
-    return;
-  }
+  // The inline head script adds html.film-live only when motion is allowed.
+  // Otherwise the static layout keeps the hero art as its image and chapters stack as normal content.
+  if (!document.documentElement.classList.contains('film-live')) return;
 
   var canvas = root.querySelector('.film__canvas');
   var chapters = [].slice.call(root.querySelectorAll('.film__chapter'));
@@ -31,6 +22,8 @@
     var tpl = mobile ? m.mobile : m.desktop;
     var N = m.count;
     var frames = new Array(N);
+    var art = null; // hero image shown first, dissolves into the film as you scroll
+    var FADE_END = 0.2; // fraction of the scroll over which the hero image fades out
     var url = function (i) { return tpl.replace('{n}', String(i + 1).padStart(m.pad || 3, '0')) + (m.v ? '?v=' + m.v : ''); };
 
     // load order: first, last, every 10th, then the rest; a few at a time
@@ -62,18 +55,24 @@
     var rt;
     window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(size, 120); });
 
-    function draw(i) {
+    function cover(img, alpha) {
+      var s = Math.max(canvas.width / img.naturalWidth, canvas.height / img.naturalHeight);
+      var w = img.naturalWidth * s, h = img.naturalHeight * s;
+      ctx.globalAlpha = alpha;
+      ctx.drawImage(img, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+      ctx.globalAlpha = 1;
+    }
+
+    function draw(i, fade) {
       var img = frames[i];
       if (!img) { // nearest loaded frame
         for (var d = 1; d < N; d++) { img = frames[i - d] || frames[i + d]; if (img) break; }
       }
-      if (!img) return;
-      var s = Math.max(canvas.width / img.naturalWidth, canvas.height / img.naturalHeight);
-      var w = img.naturalWidth * s, h = img.naturalHeight * s;
-      ctx.drawImage(img, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+      if (img) cover(img, 1);
+      if (art && fade > 0) cover(art, fade);
     }
 
-    var target = 0, current = 0, dirty = true, shown = -1, lastChapter = -1;
+    var target = 0, current = 0, dirty = true, shown = -1, shownFade = -1, lastChapter = -1, fade = 1;
     function progress() {
       var range = root.offsetHeight - window.innerHeight;
       var y = root.getBoundingClientRect().top + window.scrollY;
@@ -87,6 +86,8 @@
       if (dirty) {
         var p = progress();
         target = p * (N - 1);
+        var f = Math.max(0, 1 - p / FADE_END);
+        fade = Math.round(f * f * (3 - 2 * f) * 100) / 100; // smoothstep, 1% steps
         var c = Math.min(chapters.length - 1, Math.floor(p * chapters.length));
         if (c !== lastChapter) {
           chapters.forEach(function (el, idx) { el.classList.toggle('is-active', idx === c); });
@@ -101,15 +102,21 @@
         dirty = dirty || Math.abs(target - current) > 0.01;
       } else { current = target; }
       var idx = Math.round(current);
-      if (idx !== shown && root.classList.contains('film--ready')) { draw(idx); shown = idx; }
+      if ((idx !== shown || fade !== shownFade) && root.classList.contains('film--ready')) { draw(idx, fade); shown = idx; shownFade = fade; }
       requestAnimationFrame(tick);
     }
 
     size();
     // first frame right away (it matches the poster); the rest once the page is loaded and idle
     var first = new Image();
-    first.onload = function () { frames[0] = first; root.classList.add('film--ready'); dirty = true; };
+    var pending = 2;
+    var ready = function () { if (--pending === 0) { root.classList.add('film--ready'); dirty = true; } };
+    first.onload = function () { frames[0] = first; ready(); };
     first.src = url(0);
+    var artImg = new Image();
+    artImg.onload = function () { art = artImg; ready(); };
+    artImg.onerror = function () { ready(); }; // no art: the film simply starts at its first frame
+    artImg.src = small ? root.dataset.artMobile : root.dataset.art;
     next = 1;
     var start = function () { (window.requestIdleCallback || function (f) { setTimeout(f, 400); })(pump, { timeout: 2500 }); };
     if (document.readyState === 'complete') start(); else window.addEventListener('load', start);
