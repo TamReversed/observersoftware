@@ -3,6 +3,7 @@
   const here = (href) => href !== '/#about' && (path === href || path.startsWith(href + '/'));
 %>
 <% if (typeof preview !== 'undefined' && preview) { %><div class="preview-bar" role="status">Preview: you are seeing unpublished changes. Visitors cannot see this. <a href="<%= path %>">Exit preview</a></div><% } %>
+<% if (typeof isAdmin !== 'undefined' && isAdmin && !(typeof preview !== 'undefined' && preview)) { %><a class="admin-pill" href="/admin#site-content" rel="nofollow">Edit site</a><% } %>
 <header class="nav<%= (typeof navOver !== 'undefined' && navOver) ? ' nav--over' : '' %>" id="nav">
   <div class="wrap nav__inner">
     <a class="nav__logo" href="/" aria-label="Observer, home"><img src="/assets/brand/observer-wordmark.svg" alt="Observer" width="117" height="32"></a>
