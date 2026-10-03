@@ -43,16 +43,11 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "blob:"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https:"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      connectSrc: [
-        "'self'",
-        "https://fonts.googleapis.com",
-        "https://cdn.jsdelivr.net",
-        ...(config.isProduction ? [] : ["http://127.0.0.1:7242", "http://localhost:7242"])
-      ],
+      fontSrc: ["'self'"],
+      connectSrc: ["'self'"],
       frameSrc: ["'none'"], // Prevent embedding in iframes (except self)
       frameAncestors: ["'none'"], // Prevent clickjacking - site cannot be embedded
       objectSrc: ["'none'"],
@@ -63,8 +58,15 @@ app.use(helmet({
   },
   crossOriginEmbedderPolicy: false, // Allow external resources
   referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
-  hsts: config.isProduction ? { maxAge: 31536000 } : false
+  hsts: config.isProduction ? { maxAge: 31536000 } : false,
+  xFrameOptions: { action: 'deny' }
 }));
+
+// The site uses none of these browser features
+app.use((req, res, next) => {
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()');
+  next();
+});
 
 // Health check (before sessions; verifies the database when one is configured)
 app.get('/health', async (req, res) => {
@@ -176,6 +178,12 @@ app.use('/api/auth/webauthn', loginLimiter); // Same limits for passkey auth
 app.use('/api/auth/totp/login', loginLimiter); // And for one-time code sign-in
 app.use('/api/messages', contactFormLimiter); // Stricter rate limit for contact form
 app.use('/api', apiLimiter);
+
+// Signed-in responses must never be kept in a browser or proxy cache
+app.use(['/api/admin', '/api/auth', '/api/upload'], (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store');
+  next();
+});
 
 // API routes (CSRF validation applied per route)
 app.use(routes);

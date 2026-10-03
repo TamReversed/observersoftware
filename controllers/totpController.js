@@ -11,6 +11,7 @@ const DbService = require('../services/dbService');
 const totp = require('../services/totpService');
 const config = require('../config');
 const { establishSession } = require('./authController');
+const { authFingerprint } = require('../middleware/auth');
 
 const usersService = config.database.useDatabase ? new DbService('users') : new DataService(config.paths.usersFile);
 
@@ -150,6 +151,7 @@ async function enable(req, res, next) {
       totpRecovery: recovery.map(totp.hashRecovery), totpFailures: 0, totpLockedUntil: null
     });
     delete req.session.pendingTotp;
+    req.session.authFp = authFingerprint(await usersService.findById(user.id));
     res.json({ success: true, recoveryCodes: recovery });
   } catch (error) { next(error); }
 }
@@ -171,6 +173,7 @@ async function disable(req, res, next) {
     if (result.notOn) return res.status(400).json({ error: 'One-time codes are not turned on.' });
     if (result.locked) return lockedReply(res, result.until);
     if (!result.ok) return res.status(401).json({ error: 'That code is not right.' });
+    req.session.authFp = authFingerprint(await usersService.findById(req.session.userId));
     res.json({ success: true });
   } catch (error) { next(error); }
 }

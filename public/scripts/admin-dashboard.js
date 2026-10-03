@@ -301,6 +301,11 @@ function renderItemsList() {
     const div = document.createElement('div');
     div.className = `list-item ${isActive ? 'active' : ''} ${currentType === 'messages' && !item.read ? 'unread' : ''}`;
     div.dataset.id = id;
+    div.tabIndex = 0;
+    div.setAttribute('role', 'button');
+    div.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); div.click(); }
+    });
 
     const titleDiv = document.createElement('div');
     titleDiv.className = 'list-item-title';
@@ -673,11 +678,12 @@ function renderCapabilityScreenshots() {
 
   container.innerHTML = capabilityScreenshots.map((url, index) =>
     `<div class="screenshot-item">
-      <img src="${escapeHtml(url)}" alt="Screenshot ${index + 1}" onerror="this.style.display='none'">
+      <img src="${escapeHtml(url)}" alt="Screenshot ${index + 1}">
       <span>${escapeHtml(url)}</span>
       <button class="screenshot-remove" data-index="${index}">&times;</button>
     </div>`
   ).join('');
+  container.querySelectorAll('img').forEach((img) => img.addEventListener('error', () => { img.style.display = 'none'; }));
 
   container.querySelectorAll('.screenshot-remove').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -1295,7 +1301,7 @@ async function loadUsers() {
 
     panel.innerHTML = users.map(user => `
       <div class="user-card" data-id="${user.id}">
-        <div class="user-avatar">${user.username.charAt(0).toUpperCase()}</div>
+        <div class="user-avatar">${escapeHtml(user.username.charAt(0).toUpperCase())}</div>
         <div class="user-info">
           <div class="user-name">${escapeHtml(user.username)}</div>
           <div class="user-meta">
@@ -1991,4 +1997,11 @@ document.addEventListener('click', (e) => {
   else if (act === 'totp') resetUserTotp(id, username);
   else if (act === 'passkeys') revokeUserPasskeys(id, username);
   else if (act === 'delete') deleteUser(id, username);
+});
+
+// Small screens: the editor sits below the menu, so bring it into view after a choice is made
+document.addEventListener('click', (e) => {
+  if (!window.matchMedia('(max-width: 768px)').matches) return;
+  if (!e.target.closest('.sidebar .nav-item, .sidebar .list-item, .sidebar .btn')) return;
+  setTimeout(() => { const panel = document.getElementById('editorPanel'); if (panel) panel.scrollIntoView({ block: 'start' }); }, 0);
 });

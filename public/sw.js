@@ -1,7 +1,7 @@
 // Service Worker for PWA
 // Cache static assets and API responses
 
-const CACHE_VERSION = 'v5';
+const CACHE_VERSION = 'v6';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const API_CACHE = `api-${CACHE_VERSION}`;
 
@@ -79,6 +79,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Draft previews are private: never store them
+  if (url.searchParams.has('preview')) {
+    return;
+  }
+
   // API requests: Network-first, cache fallback
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
@@ -113,7 +118,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static assets: Network-first for JS/CSS (to get latest code), cache-first for others
+  // Static assets: network first, cached copy as the offline fallback
   if (
     url.pathname.endsWith('.css') ||
     url.pathname.endsWith('.js') ||
@@ -123,42 +128,21 @@ self.addEventListener('fetch', (event) => {
     url.pathname.endsWith('.woff') ||
     url.pathname.endsWith('.woff2')
   ) {
-    // For JS and CSS, use network-first to ensure latest code
-    if (url.pathname.endsWith('.js') || url.pathname.endsWith('.css')) {
-      event.respondWith(
-        fetch(request, { cache: 'no-cache' })
-          .then((response) => {
-            if (response.ok) {
-              const responseClone = response.clone();
-              caches.open(STATIC_CACHE).then((cache) => {
-                cache.put(request, responseClone);
-              });
-            }
-            return response;
-          })
-          .catch(() => {
-            return caches.match(request);
-          })
-      );
-    } else {
-      // For other assets, use cache-first
-      event.respondWith(
-        caches.match(request).then((cachedResponse) => {
-          if (cachedResponse) {
-            return cachedResponse;
+    // Network first for every static file, so a replaced image or stylesheet shows up straight away.
+    // The cached copy is only used when the network is unavailable.
+    event.respondWith(
+      fetch(request, { cache: 'no-cache' })
+        .then((response) => {
+          if (response.ok) {
+            const responseClone = response.clone();
+            caches.open(STATIC_CACHE).then((cache) => {
+              cache.put(request, responseClone);
+            });
           }
-          return fetch(request).then((response) => {
-            if (response.ok) {
-              const responseClone = response.clone();
-              caches.open(STATIC_CACHE).then((cache) => {
-                cache.put(request, responseClone);
-              });
-            }
-            return response;
-          });
+          return response;
         })
-      );
-    }
+        .catch(() => caches.match(request))
+    );
     return;
   }
 

@@ -129,7 +129,7 @@
   function withPasskey() {
     var sw = window.SimpleWebAuthnBrowser;
     return post('/api/auth/webauthn/login/start', { username: user.value.trim() }).then(function (s) {
-      if (!s.ok) throw { msg: failMessage(s, s.j.error === 'No passkey registered for this user' ? 'No passkey is set up for that username. Use your password, or add a passkey after signing in.' : "Couldn't start passkey sign-in.") };
+      if (!s.ok) throw { msg: failMessage(s, s.status === 400 ? "Passkey sign-in isn't available for that username. Use your password or one-time code, or add a passkey after signing in." : "Couldn't start passkey sign-in.") };
       return sw.startAuthentication(s.j);
     }).then(function (assertion) {
       return post('/api/auth/webauthn/login/finish', { response: assertion });

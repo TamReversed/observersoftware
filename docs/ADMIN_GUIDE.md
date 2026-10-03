@@ -22,6 +22,8 @@ There are two roles.
 
 **Remove someone**: **Delete**. Their open sessions stop working immediately.
 
+**Resetting a password or one-time code signs that person out everywhere.** Their open sessions stop working at once and they sign in again with the new details.
+
 Accounts made before roles existed are admins, so nobody loses access.
 
 ## Signing in, and what to do when it will not let you in
@@ -119,7 +121,7 @@ Uploads are tidied automatically: photos are rotated the right way up, hidden me
 With the server running (`npm run dev`):
 
 ```
-npm run test:smoke      # 48 checks: locked-out visitors, CSRF, drafts stay private, escaping, backups, images
+npm run test:smoke      # 127 checks: locked-out visitors, CSRF, drafts stay private, escaping, backups, images
 node scripts/audit-routes.js   # lists every route that changes data and whether it needs login
 ```
 
