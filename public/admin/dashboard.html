@@ -15,7 +15,7 @@
       <span class="admin-title">Observer Admin</span>
     </a>
     <nav class="admin-nav">
-      <span class="admin-user" id="adminUser">Loading...</span>
+      <span class="admin-user" id="adminUser">Loading...</span><span class="user-badge role-badge" id="adminRole" hidden></span>
       <a href="/" class="btn btn-ghost">View Site</a>
       <button class="btn btn-ghost" id="logoutBtn">Logout</button>
     </nav>
@@ -570,32 +570,6 @@
         </div>
       </div>
 
-      <!-- Media Library -->
-      <div id="mediaEditor" class="editor-form" style="display: none;">
-        <div class="editor-header">
-          <h2>Media Library</h2>
-          <div class="editor-actions">
-            <label class="btn btn-primary" for="mediaFileUpload">Upload Files</label>
-            <input type="file" id="mediaFileUpload" multiple accept="image/*" style="display: none;">
-          </div>
-        </div>
-        <div class="editor-content">
-          <div class="media-upload-zone" id="mediaUploadZone">
-            <div class="screenshot-upload-content">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 0.5rem; opacity: 0.5;">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="17 8 12 3 7 8"></polyline>
-                <line x1="12" x2="12" y1="3" y2="15"></line>
-              </svg>
-              <p class="screenshot-upload-text">Drag & drop files here, or <span class="screenshot-upload-link">click to browse</span></p>
-            </div>
-          </div>
-          <div class="media-grid" id="mediaGrid">
-            <div class="empty-state">Loading media...</div>
-          </div>
-        </div>
-      </div>
-
       <!-- Testimonials Editor -->
       <div id="testimonialsEditor" class="editor-form" style="display: none;">
         <div class="editor-header">
@@ -781,7 +755,14 @@
           <div class="form-group">
             <label class="form-label" for="newPassword">Password</label>
             <input type="password" id="newPassword" class="form-input" placeholder="Enter password">
-            <p class="form-hint">Minimum 8 characters. The user can set up a passkey after first login.</p>
+            <p class="form-hint">Minimum 8 characters. The user can set up a passkey or one-time codes after first sign-in.</p>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="newRole">Role</label>
+            <select id="newRole" class="form-select">
+              <option value="editor" selected>Editor: edits posts, work, products, FAQs, site content and images</option>
+              <option value="admin">Admin: everything, including users, messages, settings and backups</option>
+            </select>
           </div>
         </div>
       </div>

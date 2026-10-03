@@ -15,11 +15,10 @@ const categoriesRoutes = require('./categories');
 const changelogRoutes = require('./changelog');
 const homepageRoutes = require('./homepage');
 const navigationRoutes = require('./navigation');
-const mediaRoutes = require('./media');
 const testimonialsRoutes = require('./testimonials');
 const faqsRoutes = require('./faqs');
 const siteContentRoutes = require('./siteContent');
-const { requireAuth } = require('../middleware/auth');
+const { requireAdmin } = require('../middleware/auth');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { exportBackup } = require('../controllers/exportController');
 
@@ -37,11 +36,10 @@ router.use('/api', categoriesRoutes);
 router.use('/api', changelogRoutes);
 router.use('/api', homepageRoutes);
 router.use('/api', navigationRoutes);
-router.use('/api', mediaRoutes);
 router.use('/api', testimonialsRoutes);
 router.use('/api', faqsRoutes);
 router.use('/api', siteContentRoutes);
-router.get('/api/admin/export', requireAuth, asyncHandler(exportBackup));
+router.get('/api/admin/export', requireAdmin, asyncHandler(exportBackup));
 
 module.exports = router;
 

@@ -4,6 +4,7 @@ const config = require('../config');
 const content = require('../services/contentService');
 const siteContent = require('../services/siteContentService');
 const { asyncHandler } = require('../middleware/errorHandler');
+const { sessionUser } = require('../middleware/auth');
 
 const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '');
 
@@ -11,13 +12,15 @@ const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('en-US', { year: 'num
 router.use(asyncHandler(async (req, res, next) => {
   const settings = await content.getSettings();
   // ?preview=1 shows unpublished changes, but only to a signed-in admin
-  const preview = req.query.preview === '1' && !!(req.session && req.session.userId);
+  // The account must still exist: a deleted user's leftover session gets no preview and no Edit button
+  const signedIn = !!(await sessionUser(req));
+  const preview = req.query.preview === '1' && signedIn;
   if (preview) {
     res.set('Cache-Control', 'no-store');
     res.set('X-Robots-Tag', 'noindex, nofollow');
   }
   res.locals.preview = preview;
-  res.locals.isAdmin = !!(req.session && req.session.userId); // only used to show the Edit site button
+  res.locals.isAdmin = signedIn; // only used to show the Edit site button
   res.locals.site = {
     url: config.siteUrl, social: settings.social, legal: settings, year: new Date().getFullYear(),
     content: await siteContent.resolved({ draft: preview })

@@ -3,6 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 const DataService = require('../services/dataService');
 const DbService = require('../services/dbService');
 const config = require('../config');
+const { roleOf } = require('../middleware/auth');
 const webauthnService = require('../services/webauthnService');
 
 // Use database if available, otherwise fall back to JSON files
@@ -123,18 +124,23 @@ function logout(req, res) {
   res.json({ success: true });
 }
 
-async function getStatus(req, res) {
-  if (req.session && req.session.userId) {
-    const user = await usersService.findById(req.session.userId);
-    res.json({
-      authenticated: true,
-      username: req.session.username,
-      hasPasskey: user && user.webauthnCredentials && user.webauthnCredentials.length > 0,
-      hasTotp: !!(user && user.totpEnabled)
-    });
-  } else {
+async function getStatus(req, res, next) {
+  try {
+    if (req.session && req.session.userId) {
+      const user = await usersService.findById(req.session.userId);
+      if (user) {
+        return res.json({
+          authenticated: true,
+          id: user.id,
+          username: user.username,
+          role: roleOf(user),
+          hasPasskey: !!(user.webauthnCredentials && user.webauthnCredentials.length > 0),
+          hasTotp: !!user.totpEnabled
+        });
+      }
+    }
     res.json({ authenticated: false });
-  }
+  } catch (error) { next(error); }
 }
 
 // Public and non-secret: the address passkeys are tied to (it is in every passkey prompt anyway)
@@ -482,6 +488,7 @@ async function getUsers(req, res, next) {
       hasPasskey: u.webauthnCredentials && u.webauthnCredentials.length > 0,
       passkeyCount: u.webauthnCredentials ? u.webauthnCredentials.length : 0,
       hasTotp: !!u.totpEnabled,
+      role: roleOf(u),
       createdAt: u.createdAt
     }));
     res.json(safeUsers);
@@ -490,13 +497,26 @@ async function getUsers(req, res, next) {
   }
 }
 
+// User-management writes run one at a time, so two requests cannot both pass the "at least one admin" check.
+let userLock = Promise.resolve();
+function exclusive(fn) {
+  const run = userLock.then(fn, fn);
+  userLock = run.catch(() => {});
+  return run;
+}
+
 // Create new user (admin)
 async function createUser(req, res, next) {
+  return exclusive(async () => {
   try {
     const { username, password } = req.body;
+    const role = req.body.role === undefined ? 'editor' : req.body.role;
 
-    if (!username || !password) {
+    if (typeof username !== 'string' || typeof password !== 'string' || !username || !password) {
       return res.status(400).json({ error: 'Username and password are required' });
+    }
+    if (role !== 'admin' && role !== 'editor') {
+      return res.status(400).json({ error: 'Role must be admin or editor' });
     }
 
     if (username.length < 3 || username.length > 50) {
@@ -518,14 +538,16 @@ async function createUser(req, res, next) {
       id: require('uuid').v4(),
       username,
       password: hashedPassword,
+      role,
       webauthnCredentials: []
     };
 
     await usersService.create(newUser);
-    res.json({ success: true, username: newUser.username });
+    res.json({ success: true, username: newUser.username, role });
   } catch (error) {
     next(error);
   }
+  });
 }
 
 // Reset user password (admin)
@@ -572,8 +594,29 @@ async function revokePasskeys(req, res, next) {
   }
 }
 
+// Change someone's role (admin only). You cannot change your own, and the last admin cannot be demoted.
+async function updateRole(req, res, next) {
+  return exclusive(async () => {
+  try {
+    const { id } = req.params;
+    const role = req.body.role;
+    if (role !== 'admin' && role !== 'editor') return res.status(400).json({ error: 'Role must be admin or editor' });
+    if (id === req.session.userId) return res.status(400).json({ error: 'You cannot change your own role.' });
+    const user = await usersService.findById(id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (role === 'editor' && roleOf(user) === 'admin') {
+      const admins = (await usersService.findAll()).filter((u) => roleOf(u) === 'admin');
+      if (admins.length <= 1) return res.status(400).json({ error: 'There must be at least one admin.' });
+    }
+    await usersService.updateById(id, { role });
+    res.json({ success: true, role });
+  } catch (error) { next(error); }
+  });
+}
+
 // Delete user (admin)
 async function deleteUser(req, res, next) {
+  return exclusive(async () => {
   try {
     const { id } = req.params;
 
@@ -589,7 +632,7 @@ async function deleteUser(req, res, next) {
 
     // Ensure at least one admin remains
     const users = await usersService.findAll();
-    if (users.length <= 1) {
+    if (roleOf(user) === 'admin' && users.filter((u) => roleOf(u) === 'admin').length <= 1) {
       return res.status(400).json({ error: 'Cannot delete the last admin user' });
     }
 
@@ -598,6 +641,7 @@ async function deleteUser(req, res, next) {
   } catch (error) {
     next(error);
   }
+  });
 }
 
 module.exports = {
@@ -614,6 +658,7 @@ module.exports = {
   // User management
   getUsers,
   createUser,
+  updateRole,
   resetPassword,
   revokePasskeys,
   deleteUser

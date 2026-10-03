@@ -28,6 +28,7 @@ async function initializeData() {
       id: uuidv4(),
       username: config.admin.defaultUsername,
       password: hashedPassword, // Keep for fallback during transition
+      role: 'admin',
       webauthnCredentials: [], // Initialize empty array for passkeys
       createdAt: new Date().toISOString()
     };
@@ -49,10 +50,10 @@ async function initializeData() {
       const admin = all.find((u) => u.username === config.admin.defaultUsername);
       const hash = await bcrypt.hash(newPass, 12);
       if (admin) {
-        await usersService.updateById(admin.id, { password: hash, totpEnabled: false, totpSecret: null, totpRecovery: [], totpLastStep: 0, totpFailures: 0, totpLockedUntil: null });
+        await usersService.updateById(admin.id, { password: hash, role: 'admin', totpEnabled: false, totpSecret: null, totpRecovery: [], totpLastStep: 0, totpFailures: 0, totpLockedUntil: null });
         console.warn(`PASSWORD RESET: "${admin.username}" can now sign in with the current ADMIN_PASSWORD (one-time codes were turned off). Remove the RESET_ADMIN_PASSWORD variable in Railway now.`);
       } else {
-        await usersService.create({ id: uuidv4(), username: config.admin.defaultUsername, password: hash, webauthnCredentials: [], createdAt: new Date().toISOString() });
+        await usersService.create({ id: uuidv4(), username: config.admin.defaultUsername, password: hash, role: 'admin', webauthnCredentials: [], createdAt: new Date().toISOString() });
         console.warn(`PASSWORD RESET: created "${config.admin.defaultUsername}" with the current ADMIN_PASSWORD. Remove the RESET_ADMIN_PASSWORD variable in Railway now.`);
       }
     }
