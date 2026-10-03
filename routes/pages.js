@@ -17,6 +17,7 @@ router.use(asyncHandler(async (req, res, next) => {
     res.set('X-Robots-Tag', 'noindex, nofollow');
   }
   res.locals.preview = preview;
+  res.locals.isAdmin = !!(req.session && req.session.userId); // only used to show the Edit site button
   res.locals.site = {
     url: config.siteUrl, social: settings.social, legal: settings, year: new Date().getFullYear(),
     content: await siteContent.resolved({ draft: preview })

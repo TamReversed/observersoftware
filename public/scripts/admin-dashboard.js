@@ -1892,5 +1892,7 @@ checkAuth().then(authenticated => {
     loadCategories();
     loadItems('posts');
     renderPresetIconGrid();
+    // Deep link from the public site's "Edit site" button
+    if (location.hash === '#site-content') switchType('sitecontent');
   }
 });
