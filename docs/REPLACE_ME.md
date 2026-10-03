@@ -25,7 +25,7 @@ Case-study art exists for the first 8 work items only (`work/*.webp`). The other
 The app only imports `data/*.json` into an EMPTY database, so your live Postgres keeps its old rows. To bring it up to date (removes the invented statistics, fills missing case-study images, post covers and product screenshots, replaces em/en dashes, adds starter FAQs only if you have none), run once:
 
 ```
-railway run node scripts/sync-content.js          # dry run, lists changes
+railway run node scripts/sync-content.js          # dry run, lists changes (uses Railway's public database address automatically)
 railway run node scripts/sync-content.js --apply  # writes them
 ```
 

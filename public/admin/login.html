@@ -12,52 +12,58 @@
   <main class="login-container">
     <a href="/" class="login-logo" aria-label="Observer, back to the site"><img src="/assets/brand/observer-wordmark.svg" alt="Observer" width="150" height="41"></a>
     <h1 class="login-title">Admin sign in</h1>
-    <p class="login-subtitle">Sign in to manage the site.</p>
 
-    <div class="login-card" id="loginCard">
-      <div class="error-message" id="errorMessage" role="alert"></div>
+    <div class="login-card">
+      <div class="error-message" id="errorMessage" role="alert" aria-live="assertive"></div>
 
-      <form id="codeForm" novalidate>
+      <form id="signinForm" method="post" action="#" novalidate>
         <div class="form-group">
-          <label class="form-label" for="codeUsername">Username</label>
-          <input type="text" id="codeUsername" name="username" class="form-input" required autocomplete="username" autocapitalize="none" spellcheck="false">
+          <label class="form-label" for="username">Username</label>
+          <input type="text" id="username" name="username" class="form-input" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required>
         </div>
-        <div class="form-group">
-          <label class="form-label" for="totpCode" id="totpLabel">One-time code</label>
-          <input type="text" id="totpCode" name="code" class="form-input form-input--code" required autocomplete="one-time-code" inputmode="numeric" pattern="[0-9 ]*" maxlength="7" spellcheck="false" aria-describedby="totpHelp">
-          <p class="login-hint" id="totpHelp">The 6-digit code from Dashlane. It changes every 30 seconds.</p>
+
+        <div class="method-tabs" role="tablist" aria-label="How do you want to sign in?">
+          <button type="button" role="tab" id="tab-password" data-method="password" aria-controls="panel-password" aria-selected="true">Password</button>
+          <button type="button" role="tab" id="tab-code" data-method="code" aria-controls="panel-code" aria-selected="false" tabindex="-1">One-time code</button>
+          <button type="button" role="tab" id="tab-passkey" data-method="passkey" aria-controls="panel-passkey" aria-selected="false" tabindex="-1">Passkey</button>
         </div>
-        <button type="submit" class="login-button" id="codeLoginButton">Sign in</button>
-        <button type="button" class="login-link" id="recoveryToggle">Use a recovery code instead</button>
+
+        <div role="tabpanel" id="panel-password" aria-labelledby="tab-password">
+          <div class="form-group">
+            <label class="form-label" for="password">Password</label>
+            <div class="input-with-button">
+              <input type="password" id="password" name="password" class="form-input" autocomplete="current-password">
+              <button type="button" class="show-toggle" id="showPassword" aria-pressed="false" aria-controls="password">Show</button>
+            </div>
+          </div>
+        </div>
+
+        <div role="tabpanel" id="panel-code" aria-labelledby="tab-code" hidden>
+          <div class="form-group">
+            <label class="form-label" for="totpCode" id="totpLabel">One-time code</label>
+            <input type="text" id="totpCode" name="code" class="form-input form-input--code" autocomplete="one-time-code" inputmode="numeric" pattern="[0-9 ]*" maxlength="7" spellcheck="false" aria-describedby="totpHelp">
+            <p class="login-hint" id="totpHelp">The 6-digit code from Dashlane. It changes every 30 seconds.</p>
+          </div>
+          <button type="button" class="login-link" id="recoveryToggle">Use a recovery code instead</button>
+        </div>
+
+        <div role="tabpanel" id="panel-passkey" aria-labelledby="tab-passkey" hidden>
+          <p class="login-hint" id="passkeyHelp">Use the passkey saved on this device or in your password manager. You can add one after signing in, under Users.</p>
+          <p class="login-notice" id="passkeyNotice" hidden></p>
+        </div>
+
+        <button type="submit" class="login-button" id="submitBtn">Sign in</button>
       </form>
 
-      <details class="login-more">
-        <summary>Other ways to sign in</summary>
-        <p class="login-hint">Accounts that use one-time codes sign in with the code only; a password or passkey will not work for them.</p>
-        <div id="webauthnSection">
-          <div class="form-group">
-            <label class="form-label" for="webauthnUsername">Username</label>
-            <input type="text" id="webauthnUsername" name="username" class="form-input" required autocomplete="username">
-          </div>
-          <button type="button" class="login-button" id="passkeyButton">
-            <span id="passkeyButtonText">Sign in with Passkey</span>
-          </button>
-          <form id="passwordForm">
-            <div class="form-group">
-              <label class="form-label" for="passwordUsername">Username</label>
-              <input type="text" id="passwordUsername" name="username" class="form-input" required autocomplete="username">
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="password">Password</label>
-              <input type="password" id="password" name="password" class="form-input" required autocomplete="current-password">
-            </div>
-            <button type="submit" class="login-button login-button--outline" id="passwordLoginButton">Sign In with Password</button>
-          </form>
-          <div class="login-register">
-            <button type="button" class="login-button login-button--outline" id="registerPasskeyButton">Register Passkey</button>
-            <p class="login-hint">To register a passkey, enter your username and password above first. Accounts that use one-time codes sign in with the code only.</p>
-          </div>
-        </div>
+      <details class="login-help">
+        <summary>Can't sign in?</summary>
+        <ul>
+          <li><strong>Check the address.</strong> You are on <span id="hereHost"></span>. Passkeys only work on the address they were created for.</li>
+          <li><strong>Password manager not filling in?</strong> Pick the <em>Password</em> tab first, then click the username box.</li>
+          <li><strong>Account uses one-time codes?</strong> Then only the <em>One-time code</em> tab works for it.</li>
+          <li><strong>Too many tries?</strong> Wait a few minutes. A wrong password never locks the site for everyone.</li>
+          <li><strong>Forgot the password?</strong> In Railway set <code>RESET_ADMIN_PASSWORD</code> to <code>true</code> and <code>ADMIN_PASSWORD</code> to a new password, redeploy, sign in, then delete <code>RESET_ADMIN_PASSWORD</code>.</li>
+        </ul>
       </details>
     </div>
 
@@ -66,6 +72,5 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@9.0.1/dist/bundle/index.umd.min.js" integrity="sha384-9+Bm5pUMP2324xMjhRahdomA9HaTxP6JcMhbl3tUAcV2+Jiohq8/T+dGj/rx/MaM" crossorigin="anonymous"></script>
   <script src="/scripts/admin-login.js"></script>
-  <script src="/scripts/admin-login-code.js"></script>
 </body>
 </html>

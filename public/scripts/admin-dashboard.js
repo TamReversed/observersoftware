@@ -1890,6 +1890,7 @@ async function loadTotpCard() {
     const data = await res.json();
     totpEls.State.textContent = data.hasTotp ? 'On. This account signs in with a one-time code from Dashlane.' : 'Off. This account signs in with a password or passkey.';
     totpView(data.hasTotp ? 'On' : 'Off');
+    loadPasskeyCard(data);
   } catch (e) { totpEls.State.textContent = 'Could not load.'; }
 }
 
@@ -1955,6 +1956,49 @@ document.getElementById('totpDisableBtn')?.addEventListener('click', async () =>
     showToast('One-time codes turned off');
     loadTotpCard(); loadUsers();
   } catch (e) { showToast(e.message, 'error'); }
+});
+
+// ---------------------------------------------------------------------------
+// Passkey: add one from here (you are already signed in, so no password is needed)
+// ---------------------------------------------------------------------------
+function loadPasskeyCard(status) {
+  const card = document.getElementById('passkeyCard');
+  if (!card) return;
+  const state = document.getElementById('passkeyState');
+  const btn = document.getElementById('passkeyAddBtn');
+  if (status.hasTotp) {
+    state.textContent = 'Not used. This account signs in with one-time codes, so passkeys are switched off for it.';
+    btn.hidden = true;
+    return;
+  }
+  btn.hidden = false;
+  const supported = !!(window.PublicKeyCredential && window.SimpleWebAuthnBrowser);
+  btn.disabled = !supported;
+  state.textContent = !supported
+    ? 'This browser cannot create passkeys.'
+    : (status.hasPasskey ? 'You have a passkey. You can sign in with it from the Passkey tab. Add another device below.' : 'No passkey yet. Add one to sign in with Touch ID, Face ID or your password manager.');
+}
+
+document.getElementById('passkeyAddBtn')?.addEventListener('click', async () => {
+  const btn = document.getElementById('passkeyAddBtn');
+  btn.disabled = true;
+  try {
+    const startRes = await authenticatedFetch('/api/auth/webauthn/register/start', { method: 'POST', body: {} });
+    const options = await startRes.json();
+    if (!startRes.ok) throw new Error(options.error || 'Could not start');
+    const credential = await window.SimpleWebAuthnBrowser.startRegistration(options);
+    const finRes = await authenticatedFetch('/api/auth/webauthn/register/finish', { method: 'POST', body: { response: credential } });
+    const result = await finRes.json();
+    if (!finRes.ok || !result.success) throw new Error(result.userMessage || result.error || 'Could not save the passkey');
+    showToast('Passkey added');
+    csrfToken = null; // the server refreshes the session token after this step
+    loadTotpCard(); loadUsers();
+  } catch (e) {
+    const cancelled = e && (e.name === 'NotAllowedError' || e.name === 'NotSupportedError');
+    showToast(cancelled ? 'Passkey setup was cancelled' : (e.message || 'Passkey setup failed'), 'error');
+  } finally {
+    btn.disabled = false;
+  }
 });
 
 // Logout

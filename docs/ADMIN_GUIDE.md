@@ -2,6 +2,27 @@
 
 Sign in at `/observe`. Everything you can change without touching code lives here.
 
+## Signing in, and what to do when it will not let you in
+
+`/observe` has one form: type your **username**, pick **Password**, **One-time code** or **Passkey**, and press Sign in. The page remembers your last choice. Pick Password first if your password manager is not filling in.
+
+**Common causes, in the order to check them**
+1. **You changed `ADMIN_PASSWORD` in Railway and it did nothing.** That variable is only read the very first time the site starts. To change the password later: in Railway set `RESET_ADMIN_PASSWORD` to `true` and `ADMIN_PASSWORD` to the new password, redeploy, sign in, then **delete `RESET_ADMIN_PASSWORD`**. The boot log confirms with "PASSWORD RESET".
+2. **The account uses one-time codes.** Then only the One-time code tab works for it.
+3. **Passkeys on the wrong address.** A passkey only works on the exact address it was created for. Set `WEBAUTHN_RP_ID` (your domain, for example `observersoftware.io`) and `WEBAUTHN_ORIGIN` (`https://observersoftware.io`) in Railway. The Passkey tab tells you when you are on a different address. Password and one-time codes work on any address.
+4. **Too many wrong tries.** Five wrong passwords lock that account for 15 minutes; ten failures from one network pause that network for 15 minutes. Successful sign-ins never count. The message says how long to wait.
+5. **Cookies blocked.** If you are told you signed in but the browser did not keep the session, allow cookies for the site and try again.
+
+**Check the boot log.** When the site starts, Railway's deploy log prints a **Sign-in setup** report: which accounts exist and any mismatched settings (passkey address, missing volume, and so on).
+
+**Set a password from a terminal instead** (hidden prompt, nothing saved in your shell history):
+
+```
+railway run node scripts/set-password.js admin
+```
+
+The scripts reach Railway's database through its public address automatically (`DATABASE_PUBLIC_URL`), because the private address only works inside Railway.
+
 ## Signing in with Dashlane one-time codes
 
 You can make the 6-digit code from Dashlane (it changes every 30 seconds) your only sign-in: type your username, then the code. No password.
@@ -18,7 +39,7 @@ You can make the 6-digit code from Dashlane (it changes every 30 seconds) your o
 
 **Protections, and the honest trade-off**: a code on its own is weaker than a password plus a code, so the account defends itself. Five wrong tries lock it for 15 minutes, and each further five doubles that (up to 24 hours). Each code works once, and guesses made at the same moment still count one by one. Someone who knows your username can deliberately trigger a lockout, which only delays you: use a recovery code, ask another admin to press **Reset one-time code**, or run the emergency script below.
 
-**Emergency reset** (you lost the vault and the recovery codes). From the project folder, or through Railway:
+**Emergency reset** (you lost the vault and the recovery codes). From the project folder, or through Railway (this also lets your password work again):
 
 ```
 node scripts/reset-2fa.js admin

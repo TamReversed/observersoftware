@@ -34,6 +34,12 @@ function isAccountLocked(key) {
   return false;
 }
 
+function lockMinutesLeft(key) {
+  const record = failedLogins.get(key);
+  if (!record) return 1;
+  return Math.max(1, Math.ceil((record.lastAttempt + LOCKOUT_DURATION - Date.now()) / 60000));
+}
+
 function recordFailedLogin(key) {
   if (failedLogins.size > 1000) {
     const cutoff = Date.now() - LOCKOUT_DURATION;
@@ -75,7 +81,7 @@ async function login(req, res, next) {
     // Check for account lockout
     if (isAccountLocked(key)) {
       return res.status(429).json({
-        error: 'Account temporarily locked due to too many failed attempts. Please try again later.'
+        error: `Too many wrong passwords for this account. Try again in ${lockMinutesLeft(key)} minute${lockMinutesLeft(key) === 1 ? '' : 's'}.`
       });
     }
 
@@ -131,6 +137,11 @@ async function getStatus(req, res) {
   }
 }
 
+// Public and non-secret: the address passkeys are tied to (it is in every passkey prompt anyway)
+function getSigninConfig(req, res) {
+  res.json({ passkeyRpId: config.webauthn.rpID, passkeyOrigins: String(config.webauthn.origin).split(',').map((o) => o.trim()) });
+}
+
 function getCsrfToken(req, res) {
   if (!req.session.csrfToken) {
     req.session.csrfToken = uuidv4();
@@ -167,7 +178,7 @@ async function startWebAuthnRegistration(req, res, next) {
       key = lockoutKey(req, username);
       if (isAccountLocked(key)) {
         return res.status(429).json({
-          error: 'Account temporarily locked due to too many failed attempts. Please try again later.'
+          error: `Too many wrong passwords for this account. Try again in ${lockMinutesLeft(key)} minute${lockMinutesLeft(key) === 1 ? '' : 's'}.`
         });
       }
 
@@ -591,6 +602,7 @@ async function deleteUser(req, res, next) {
 
 module.exports = {
   establishSession,
+  getSigninConfig,
   login,
   logout,
   getStatus,

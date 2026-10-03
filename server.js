@@ -138,12 +138,16 @@ app.use(session({
 // Rate limiting for login endpoint
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 attempts per window
+  max: 10, // 10 FAILED attempts per window, per network
+  skipSuccessfulRequests: true, // a working sign-in (or the first step of a passkey sign-in) never counts
   // Local testing only (never in production): lets the automated tests exercise the per-account lockout
   skip: () => !config.isProduction && process.env.DISABLE_RATE_LIMIT === '1',
-  message: { error: 'Too many login attempts, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
+  handler: (req, res) => {
+    const mins = Math.max(1, Math.ceil(((req.rateLimit && req.rateLimit.resetTime ? req.rateLimit.resetTime.getTime() : Date.now() + 900000) - Date.now()) / 60000));
+    res.status(429).json({ error: `Too many failed sign-in attempts from your network. Try again in ${mins} minute${mins === 1 ? '' : 's'}.` });
+  }
 });
 
 // Rate limiting for contact form (prevent spam)
@@ -249,6 +253,7 @@ async function startServer() {
 
     // Initialize data (creates default admin user, sample data if needed)
     await initializeData();
+    await require('./services/startupChecks').reportSigninSetup();
     
     app.listen(config.port, () => {
       console.log(`Server running at http://localhost:${config.port}`);
