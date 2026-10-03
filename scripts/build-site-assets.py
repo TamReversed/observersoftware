@@ -86,6 +86,10 @@ cover(load('diagram-engagement'), 2400, 1029).save(f'{out("diagrams")}/engagemen
 for s in ('404', 'offline'):
     cover(load(f'state-{s}'), 1000, 1000).save(f'{out("states")}/{s}.webp', quality=80, method=6)
 
+# --- hero art (first screen; dissolves into the film on scroll)
+cover(load('hero-art'), 1920, 1085).save(f'{out("film")}/hero-art.webp', quality=82, method=6)
+cover(load('hero-art-mobile'), 900, 1125).save(f'{out("film")}/hero-art-mobile.webp', quality=82, method=6)
+
 # --- fingerprint the placeholders so the site can tell when the owner has replaced one
 ph = {}
 for rel in ('team/founder.jpg', 'team/team-01.jpg', 'team/team-02.jpg',
