@@ -29,8 +29,8 @@ MAIN_SHARE = 0.82          # share of output frames spent before the coral line 
 HOLD_FROM = 0.90           # scroll fraction where the film holds its last frame while the page takes over
 CHAPTERS = [0, 0.22, 0.46, 0.68]  # scroll fractions where headlines 1-4 begin (tuned to the film content)
 FLOOR = 1.0                # minimum "visual weight" per source step, so slow parts still get frames
-DESKTOP_W, DESKTOP_Q = 1920, 72  # the film is 1080p, so 1920 is its native width
-MOBILE_W, MOBILE_Q = 864, 66     # 4:5 centre crop of a 1080p frame is 864 px wide natively
+DESKTOP_W, DESKTOP_Q = int(os.environ.get('DESKTOP_W', 2560)), int(os.environ.get('DESKTOP_Q', 66))
+MOBILE_W, MOBILE_Q = int(os.environ.get('MOBILE_W', 1080)), int(os.environ.get('MOBILE_Q', 62))
 
 
 def neutralise(im):
@@ -44,7 +44,8 @@ def neutralise(im):
 shutil.rmtree(TMP, ignore_errors=True); os.makedirs(TMP)
 for d in ('desktop', 'mobile'):
     shutil.rmtree(f'{OUT}/{d}', ignore_errors=True); os.makedirs(f'{OUT}/{d}')
-subprocess.run(['ffmpeg', '-loglevel', 'error', '-i', src, f'{TMP}/f_%03d.png'], check=True)
+# extract at the widest size we will ship (keeps 4K masters from filling the disk)
+subprocess.run(['ffmpeg', '-loglevel', 'error', '-i', src, '-vf', f'scale={max(DESKTOP_W, 1920)}:-2:flags=lanczos', '-compression_level', '1', f'{TMP}/f_%03d.png'], check=True)
 files = sorted(glob.glob(f'{TMP}/f_*.png'))
 nsrc = len(files)
 
