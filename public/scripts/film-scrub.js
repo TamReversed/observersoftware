@@ -23,6 +23,7 @@
     var N = m.count;
     var frames = new Array(N);
     var art = null; // hero image shown first, dissolves into the film as you scroll
+    var OUTRO_START = 0.84; // fraction of the scroll where the film starts dissolving into the page
     var FADE_END = 0.2; // fraction of the scroll over which the hero image fades out
     var url = function (i) { return tpl.replace('{n}', String(i + 1).padStart(m.pad || 3, '0')) + (m.v ? '?v=' + m.v : ''); };
 
@@ -72,7 +73,7 @@
       if (art && fade > 0) cover(art, fade);
     }
 
-    var target = 0, current = 0, dirty = true, shown = -1, shownFade = -1, lastChapter = -1, fade = 1;
+    var target = 0, current = 0, dirty = true, shown = -1, shownFade = -1, lastChapter = -1, fade = 1, outro = -1;
     function progress() {
       var range = root.offsetHeight - window.innerHeight;
       var y = root.getBoundingClientRect().top + window.scrollY;
@@ -93,6 +94,9 @@
           chapters.forEach(function (el, idx) { el.classList.toggle('is-active', idx === c); });
           lastChapter = c;
         }
+        var o = Math.min(1, Math.max(0, (p - OUTRO_START) / (1 - OUTRO_START)));
+        o = Math.round(o * o * (3 - 2 * o) * 100) / 100; // smoothstep
+        if (o !== outro) { outro = o; root.style.setProperty('--outro', o); }
         if (bar) bar.style.transform = 'scaleX(' + p.toFixed(4) + ')';
         dirty = false;
       }
