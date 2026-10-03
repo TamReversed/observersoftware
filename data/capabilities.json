@@ -11,7 +11,11 @@
       "Audit trail for every insight",
       "Self-documenting data lineage"
     ],
-    "screenshots": [],
+    "screenshots": [
+      "/assets/products/datadragon-01.png",
+      "/assets/products/datadragon-02.png",
+      "/assets/products/datadragon-03.png"
+    ],
     "externalUrl": "",
     "icon": {
       "type": "preset",
@@ -35,7 +39,11 @@
       "Role-based access and approval flows",
       "Real-time collaboration"
     ],
-    "screenshots": [],
+    "screenshots": [
+      "/assets/products/tableflow-01.png",
+      "/assets/products/tableflow-02.png",
+      "/assets/products/tableflow-03.png"
+    ],
     "externalUrl": "",
     "icon": {
       "type": "preset",

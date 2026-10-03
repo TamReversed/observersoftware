@@ -294,3 +294,7 @@ INSERT INTO navigation (location, label, url, "order", is_external, published) V
   ('footer_links', 'GitHub', '', 2, true, false)
 ON CONFLICT DO NOTHING;
 
+
+-- Redesign additions (additive, safe to re-run)
+ALTER TABLE work ADD COLUMN IF NOT EXISTS metrics JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS cover_image VARCHAR(500) DEFAULT '';

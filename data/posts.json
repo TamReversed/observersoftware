@@ -9,7 +9,8 @@
     "author": "tamreversed",
     "publishedAt": "2025-12-19T18:31:50.395Z",
     "updatedAt": "2025-12-19T18:31:50.395Z",
-    "published": true
+    "published": true,
+    "coverImage": "/assets/blog/welcome-to-observer.webp"
   },
   {
     "id": "db4990e9-beae-42dd-bdb3-6ceaed7a594a",
@@ -21,7 +22,8 @@
     "author": "tamreversed",
     "publishedAt": "2025-12-18T18:31:50.395Z",
     "updatedAt": "2025-12-19T18:38:22.635Z",
-    "published": true
+    "published": true,
+    "coverImage": "/assets/blog/the-cost-of-unnecessary-features.webp"
   },
   {
     "id": "9ec6dc90-2850-490c-a661-1c91908d3667",
@@ -33,7 +35,8 @@
     "author": "tamreversed",
     "publishedAt": "2025-12-17T18:31:50.395Z",
     "updatedAt": "2025-12-17T18:31:50.395Z",
-    "published": true
+    "published": true,
+    "coverImage": "/assets/blog/designing-for-the-real-workflow.webp"
   },
   {
     "id": "f75d5107-2c80-4220-9789-407405c5f94c",
@@ -45,6 +48,7 @@
     "author": "tamreversed",
     "publishedAt": "2025-12-19T18:36:27.325Z",
     "updatedAt": "2025-12-19T18:36:27.325Z",
-    "published": true
+    "published": true,
+    "coverImage": "/assets/blog/tableflow-the-birth-of-a-project.webp"
   }
 ]
