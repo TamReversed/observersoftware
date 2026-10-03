@@ -29,8 +29,8 @@ MAIN_SHARE = 0.82          # share of output frames spent before the coral line 
 HOLD_FROM = 0.90           # scroll fraction where the film holds its last frame while the page takes over
 CHAPTERS = [0, 0.22, 0.46, 0.68]  # scroll fractions where headlines 1-4 begin (tuned to the film content)
 FLOOR = 1.0                # minimum "visual weight" per source step, so slow parts still get frames
-DESKTOP_W, DESKTOP_Q = int(os.environ.get('DESKTOP_W', 2560)), int(os.environ.get('DESKTOP_Q', 66))
-MOBILE_W, MOBILE_Q = int(os.environ.get('MOBILE_W', 1080)), int(os.environ.get('MOBILE_Q', 62))
+DESKTOP_W, DESKTOP_Q = int(os.environ.get('DESKTOP_W', 2560)), int(os.environ.get('DESKTOP_Q', 60))  # Q = quality for BRIGHT frames
+MOBILE_W, MOBILE_Q = int(os.environ.get('MOBILE_W', 1080)), int(os.environ.get('MOBILE_Q', 56))
 
 
 def neutralise(im):
@@ -81,16 +81,25 @@ def frame(i):
     return neutralise(Image.open(files[i]).convert('RGB'))
 
 
+def quality_boost(im):
+    """Dark, smooth frames show blocky banding at normal quality (the eye is sensitive to it on dark
+    backgrounds), and they compress to almost nothing anyway. Bright detailed frames keep the base quality."""
+    lum = float(np.asarray(im.convert('L').resize((160, 90))).mean())
+    t = min(1.0, max(0.0, (90 - lum) / 60))   # 0 at lum >= 90, 1 at lum <= 30
+    return int(round(t * 26))
+
+
 sizes = {'desktop': 0, 'mobile': 0}
 for k, pos in enumerate(positions, 1):
     f0 = int(np.floor(pos)); a = float(pos - f0)
     im = frame(f0) if (a < 0.03 or f0 >= last) else Image.blend(frame(f0), frame(f0 + 1), a)
     w, h = im.size
     d = im.resize((DESKTOP_W, round(DESKTOP_W * h / w)), Image.LANCZOS)
-    d.save(f'{OUT}/desktop/f_{k:03d}.webp', quality=DESKTOP_Q, method=6)
+    q_boost = quality_boost(im)
+    d.save(f'{OUT}/desktop/f_{k:03d}.webp', quality=min(95, DESKTOP_Q + q_boost), method=6)
     cw = round(h * 4 / 5)                      # centre-safe 4:5 crop for phones
     m = im.crop(((w - cw) // 2, 0, (w + cw) // 2, h)).resize((MOBILE_W, round(MOBILE_W * h / cw)), Image.LANCZOS)
-    m.save(f'{OUT}/mobile/f_{k:03d}.webp', quality=MOBILE_Q, method=6)
+    m.save(f'{OUT}/mobile/f_{k:03d}.webp', quality=min(95, MOBILE_Q + q_boost), method=6)
 
 shutil.copy(f'{OUT}/desktop/f_001.webp', f'{OUT}/poster-start.webp')
 shutil.copy(f'{OUT}/desktop/f_{N:03d}.webp', f'{OUT}/poster-end.webp')
