@@ -2,6 +2,33 @@
 
 Sign in at `/observe`. Everything you can change without touching code lives here.
 
+## Signing in with Dashlane one-time codes
+
+You can make the 6-digit code from Dashlane (it changes every 30 seconds) your only sign-in: type your username, then the code. No password.
+
+**Turn it on (once)**
+1. Sign in the usual way, open **Users**, and press **Set up one-time codes**.
+2. In Dashlane, add a 2FA / one-time code to your Observer login. Scan the QR code with Dashlane, or choose manual entry and paste the key shown under it.
+3. Type the code Dashlane now shows and press **Turn on**.
+4. **Save the 8 recovery codes** (shown once). Keep them in a Dashlane secure note. Each works one time.
+
+**Signing in afterwards**: go to `/observe`, enter your username and the code. With Dashlane's browser extension the code can fill itself in; a pasted 6-digit code submits automatically. Lost your phone or vault? Press "Use a recovery code instead".
+
+**What happens to the other sign-in methods**: once codes are on, that account's password and passkeys stop working for sign-in. To go back, press **Turn off** (needs a current code or a recovery code).
+
+**Protections, and the honest trade-off**: a code on its own is weaker than a password plus a code, so the account defends itself. Five wrong tries lock it for 15 minutes, and each further five doubles that (up to 24 hours). Each code works once, and guesses made at the same moment still count one by one. Someone who knows your username can deliberately trigger a lockout, which only delays you: use a recovery code, ask another admin to press **Reset one-time code**, or run the emergency script below.
+
+**Emergency reset** (you lost the vault and the recovery codes). From the project folder, or through Railway:
+
+```
+node scripts/reset-2fa.js admin
+railway run node scripts/reset-2fa.js admin
+```
+
+This turns codes off and clears any lock, so the password works again. Only someone with access to the server can run it.
+
+**Railway note**: the secret is stored encrypted using a key derived from `SESSION_SECRET`. If you ever change `SESSION_SECRET`, codes stop validating and you will need the reset above. To avoid that, set a separate `TOTP_ENCRYPTION_KEY` (any long random string) once and never change it.
+
 ## What you can edit
 
 | Where | What it controls |

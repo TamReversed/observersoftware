@@ -93,6 +93,13 @@ async function login(req, res, next) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
+    // Accounts with one-time codes turned on sign in ONLY with the code. Answer exactly like a wrong
+    // password, so a correct password is never confirmed to someone who is guessing.
+    if (user.totpEnabled) {
+      recordFailedLogin(key);
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
     // Successful login - clear failed attempts
     clearFailedLogins(key);
 
@@ -116,7 +123,8 @@ async function getStatus(req, res) {
     res.json({
       authenticated: true,
       username: req.session.username,
-      hasPasskey: user && user.webauthnCredentials && user.webauthnCredentials.length > 0
+      hasPasskey: user && user.webauthnCredentials && user.webauthnCredentials.length > 0,
+      hasTotp: !!(user && user.totpEnabled)
     });
   } else {
     res.json({ authenticated: false });
@@ -167,7 +175,7 @@ async function startWebAuthnRegistration(req, res, next) {
       user = users.find(u => u.username === username);
       const valid = user ? await bcrypt.compare(password, user.password) : false;
 
-      if (!valid) {
+      if (!valid || user.totpEnabled) {
         recordFailedLogin(key);
         return res.status(401).json({ error: 'Invalid credentials' });
       }
@@ -314,7 +322,7 @@ async function startWebAuthnLogin(req, res, next) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    if (!user.webauthnCredentials || user.webauthnCredentials.length === 0) {
+    if (user.totpEnabled || !user.webauthnCredentials || user.webauthnCredentials.length === 0) {
       return res.status(400).json({ error: 'No passkey registered for this user' });
     }
 
@@ -395,6 +403,10 @@ async function finishWebAuthnLogin(req, res, next) {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    if (user.totpEnabled) {
+      return res.status(400).json({ error: 'Invalid authentication session' });
+    }
+
     const credential = user.webauthnCredentials.find(cred => cred.id === response.id);
 
     const failKey = lockoutKey(req, user.username);
@@ -458,6 +470,7 @@ async function getUsers(req, res, next) {
       username: u.username,
       hasPasskey: u.webauthnCredentials && u.webauthnCredentials.length > 0,
       passkeyCount: u.webauthnCredentials ? u.webauthnCredentials.length : 0,
+      hasTotp: !!u.totpEnabled,
       createdAt: u.createdAt
     }));
     res.json(safeUsers);
@@ -577,6 +590,7 @@ async function deleteUser(req, res, next) {
 }
 
 module.exports = {
+  establishSession,
   login,
   logout,
   getStatus,

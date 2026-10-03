@@ -17,18 +17,31 @@
     <div class="login-card" id="loginCard">
       <div class="error-message" id="errorMessage" role="alert"></div>
 
-      <div id="webauthnSection">
+      <form id="codeForm" novalidate>
         <div class="form-group">
-          <label class="form-label" for="webauthnUsername">Username</label>
-          <input type="text" id="webauthnUsername" name="username" class="form-input" required autocomplete="username">
+          <label class="form-label" for="codeUsername">Username</label>
+          <input type="text" id="codeUsername" name="username" class="form-input" required autocomplete="username" autocapitalize="none" spellcheck="false">
         </div>
+        <div class="form-group">
+          <label class="form-label" for="totpCode" id="totpLabel">One-time code</label>
+          <input type="text" id="totpCode" name="code" class="form-input form-input--code" required autocomplete="one-time-code" inputmode="numeric" pattern="[0-9 ]*" maxlength="7" spellcheck="false" aria-describedby="totpHelp">
+          <p class="login-hint" id="totpHelp">The 6-digit code from Dashlane. It changes every 30 seconds.</p>
+        </div>
+        <button type="submit" class="login-button" id="codeLoginButton">Sign in</button>
+        <button type="button" class="login-link" id="recoveryToggle">Use a recovery code instead</button>
+      </form>
 
-        <button type="button" class="login-button" id="passkeyButton">
-          <span id="passkeyButtonText">Sign in with Passkey</span>
-        </button>
-
-        <details class="login-more">
-          <summary>Use a password, or set up a passkey</summary>
+      <details class="login-more">
+        <summary>Other ways to sign in</summary>
+        <p class="login-hint">Accounts that use one-time codes sign in with the code only; a password or passkey will not work for them.</p>
+        <div id="webauthnSection">
+          <div class="form-group">
+            <label class="form-label" for="webauthnUsername">Username</label>
+            <input type="text" id="webauthnUsername" name="username" class="form-input" required autocomplete="username">
+          </div>
+          <button type="button" class="login-button" id="passkeyButton">
+            <span id="passkeyButtonText">Sign in with Passkey</span>
+          </button>
           <form id="passwordForm">
             <div class="form-group">
               <label class="form-label" for="passwordUsername">Username</label>
@@ -42,10 +55,10 @@
           </form>
           <div class="login-register">
             <button type="button" class="login-button login-button--outline" id="registerPasskeyButton">Register Passkey</button>
-            <p class="login-hint">To register a passkey, enter your username and password above first.</p>
+            <p class="login-hint">To register a passkey, enter your username and password above first. Accounts that use one-time codes sign in with the code only.</p>
           </div>
-        </details>
-      </div>
+        </div>
+      </details>
     </div>
 
     <a href="/" class="back-link">&larr; Back to site</a>
@@ -53,5 +66,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@9.0.1/dist/bundle/index.umd.min.js" integrity="sha384-9+Bm5pUMP2324xMjhRahdomA9HaTxP6JcMhbl3tUAcV2+Jiohq8/T+dGj/rx/MaM" crossorigin="anonymous"></script>
   <script src="/scripts/admin-login.js"></script>
+  <script src="/scripts/admin-login-code.js"></script>
 </body>
 </html>

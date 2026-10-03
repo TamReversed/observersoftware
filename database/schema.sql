@@ -298,3 +298,11 @@ ON CONFLICT DO NOTHING;
 -- Redesign additions (additive, safe to re-run)
 ALTER TABLE work ADD COLUMN IF NOT EXISTS metrics JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE posts ADD COLUMN IF NOT EXISTS cover_image VARCHAR(500) DEFAULT '';
+
+-- One-time code (TOTP) sign-in (additive, safe to re-run)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_secret TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_enabled BOOLEAN DEFAULT false;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_last_step BIGINT DEFAULT 0;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_recovery JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_failures INTEGER DEFAULT 0;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_locked_until TIMESTAMP WITH TIME ZONE;

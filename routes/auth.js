@@ -5,6 +5,7 @@ const { validateCsrfToken } = require('../middleware/csrf');
 const { validateLogin, validateId } = require('../middleware/validation');
 const { requireAuth } = require('../middleware/auth');
 const authController = require('../controllers/authController');
+const totpController = require('../controllers/totpController');
 
 // Password login (legacy fallback)
 router.post('/login', validateCsrfToken, validateLogin, asyncHandler(authController.login));
@@ -16,6 +17,13 @@ router.post('/webauthn/register/finish', validateCsrfToken, asyncHandler(authCon
 // WebAuthn Authentication
 router.post('/webauthn/login/start', validateCsrfToken, asyncHandler(authController.startWebAuthnLogin));
 router.post('/webauthn/login/finish', validateCsrfToken, asyncHandler(authController.finishWebAuthnLogin));
+
+// One-time code sign-in (the 6-digit code from Dashlane) and its setup
+router.post('/totp/login', validateCsrfToken, asyncHandler(totpController.login));
+router.post('/totp/setup', requireAuth, validateCsrfToken, asyncHandler(totpController.setup));
+router.post('/totp/enable', requireAuth, validateCsrfToken, asyncHandler(totpController.enable));
+router.post('/totp/disable', requireAuth, validateCsrfToken, asyncHandler(totpController.disable));
+router.delete('/users/:id/totp', requireAuth, validateCsrfToken, validateId, asyncHandler(totpController.adminReset));
 
 // Other routes
 router.post('/logout', validateCsrfToken, authController.logout);

@@ -139,6 +139,8 @@ app.use(session({
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // 5 attempts per window
+  // Local testing only (never in production): lets the automated tests exercise the per-account lockout
+  skip: () => !config.isProduction && process.env.DISABLE_RATE_LIMIT === '1',
   message: { error: 'Too many login attempts, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
@@ -158,6 +160,7 @@ const contactFormLimiter = rateLimit({
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 200, // 200 requests per window (increased for frontend page loads)
+  skip: () => !config.isProduction && process.env.DISABLE_RATE_LIMIT === '1', // local automated tests only
   message: { error: 'Too many requests, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
@@ -166,6 +169,7 @@ const apiLimiter = rateLimit({
 // Apply rate limiting
 app.use('/api/auth/login', loginLimiter);
 app.use('/api/auth/webauthn', loginLimiter); // Same limits for passkey auth
+app.use('/api/auth/totp/login', loginLimiter); // And for one-time code sign-in
 app.use('/api/messages', contactFormLimiter); // Stricter rate limit for contact form
 app.use('/api', apiLimiter);
 
