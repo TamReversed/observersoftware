@@ -40,3 +40,6 @@ build/
 
 .claude/launch.json
 refs/raw/
+
+# iCloud sync conflict copies (e.g. "file 2.webp")
+* [0-9].*

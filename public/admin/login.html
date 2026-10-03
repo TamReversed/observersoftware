@@ -3,187 +3,55 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <title>Admin Login | Observer</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <title>Admin sign in | Observer</title>
   <link rel="stylesheet" href="/styles/admin-login.css">
 </head>
 <body>
-  <canvas id="galaxy"></canvas>
-  <div class="nebula"></div>
-  <div class="orb orb-1"></div>
-  <div class="orb orb-2"></div>
-  <div class="orb orb-3"></div>
-  <canvas id="pleiades-constellation" class="pleiades-constellation"></canvas>
-  
-  <div class="login-container">
-    <div class="login-header">
-      <div class="login-logo">
-        <svg class="observer-logo-interactive" viewBox="0 0 200 250" width="200" height="250" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" aria-label="Observer logo">
-          <defs>
-            <linearGradient id="loginHexGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#4facfe">
-                <animate attributeName="stop-color" values="#4facfe;#43e97b;#667eea;#4facfe" dur="4s" repeatCount="indefinite"/>
-              </stop>
-              <stop offset="50%" style="stop-color:#00f2fe">
-                <animate attributeName="stop-color" values="#00f2fe;#4facfe;#00d2ff;#00f2fe" dur="4s" repeatCount="indefinite"/>
-              </stop>
-              <stop offset="100%" style="stop-color:#43e97b">
-                <animate attributeName="stop-color" values="#43e97b;#764ba2;#4facfe;#43e97b" dur="4s" repeatCount="indefinite"/>
-              </stop>
-            </linearGradient>
-            <radialGradient id="loginNodeGradient" cx="30%" cy="30%" r="70%">
-              <stop offset="0%" style="stop-color:#00f2fe"/>
-              <stop offset="100%" style="stop-color:#4facfe"/>
-            </radialGradient>
-            <linearGradient id="loginEyeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#667eea"/>
-              <stop offset="100%" style="stop-color:#764ba2"/>
-            </linearGradient>
-            <linearGradient id="loginIrisGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#00d2ff"/>
-              <stop offset="100%" style="stop-color:#3a7bd5"/>
-            </linearGradient>
-            <radialGradient id="loginPupilGradient" cx="30%" cy="30%" r="70%">
-              <stop offset="0%" style="stop-color:#1a1a2e"/>
-              <stop offset="100%" style="stop-color:#0f0f23"/>
-            </radialGradient>
-            <linearGradient id="loginTextGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" style="stop-color:#667eea"/>
-              <stop offset="50%" style="stop-color:#4facfe"/>
-              <stop offset="100%" style="stop-color:#43e97b"/>
-            </linearGradient>
-            <filter id="loginGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-              <feMerge>
-                <feMergeNode in="coloredBlur"/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-            <mask id="loginCrescentMask" maskUnits="userSpaceOnUse">
-              <circle cx="0" cy="0" r="17.5" fill="white"/>
-              <circle cx="0" cy="-10" r="14" fill="black"/>
-            </mask>
-            <clipPath id="loginEyeClip">
-              <path d="M 40 95 C 64.54 56.33 131.46 56.33 156 95 C 131.46 133.67 64.54 133.67 40 95"/>
-            </clipPath>
-          </defs>
-          <g transform="translate(5, 10)">
-            <g>
-              <path fill="none" stroke="url(#loginHexGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
-                    d="M 54.5 11 L 141.5 11 L 185 95.1 L 141.5 179.2 L 54.5 179.2 L 11 95.1 Z"/>
-              <path fill="none" stroke="url(#loginHexGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" 
-                    d="M 51 3 L 145 3 L 192 94.4 L 145 185.8 L 51 185.8 L 4 94.4 Z"/>
-              <path fill="none" stroke="url(#loginHexGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M 147 11 L 185 89"/>
-              <path fill="none" stroke="url(#loginHexGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M 186 101 L 146 177"/>
-              <path fill="none" stroke="url(#loginHexGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M 138 183 L 57 183"/>
-              <path fill="none" stroke="url(#loginHexGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M 49 177 L 9 99"/>
-              <path fill="none" stroke="url(#loginHexGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M 9 89 L 50 12"/>
-              <path fill="none" stroke="url(#loginHexGradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M 60 9 L 137 5"/>
-              <circle fill="url(#loginNodeGradient)" filter="url(#loginGlow)" cx="54" cy="7" r="7"/>
-              <circle fill="url(#loginNodeGradient)" filter="url(#loginGlow)" cx="143" cy="7" r="7"/>
-              <circle fill="url(#loginNodeGradient)" filter="url(#loginGlow)" cx="188" cy="95" r="7"/>
-              <circle fill="url(#loginNodeGradient)" filter="url(#loginGlow)" cx="144" cy="182" r="7"/>
-              <circle fill="url(#loginNodeGradient)" filter="url(#loginGlow)" cx="52" cy="182" r="7"/>
-              <circle fill="url(#loginNodeGradient)" filter="url(#loginGlow)" cx="7" cy="94" r="7"/>
-            </g>
-            <g>
-              <path fill="none" stroke="url(#loginEyeGradient)" stroke-width="2.5" 
-                    d="M 40 95 C 64.54 56.33 131.46 56.33 156 95 C 131.46 133.67 64.54 133.67 40 95"/>
-              <g clip-path="url(#loginEyeClip)">
-                <g class="eye-inner" transform="translate(99, 95)">
-                  <circle fill="none" stroke="url(#loginIrisGradient)" stroke-width="2" cx="0" cy="0" r="30"/>
-                  <circle fill="none" stroke="url(#loginEyeGradient)" stroke-width="4" cx="0" cy="0" r="21"/>
-                  <circle fill="url(#loginEyeGradient)" cx="9" cy="-15" r="3"/>
-                  <circle fill="url(#loginPupilGradient)" cx="0" cy="0" r="17.5" mask="url(#loginCrescentMask)"/>
-                </g>
-              </g>
-            </g>
-            <text x="32" y="235" font-family="Helvetica, Arial, sans-serif" font-size="30" fill="url(#loginTextGradient)" letter-spacing="0.5">Observer</text>
-          </g>
-        </svg>
-      </div>
-      <h1 class="login-title" id="loginTitle">Observing...</h1>
-      <p class="login-subtitle" id="loginSubtitle" style="opacity: 0.5;">Something is being observed</p>
-    </div>
+  <main class="login-container">
+    <a href="/" class="login-logo" aria-label="Observer, back to the site"><img src="/assets/brand/observer-wordmark.svg" alt="Observer" width="150" height="41"></a>
+    <h1 class="login-title">Admin sign in</h1>
+    <p class="login-subtitle">Sign in to manage the site.</p>
 
-    <div class="login-card" id="loginCard" style="display: none;">
-      <div class="error-message" id="errorMessage"></div>
+    <div class="login-card" id="loginCard">
+      <div class="error-message" id="errorMessage" role="alert"></div>
 
-      <!-- WebAuthn Primary UI -->
       <div id="webauthnSection">
         <div class="form-group">
           <label class="form-label" for="webauthnUsername">Username</label>
-          <input
-            type="text"
-            id="webauthnUsername"
-            name="username"
-            class="form-input"
-            placeholder="Enter your username"
-            required
-            autocomplete="username"
-          >
+          <input type="text" id="webauthnUsername" name="username" class="form-input" required autocomplete="username">
         </div>
 
-        <button type="button" class="login-button" id="passkeyButton" style="margin-bottom: 1rem;">
-          <svg style="width: 20px; height: 20px; display: inline-block; vertical-align: middle; margin-right: 0.5rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            <path d="M9 12l2 2 4-4"/>
-          </svg>
+        <button type="button" class="login-button" id="passkeyButton">
           <span id="passkeyButtonText">Sign in with Passkey</span>
         </button>
 
-        <div style="text-align: center; margin: 1rem 0; color: var(--color-text-muted); font-size: 0.875rem;">
-          or
-        </div>
-
-        <button type="button" class="login-button" id="registerPasskeyButton" style="background: transparent; border: 1px solid var(--color-border); color: var(--color-text); margin-bottom: 1rem;">
-          Register Passkey
-        </button>
-
-        <details style="margin-top: 1rem;">
-          <summary style="cursor: pointer; color: var(--color-text-muted); font-size: 0.875rem; text-align: center;">
-            Use password (legacy)
-          </summary>
-          <form id="passwordForm" style="margin-top: 1rem;">
+        <details class="login-more">
+          <summary>Use a password, or set up a passkey</summary>
+          <form id="passwordForm">
             <div class="form-group">
               <label class="form-label" for="passwordUsername">Username</label>
-              <input
-                type="text"
-                id="passwordUsername"
-                name="username"
-                class="form-input"
-                placeholder="Enter your username"
-                required
-                autocomplete="username"
-              >
+              <input type="text" id="passwordUsername" name="username" class="form-input" required autocomplete="username">
             </div>
-
             <div class="form-group">
               <label class="form-label" for="password">Password</label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                class="form-input"
-                placeholder="Enter your password"
-                required
-                autocomplete="current-password"
-              >
+              <input type="password" id="password" name="password" class="form-input" required autocomplete="current-password">
             </div>
-
-            <button type="submit" class="login-button" id="passwordLoginButton" style="background: var(--color-text-muted);">
-              Sign In with Password
-            </button>
+            <button type="submit" class="login-button login-button--outline" id="passwordLoginButton">Sign In with Password</button>
           </form>
+          <div class="login-register">
+            <button type="button" class="login-button login-button--outline" id="registerPasskeyButton">Register Passkey</button>
+            <p class="login-hint">To register a passkey, enter your username and password above first.</p>
+          </div>
         </details>
       </div>
     </div>
 
     <a href="/" class="back-link">&larr; Back to site</a>
-  </div>
+  </main>
 
-  <script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@9.0.1/dist/bundle/index.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@9.0.1/dist/bundle/index.umd.min.js" integrity="sha384-9+Bm5pUMP2324xMjhRahdomA9HaTxP6JcMhbl3tUAcV2+Jiohq8/T+dGj/rx/MaM" crossorigin="anonymous"></script>
   <script src="/scripts/admin-login.js"></script>
+</body>
+</html>

@@ -165,7 +165,7 @@ async function getAllPosts(req, res, next) {
 
 async function createPost(req, res, next) {
   try {
-    const { title, excerpt, content, category, published } = req.body;
+    const { title, excerpt, content, category, published, coverImage } = req.body;
 
     if (!title || !content) {
       return res.status(400).json({ error: 'Title and content are required' });
@@ -186,6 +186,7 @@ async function createPost(req, res, next) {
       excerpt: excerpt || title,
       category: category || 'insights',
       content,
+      coverImage: coverImage || '',
       author: req.session.username,
       publishedAt: published ? new Date().toISOString() : null,
       updatedAt: new Date().toISOString(),
@@ -201,7 +202,7 @@ async function createPost(req, res, next) {
 
 async function updatePost(req, res, next) {
   try {
-    const { title, excerpt, content, category, published } = req.body;
+    const { title, excerpt, content, category, published, coverImage } = req.body;
     const post = await postsService.findBySlug(req.params.slug);
 
     if (!post) {
@@ -223,6 +224,7 @@ async function updatePost(req, res, next) {
       ...(excerpt !== undefined && { excerpt }),
       ...(category !== undefined && { category }),
       ...(content !== undefined && { content }),
+      ...(coverImage !== undefined && { coverImage }),
       ...(published !== undefined && {
         published,
         publishedAt: published && !post.publishedAt ? new Date().toISOString() : post.publishedAt

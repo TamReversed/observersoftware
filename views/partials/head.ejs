@@ -10,7 +10,7 @@
   <title><%= title %></title>
   <meta name="description" content="<%= description %>">
   <meta name="theme-color" content="#121113">
-  <% if (typeof noindex !== 'undefined' && noindex) { %><meta name="robots" content="noindex"><% } %>
+  <% if ((typeof noindex !== 'undefined' && noindex) || (typeof preview !== 'undefined' && preview)) { %><meta name="robots" content="noindex"><% } %>
   <link rel="canonical" href="<%= url %>">
   <meta property="og:site_name" content="Observer">
   <meta property="og:type" content="<%= typeof ogType !== 'undefined' ? ogType : 'website' %>">

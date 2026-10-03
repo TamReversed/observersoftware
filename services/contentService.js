@@ -101,9 +101,9 @@ async function getPosts({ category, q, page = 1, limit = 8 } = {}) {
   return { posts: posts.slice((current - 1) * limit, current * limit).map(decoratePost), total, pages, page: current };
 }
 
-async function getPost(slug) {
+async function getPost(slug, { preview = false } = {}) {
   const raw = await postsStore.findBySlug(slug);
-  if (!raw || !raw.published) return null;
+  if (!raw || (!raw.published && !preview)) return null; // drafts are visible only to a previewing admin
   const post = decoratePost(raw);
   // The page supplies its own h1: drop a leading title heading and demote any other h1
   post.html = renderMarkdown(raw.content)

@@ -58,6 +58,10 @@ button, input, textarea, select { font: inherit; color: inherit; }
 .cta-text { color: var(--muted); text-decoration: none; font-weight: 500; transition: color 0.2s; }
 .cta-text:hover, .cta-text:focus-visible { color: var(--text); }
 
+/* admin preview banner */
+.preview-bar { position: fixed; z-index: 60; left: 0; right: 0; bottom: 0; padding: 12px var(--gutter); background: var(--accent); color: var(--ground); font-weight: 500; text-align: center; }
+.preview-bar a { color: inherit; text-underline-offset: 3px; margin-left: 8px; }
+
 /* navigation */
 .nav { position: fixed; inset: 0 0 auto 0; z-index: 50; height: var(--nav-h); background: rgba(18, 17, 19, 0.82); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }
 .nav--over { background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom-color: transparent; transition: background 0.3s, border-color 0.3s; }
