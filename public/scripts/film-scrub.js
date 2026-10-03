@@ -68,7 +68,7 @@
     function size() {
       var dpr = Math.min(window.devicePixelRatio || 1, 2);
       cw = canvas.clientWidth; ch = canvas.clientHeight;
-      canvas.width = Math.min(Math.round(cw * dpr), 2880);
+      canvas.width = Math.min(Math.round(cw * dpr), 3840); // the frames are 3840 px wide: more would only be upscaling
       canvas.height = Math.round(canvas.width * ch / cw);
       dirty = true;
     }
