@@ -13,7 +13,7 @@
             <% if (product.externalUrl) { %><a class="cta-framed" href="<%= product.externalUrl %>" rel="noopener" target="_blank">Visit <%= product.title %></a><% } %>
           </p>
         </div>
-        <% if (product.screenshots[0]) { %><div class="product-gallery"><img src="<%= product.screenshots[0] %>" alt="<%= product.title %> interface" width="1600" height="1000"></div><% } %>
+        <% if (product.screenshots[0]) { %><div class="product-gallery"><img src="<%= product.screenshots[0] %>" alt="<%= product.title %> interface" width="1600" height="1000" fetchpriority="high"></div><% } %>
       </div>
     </header>
     <div class="contact" style="padding-top: 24px; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr)">

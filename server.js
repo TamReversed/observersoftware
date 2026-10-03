@@ -98,6 +98,8 @@ app.use((req, res, next) => {
 
 // Static files come before sessions so asset requests never create a session
 const publicDir = path.join(__dirname, 'public');
+// Resized WebP copies of large PNG/JPEG images for browsers that support them (originals untouched)
+app.use(require('./middleware/optimizeImages'));
 app.use(express.static(publicDir, {
   index: false,
   maxAge: 0, // always revalidate (ETag): deploys and replaced images show up immediately

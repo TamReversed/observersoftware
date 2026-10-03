@@ -48,34 +48,91 @@
     });
   }
 
-  // --- contact form
+  // --- contact form: messages sit next to the fields they belong to, so they are always on screen
   var form = document.getElementById('contact-form');
   if (form) {
-    var status = document.getElementById('contact-status');
     var submit = document.getElementById('contact-submit');
-    var say = function (msg, state) { status.textContent = msg; status.setAttribute('data-state', state || ''); };
+    var formError = document.getElementById('contact-error');
+    var success = document.getElementById('contact-success');
+    var names = ['name', 'email', 'subject', 'message'];
+
+    function fieldError(name, msg) {
+      var el = form.elements[name], p = document.getElementById('c-' + name + '-error');
+      if (!el || !p) return;
+      if (msg) { p.textContent = msg; p.hidden = false; el.setAttribute('aria-invalid', 'true'); }
+      else { p.textContent = ''; p.hidden = true; el.removeAttribute('aria-invalid'); }
+    }
+    function showFormError(msg) {
+      formError.textContent = msg || '';
+      formError.hidden = !msg;
+      if (msg) formError.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+    function validate() {
+      var errs = {};
+      if (!form.name.value.trim()) errs.name = 'Enter your name.';
+      var em = form.email.value.trim();
+      if (!em) errs.email = 'Enter your email address.';
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) errs.email = 'Enter a valid email address, like name@company.com.';
+      if (!form.message.value.trim()) errs.message = 'Write a short message.';
+      return errs;
+    }
+    function focusFirst(errs) {
+      for (var i = 0; i < names.length; i++) {
+        if (errs[names[i]]) { form.elements[names[i]].focus(); return; }
+      }
+    }
+
+    // clear a field's message as soon as it is fixed
+    names.forEach(function (n) {
+      form.elements[n].addEventListener('input', function () {
+        if (form.elements[n].getAttribute('aria-invalid') === 'true' && !validate()[n]) fieldError(n, '');
+      });
+    });
 
     form.addEventListener('submit', function (e) {
       e.preventDefault();
+      showFormError('');
+      var errs = validate();
+      names.forEach(function (n) { fieldError(n, errs[n] || ''); });
+      if (Object.keys(errs).length) { focusFirst(errs); return; }
+
       var data = {
         name: form.name.value.trim(), email: form.email.value.trim(),
         subject: form.subject.value.trim(), message: form.message.value.trim(), website: form.website.value
       };
-      if (!data.name || !data.email || !data.message) { say('Please fill in your name, email and message.', 'error'); return; }
       submit.disabled = true;
-      say('Sending...', '');
+      submit.setAttribute('aria-busy', 'true');
       fetch('/api/messages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
         .then(function (res) {
-          if (res.status === 429) throw new Error('Too many messages. Please wait a few minutes and try again.');
+          if (res.status === 429) throw { form: 'Too many messages in a short time. Please wait a few minutes and try again.' };
           if (res.status === 400) return res.json().then(function (j) {
-            throw new Error((j.errors && j.errors[0] && j.errors[0].msg) || j.error || 'Please check your details and try again.');
+            var server = {};
+            (j.errors || []).forEach(function (er) { if (er.path && !server[er.path]) server[er.path] = er.msg; });
+            if (Object.keys(server).length) throw { fields: server };
+            throw { form: j.error || 'Please check your details and try again.' };
           });
-          if (!res.ok) throw new Error('Something went wrong. Please try again.');
+          if (!res.ok) throw { form: 'Something went wrong on our side. Please try again in a moment.' };
           form.reset();
-          say('Thank you. Your message is on its way and we will reply soon.', 'ok');
+          form.hidden = true;
+          success.hidden = false;
+          success.focus();
+          success.scrollIntoView({ block: 'center', behavior: 'smooth' });
         })
-        .catch(function (err) { say(err.message || 'Something went wrong. Please try again.', 'error'); })
-        .then(function () { submit.disabled = false; });
+        .catch(function (err) {
+          if (err && err.fields) {
+            names.forEach(function (n) { fieldError(n, err.fields[n] || ''); });
+            focusFirst(err.fields);
+          } else {
+            showFormError((err && err.form) || 'Could not send your message. Check your connection and try again.');
+          }
+        })
+        .then(function () { submit.disabled = false; submit.removeAttribute('aria-busy'); });
+    });
+
+    document.getElementById('contact-again').addEventListener('click', function () {
+      success.hidden = true;
+      form.hidden = false;
+      form.name.focus();
     });
   }
 

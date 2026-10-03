@@ -31,6 +31,8 @@ A post, work item or testimonial with **Published** switched off is a draft. Vis
 
 Images must be uploaded here (JPEG, PNG, WebP or GIF, up to 5 MB). Links to images on other websites are rejected on purpose.
 
+Uploads are tidied automatically: photos are rotated the right way up, hidden metadata such as GPS location is removed, and very large images are scaled down. Visitors on modern browsers are served a much smaller WebP copy, so a big phone photo will not slow the page down. Replacing an image file updates the optimised copy by itself.
+
 ## Backups
 
 **Download backup** (sidebar or Settings) saves one JSON file with your posts, work, products, FAQs, testimonials and site content. It never includes passwords, passkeys or contact messages. Download one before any big edit session.

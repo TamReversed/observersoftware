@@ -86,3 +86,12 @@ Logo family (SVG), head kit, icon set (9 glyphs), OG cards (home, work, products
 - Nav "About" links to `/#about`. Footer social links and testimonials render only when real data exists.
 - Contact email is deliberately not printed on the site; the form is the channel.
 - Case-study art exists for the first 8 work items; the other 12 render text-only.
+
+## Hero film motion (v2)
+
+The film is cut by `scripts/build-film-frames.py`, not sampled at a fixed rate:
+- The generator drops one frame every second (25 fps conformed to 24), which made one frame pair per second move twice as far. Frames are placed at equal visual change and positions between source frames are blended, so the hitch is gone.
+- The last ~2.5 s of the film is nearly still; it is compressed instead of being dead scroll.
+- The coral line only appears at 12.5 s, so it gets its own stretch of scroll and the exit fade begins after it.
+- Timings (`holdFrom`, `chapters`, `outroStart`) live in `manifest.json` next to the frames, so the page script always matches how the frames were cut.
+- The page blends neighbouring frames while scrolling, so slow scrolls glide instead of stepping.

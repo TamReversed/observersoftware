@@ -3,6 +3,9 @@ const path = require('path');
 const fs = require('fs').promises;
 const config = require('../config');
 
+let sharp = null;
+try { sharp = require('sharp'); } catch { /* optional: files are stored as uploaded */ }
+
 // Magic numbers for image validation (file signatures)
 const IMAGE_SIGNATURES = {
   'image/jpeg': [0xFF, 0xD8, 0xFF],
@@ -90,8 +93,14 @@ async function uploadScreenshot(req, res, next) {
       return res.status(400).json({ error: 'Invalid file type. File signature does not match declared type.' });
     }
 
-    // Additional validation: check file dimensions if possible (would require image processing library)
-    // For now, we rely on magic number validation
+    // Re-encode photos: applies the camera rotation, strips hidden metadata (such as GPS location)
+    // and caps very large images. Falls back to the file as uploaded if this is not possible.
+    if (sharp && /^image\/(jpeg|png|webp)$/.test(req.file.mimetype)) {
+      try {
+        const cleaned = await sharp(req.file.path, { failOn: 'none' }).rotate().resize({ width: 2400, withoutEnlargement: true }).toBuffer();
+        await fs.writeFile(req.file.path, cleaned);
+      } catch (e) { /* keep the original upload */ }
+    }
 
     // Return the public URL path
     const publicPath = `/uploads/${req.file.filename}`;
