@@ -52,7 +52,7 @@
     function size() {
       var dpr = Math.min(window.devicePixelRatio || 1, 2);
       cw = canvas.clientWidth; ch = canvas.clientHeight;
-      canvas.width = Math.min(Math.round(cw * dpr), 1920);
+      canvas.width = Math.min(Math.round(cw * dpr), 2880);
       canvas.height = Math.round(canvas.width * ch / cw);
       dirty = true;
     }
