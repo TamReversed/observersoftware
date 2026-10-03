@@ -4,7 +4,7 @@ const config = require('../config');
 
 const settingsService = config.database.useDatabase
   ? new DbService('site_settings')
-  : new DataService(config.paths.settingsFile || './data/settings.json');
+  : new DataService(config.paths.settingsFile);
 
 // Get all settings (public - for rendering site)
 async function getSettings(req, res, next) {

@@ -1,9 +1,9 @@
 const bcrypt = require('bcrypt');
+const { v4: uuidv4 } = require('uuid');
 const DataService = require('../services/dataService');
 const DbService = require('../services/dbService');
 const config = require('../config');
 const webauthnService = require('../services/webauthnService');
-const { getRpIDFromOrigin } = require('../services/webauthnService');
 
 // Use database if available, otherwise fall back to JSON files
 const usersService = config.database.useDatabase
@@ -15,8 +15,12 @@ const failedLogins = new Map();
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
 
-function isAccountLocked(username) {
-  const record = failedLogins.get(username);
+function lockoutKey(req, username) {
+  return `${req.ip}|${String(username || '').toLowerCase()}`;
+}
+
+function isAccountLocked(key) {
+  const record = failedLogins.get(key);
   if (!record) return false;
 
   if (record.attempts >= MAX_FAILED_ATTEMPTS) {
@@ -25,20 +29,37 @@ function isAccountLocked(username) {
       return true;
     }
     // Lockout expired, reset
-    failedLogins.delete(username);
+    failedLogins.delete(key);
   }
   return false;
 }
 
-function recordFailedLogin(username) {
-  const record = failedLogins.get(username) || { attempts: 0, lastAttempt: 0 };
+function recordFailedLogin(key) {
+  if (failedLogins.size > 1000) {
+    const cutoff = Date.now() - LOCKOUT_DURATION;
+    for (const [k, v] of failedLogins) {
+      if (v.lastAttempt < cutoff) failedLogins.delete(k);
+    }
+  }
+  const record = failedLogins.get(key) || { attempts: 0, lastAttempt: 0 };
   record.attempts++;
   record.lastAttempt = Date.now();
-  failedLogins.set(username, record);
+  failedLogins.set(key, record);
 }
 
-function clearFailedLogins(username) {
-  failedLogins.delete(username);
+function clearFailedLogins(key) {
+  failedLogins.delete(key);
+}
+
+// Start a fresh session (prevents session fixation) and sign the user in
+function establishSession(req, user, cb) {
+  req.session.regenerate((err) => {
+    if (err) return cb(err);
+    req.session.userId = user.id;
+    req.session.username = user.username;
+    req.session.csrfToken = uuidv4();
+    req.session.save(cb);
+  });
 }
 
 async function login(req, res, next) {
@@ -49,8 +70,10 @@ async function login(req, res, next) {
       return res.status(400).json({ error: 'Username and password are required' });
     }
 
+    const key = lockoutKey(req, username);
+
     // Check for account lockout
-    if (isAccountLocked(username)) {
+    if (isAccountLocked(key)) {
       return res.status(429).json({
         error: 'Account temporarily locked due to too many failed attempts. Please try again later.'
       });
@@ -60,22 +83,23 @@ async function login(req, res, next) {
     const user = users.find(u => u.username === username);
 
     if (!user) {
-      recordFailedLogin(username);
+      recordFailedLogin(key);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) {
-      recordFailedLogin(username);
+      recordFailedLogin(key);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     // Successful login - clear failed attempts
-    clearFailedLogins(username);
+    clearFailedLogins(key);
 
-    req.session.userId = user.id;
-    req.session.username = user.username;
-    res.json({ success: true, username: user.username });
+    establishSession(req, user, (err) => {
+      if (err) return next(err);
+      res.json({ success: true, username: user.username });
+    });
   } catch (error) {
     next(error);
   }
@@ -100,49 +124,74 @@ async function getStatus(req, res) {
 }
 
 function getCsrfToken(req, res) {
-  res.json({ csrfToken: req.session.csrfToken || null });
+  if (!req.session.csrfToken) {
+    req.session.csrfToken = uuidv4();
+  }
+  res.json({ csrfToken: req.session.csrfToken });
 }
 
-// Helper to get origin from request
-function getOriginFromRequest(req) {
-  const protocol = req.headers['x-forwarded-proto'] || (req.secure ? 'https' : 'http');
-  const host = req.headers.host || req.get('host');
-  return `${protocol}://${host}`;
-}
+// WebAuthn origin and RP ID come from configuration, never from request headers
+const expectedOrigin = config.webauthn.origin.includes(',')
+  ? config.webauthn.origin.split(',').map(o => o.trim())
+  : config.webauthn.origin;
+const primaryOrigin = Array.isArray(expectedOrigin) ? expectedOrigin[0] : expectedOrigin;
 
 // WebAuthn Registration - Start
+// Requires either an authenticated session or the account password.
 async function startWebAuthnRegistration(req, res, next) {
   try {
-    const { username } = req.body;
+    let user;
+    let key;
+    const sessionAuthenticated = !!(req.session && req.session.userId);
 
-    if (!username) {
-      return res.status(400).json({ error: 'Username is required' });
+    if (sessionAuthenticated) {
+      user = await usersService.findById(req.session.userId);
+      if (!user) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+    } else {
+      const { username, password } = req.body;
+
+      if (!username || !password) {
+        return res.status(400).json({ error: 'Username and password are required' });
+      }
+
+      key = lockoutKey(req, username);
+      if (isAccountLocked(key)) {
+        return res.status(429).json({
+          error: 'Account temporarily locked due to too many failed attempts. Please try again later.'
+        });
+      }
+
+      const users = await usersService.findAll();
+      user = users.find(u => u.username === username);
+      const valid = user ? await bcrypt.compare(password, user.password) : false;
+
+      if (!valid) {
+        recordFailedLogin(key);
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+      clearFailedLogins(key);
     }
 
-    const users = await usersService.findAll();
-    const user = users.find(u => u.username === username);
-
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+    if (typeof user.webauthnCredentials === 'string') {
+      try { user.webauthnCredentials = JSON.parse(user.webauthnCredentials); } catch { user.webauthnCredentials = []; }
     }
-
-    if (!user.webauthnCredentials) {
+    if (!Array.isArray(user.webauthnCredentials)) {
       user.webauthnCredentials = [];
-      await usersService.updateById(user.id, { webauthnCredentials: [] });
     }
 
-    if (user.webauthnCredentials.length > 0) {
+    // Only a signed-in admin may add an additional passkey
+    if (!sessionAuthenticated && user.webauthnCredentials.length > 0) {
       return res.status(400).json({ error: 'User already has a passkey registered' });
     }
-
-    const origin = getOriginFromRequest(req);
 
     try {
       const options = await webauthnService.generateRegistrationOptionsForUser(
         user.id,
         user.username,
         user.webauthnCredentials,
-        origin
+        primaryOrigin
       );
 
       req.session.webauthnChallenge = options.challenge;
@@ -200,17 +249,14 @@ async function finishWebAuthnRegistration(req, res, next) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const origin = getOriginFromRequest(req);
-    const rpID = getRpIDFromOrigin(origin);
-
     const options = {
       challenge: req.session.webauthnChallenge,
-      rpID: rpID,
-      origin: origin
+      rpID: config.webauthn.rpID,
+      origin: primaryOrigin
     };
 
     try {
-      const verification = await webauthnService.verifyRegistration(options, response, origin);
+      const verification = await webauthnService.verifyRegistration(options, response, expectedOrigin);
 
       if (!verification.verified) {
         return res.status(400).json({ error: 'Registration verification failed' });
@@ -261,13 +307,6 @@ async function startWebAuthnLogin(req, res, next) {
       return res.status(400).json({ error: 'Username is required' });
     }
 
-    // Check for account lockout
-    if (isAccountLocked(username)) {
-      return res.status(429).json({
-        error: 'Account temporarily locked due to too many failed attempts. Please try again later.'
-      });
-    }
-
     const users = await usersService.findAll();
     const user = users.find(u => u.username === username);
 
@@ -303,13 +342,11 @@ async function startWebAuthnLogin(req, res, next) {
       return res.status(400).json({ error: 'No valid passkeys found. Please re-register.' });
     }
 
-    const origin = getOriginFromRequest(req);
-
     try {
       const options = await webauthnService.generateAuthenticationOptionsForUser(
         user.id,
         validCredentials,
-        origin
+        primaryOrigin
       );
 
       req.session.webauthnChallenge = options.challenge;
@@ -360,34 +397,28 @@ async function finishWebAuthnLogin(req, res, next) {
 
     const credential = user.webauthnCredentials.find(cred => cred.id === response.id);
 
-    if (!credential) {
-      recordFailedLogin(user.username);
-      return res.status(400).json({ error: 'Credential not found. Please register a new passkey.' });
-    }
+    const failKey = lockoutKey(req, user.username);
 
-    const origin = getOriginFromRequest(req);
-    let rpID;
-    try {
-      rpID = new URL(origin).hostname;
-    } catch {
-      rpID = (req.headers.host || '').split(':')[0];
+    if (!credential) {
+      recordFailedLogin(failKey);
+      return res.status(400).json({ error: 'Credential not found. Please register a new passkey.' });
     }
 
     const options = {
       challenge: req.session.webauthnChallenge,
-      rpID: rpID,
-      origin: origin
+      rpID: config.webauthn.rpID,
+      origin: primaryOrigin
     };
 
     const verification = await webauthnService.verifyAuthentication(
       options,
       response,
       credential,
-      origin
+      expectedOrigin
     );
 
     if (!verification.verified) {
-      recordFailedLogin(user.username);
+      recordFailedLogin(failKey);
       return res.status(401).json({ error: 'Authentication verification failed' });
     }
 
@@ -401,19 +432,13 @@ async function finishWebAuthnLogin(req, res, next) {
     }
 
     // Clear failed logins on success
-    clearFailedLogins(user.username);
+    clearFailedLogins(failKey);
 
-    // Create session
-    req.session.userId = user.id;
-    req.session.username = user.username;
-
-    // Clear WebAuthn session
-    delete req.session.webauthnChallenge;
-    delete req.session.webauthnUserId;
-    delete req.session.webauthnType;
-    delete req.session.webauthnTimestamp;
-
-    res.json({ success: true, username: user.username });
+    // New session (also discards the WebAuthn challenge state)
+    establishSession(req, user, (err) => {
+      if (err) return next(err);
+      res.json({ success: true, username: user.username });
+    });
   } catch (error) {
     next(error);
   }

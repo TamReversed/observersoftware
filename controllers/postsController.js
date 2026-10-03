@@ -60,10 +60,6 @@ function getRelatedPosts(currentPost, allPosts) {
     .map(({ _score, ...p }) => p); // Remove score from result
 }
 
-function getCategories(req, res) {
-  res.json(CATEGORIES);
-}
-
 async function getPosts(req, res, next) {
   try {
     const { search, category, page = 1, limit = 8 } = req.query;
@@ -254,7 +250,6 @@ async function deletePost(req, res, next) {
 }
 
 module.exports = {
-  getCategories,
   getPosts,
   getPostBySlug,
   getAllPosts,

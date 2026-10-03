@@ -1,7 +1,7 @@
 // Service Worker for PWA
 // Cache static assets and API responses
 
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const API_CACHE = `api-${CACHE_VERSION}`;
 
@@ -82,6 +82,18 @@ self.addEventListener('fetch', (event) => {
   // This prevents CSP violations when trying to cache external resources
   if (url.origin !== self.location.origin) {
     return; // Let browser handle external resources normally
+  }
+
+  // Never cache or intercept private/admin traffic: always go to the network
+  if (
+    url.pathname.startsWith('/api/admin') ||
+    url.pathname.startsWith('/api/auth') ||
+    url.pathname.startsWith('/api/messages') ||
+    url.pathname === '/admin' ||
+    url.pathname.startsWith('/admin/') ||
+    url.pathname === '/observe'
+  ) {
+    return;
   }
 
   // API requests: Network-first, cache fallback

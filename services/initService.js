@@ -38,6 +38,11 @@ async function initializeData() {
     }
   }
 
+  // Sample content is seeded only when SEED_SAMPLE_CONTENT=true (never re-created after deletion)
+  if (process.env.SEED_SAMPLE_CONTENT !== 'true') {
+    return;
+  }
+
   // Initialize posts
   const postsService = getService('posts', config.paths.postsFile);
   const existingPosts = await postsService.findAll();
@@ -178,7 +183,7 @@ The patterns people create organically are the real requirements. Our job is to 
         id: uuidv4(),
         industry: 'Professional Services',
         problem: 'Intake relied on retyping the same details in multiple places',
-        solution: 'Observer removed repeated questions and collapsed handoffs into one guided flow. Onboarding time dropped by roughly 60%.',
+        solution: 'Observer removed repeated questions and collapsed handoffs into one guided flow. Onboarding got noticeably shorter.',
         tags: ['Intake', 'One flow'],
         image: '',
         client: '',

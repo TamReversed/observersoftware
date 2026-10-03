@@ -5,7 +5,7 @@ const config = require('../config');
 
 const testimonialsService = config.database.useDatabase
   ? new DbService('testimonials')
-  : new DataService(config.paths.testimonialsFile || './data/testimonials.json');
+  : new DataService(config.paths.testimonialsFile);
 
 // Get published testimonials (public)
 async function getTestimonials(req, res, next) {

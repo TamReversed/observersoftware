@@ -38,3 +38,5 @@ build/
 *.tmp
 *.temp
 
+.claude/launch.json
+refs/raw/

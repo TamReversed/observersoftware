@@ -1,11 +1,12 @@
 const { v4: uuidv4 } = require('uuid');
 const DbService = require('../services/dbService');
 const DataService = require('../services/dataService');
+const { CATEGORIES } = require('../utils/constants');
 const config = require('../config');
 
 const categoriesService = config.database.useDatabase
   ? new DbService('categories')
-  : new DataService(config.paths.categoriesFile || './data/categories.json');
+  : new DataService(config.paths.categoriesFile);
 
 // Helper to create slug from name
 function slugify(text) {
@@ -22,7 +23,8 @@ async function getCategories(req, res, next) {
   try {
     let categories = await categoriesService.findAll();
     categories.sort((a, b) => (a.order || 0) - (b.order || 0));
-    res.json(categories);
+    // Until categories are managed in the admin panel, serve the built-in blog categories
+    res.json(categories.length ? categories : CATEGORIES);
   } catch (error) {
     next(error);
   }

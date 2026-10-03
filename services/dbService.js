@@ -33,7 +33,7 @@ class DbService {
       return data;
     } catch (error) {
       console.error(`Error in findAll for ${this.tableName}:`, error);
-      return [];
+      throw error;
     }
   }
 
@@ -62,7 +62,7 @@ class DbService {
       return this._deserializeRow(result.rows[0]);
     } catch (error) {
       console.error(`Error in findById for ${this.tableName}:`, error);
-      return null;
+      throw error;
     }
   }
 
@@ -83,7 +83,7 @@ class DbService {
       return this._deserializeRow(result.rows[0]);
     } catch (error) {
       console.error(`Error in findBySlug for ${this.tableName}:`, error);
-      return null;
+      throw error;
     }
   }
 

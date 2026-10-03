@@ -3,10 +3,11 @@ const router = express.Router();
 const { asyncHandler } = require('../middleware/errorHandler');
 const { requireAuth } = require('../middleware/auth');
 const { validateCsrfToken } = require('../middleware/csrf');
+const { validateMessage } = require('../middleware/validation');
 const messagesController = require('../controllers/messagesController');
 
 // Public route - anyone can submit a message
-router.post('/messages', asyncHandler(messagesController.createMessage));
+router.post('/messages', validateMessage, asyncHandler(messagesController.createMessage));
 
 // Admin routes - require authentication
 router.get('/admin/messages', requireAuth, asyncHandler(messagesController.getAllMessages));

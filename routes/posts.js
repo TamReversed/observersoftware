@@ -7,7 +7,6 @@ const { validatePost, validateSlug } = require('../middleware/validation');
 const postsController = require('../controllers/postsController');
 
 // Public routes
-router.get('/categories', postsController.getCategories);
 router.get('/posts', asyncHandler(postsController.getPosts));
 router.get('/posts/:slug', validateSlug, asyncHandler(postsController.getPostBySlug));
 

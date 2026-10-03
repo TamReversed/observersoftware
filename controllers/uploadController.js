@@ -1,6 +1,7 @@
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises;
+const config = require('../config');
 
 // Magic numbers for image validation (file signatures)
 const IMAGE_SIGNATURES = {
@@ -13,8 +14,16 @@ const IMAGE_SIGNATURES = {
 // Validate file by magic number
 async function validateFileSignature(filePath, expectedMime) {
   try {
-    const buffer = await fs.readFile(filePath);
-    const signature = Array.from(buffer.slice(0, 12));
+    // Only the first 12 bytes are needed to check the file signature
+    const handle = await fs.open(filePath, 'r');
+    let signature;
+    try {
+      const buffer = Buffer.alloc(12);
+      await handle.read(buffer, 0, 12, 0);
+      signature = Array.from(buffer);
+    } finally {
+      await handle.close();
+    }
     const expectedSig = IMAGE_SIGNATURES[expectedMime];
     
     if (!expectedSig) return false;
@@ -29,7 +38,7 @@ async function validateFileSignature(filePath, expectedMime) {
 // Configure storage
 const storage = multer.diskStorage({
   destination: async (req, file, cb) => {
-    const uploadPath = path.join(__dirname, '..', 'public', 'assets', 'products');
+    const uploadPath = config.paths.uploadsDir;
     try {
       await fs.mkdir(uploadPath, { recursive: true });
       cb(null, uploadPath);
@@ -48,9 +57,8 @@ const storage = multer.diskStorage({
 
 // File filter - only images with stricter validation
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|gif|webp/;
-  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = allowedTypes.test(file.mimetype);
+  const extname = /^\.(jpe?g|png|gif|webp)$/.test(path.extname(file.originalname).toLowerCase());
+  const mimetype = /^image\/(jpeg|png|gif|webp)$/.test(file.mimetype);
 
   if (mimetype && extname) {
     return cb(null, true);
@@ -86,7 +94,7 @@ async function uploadScreenshot(req, res, next) {
     // For now, we rely on magic number validation
 
     // Return the public URL path
-    const publicPath = `/assets/products/${req.file.filename}`;
+    const publicPath = `/uploads/${req.file.filename}`;
     res.json({ 
       url: publicPath,
       filename: req.file.filename

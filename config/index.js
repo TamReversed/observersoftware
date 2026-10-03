@@ -14,6 +14,7 @@ if (isProduction) {
 
 const config = {
   port: process.env.PORT || 3000,
+  siteUrl: (process.env.SITE_URL || 'https://observersoftware.io').replace(/\/+$/, ''),
   isProduction,
   session: {
     secret: process.env.SESSION_SECRET || 'observer-dev-secret-key-2024',
@@ -34,7 +35,16 @@ const config = {
       postsFile: path.join(dataDir, 'posts.json'),
       workFile: path.join(dataDir, 'work.json'),
       capabilitiesFile: path.join(dataDir, 'capabilities.json'),
-      messagesFile: path.join(dataDir, 'messages.json')
+      messagesFile: path.join(dataDir, 'messages.json'),
+      settingsFile: path.join(dataDir, 'settings.json'),
+      homepageFile: path.join(dataDir, 'homepage.json'),
+      navigationFile: path.join(dataDir, 'navigation.json'),
+      mediaFile: path.join(dataDir, 'media.json'),
+      categoriesFile: path.join(dataDir, 'categories.json'),
+      changelogFile: path.join(dataDir, 'changelog.json'),
+      testimonialsFile: path.join(dataDir, 'testimonials.json'),
+      faqsFile: path.join(dataDir, 'faqs.json'),
+      uploadsDir: path.join(dataDir, 'uploads')
     };
   })(),
   admin: {
