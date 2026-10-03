@@ -12,7 +12,7 @@
   <header class="admin-header">
     <a href="/" class="admin-brand">
       <img src="/assets/brand/observer-mark.svg" alt="Observer" class="admin-logo">
-      <span class="admin-title">Observer Admin</span>
+      <h1 class="admin-title">Observer Admin</h1>
     </a>
     <nav class="admin-nav">
       <span class="admin-user" id="adminUser">Loading...</span><span class="user-badge role-badge" id="adminRole" hidden></span>
@@ -188,7 +188,7 @@
           <div class="form-group">
             <label class="form-label">Tags</label>
             <div class="tags-container" id="workTagsContainer">
-              <input type="text" class="tag-input" id="workTagInput" placeholder="Type and press Enter">
+              <input type="text" class="tag-input" id="workTagInput" aria-label="Add a tag" placeholder="Type and press Enter">
             </div>
             <p class="form-hint">Press Enter to add tags</p>
           </div>
@@ -263,12 +263,12 @@
               </div>
 
               <div class="icon-type-content" id="iconSvgContent" style="display: none;">
-                <textarea id="capabilityIconSvg" class="form-input form-textarea small" placeholder="Paste SVG code here..."></textarea>
+                <textarea id="capabilityIconSvg" aria-label="Custom icon SVG code" class="form-input form-textarea small" placeholder="Paste SVG code here..."></textarea>
                 <p class="form-hint">Paste a valid SVG element. It will be sanitized for security.</p>
               </div>
 
               <div class="icon-type-content" id="iconLottieContent" style="display: none;">
-                <input type="text" id="capabilityIconLottieUrl" class="form-input" placeholder="https://assets.lottiefiles.com/...">
+                <input type="text" id="capabilityIconLottieUrl" aria-label="Lottie animation address" class="form-input" placeholder="https://assets.lottiefiles.com/...">
                 <p class="form-hint">Paste a URL to a Lottie JSON file</p>
               </div>
             </div>
@@ -282,7 +282,7 @@
           <div class="form-group">
             <label class="form-label">Features</label>
             <div class="tags-container" id="capabilityFeaturesContainer">
-              <input type="text" class="tag-input" id="capabilityFeatureInput" placeholder="Type feature and press Enter">
+              <input type="text" class="tag-input" id="capabilityFeatureInput" aria-label="Add a feature" placeholder="Type feature and press Enter">
             </div>
             <p class="form-hint">Press Enter to add features</p>
           </div>
@@ -311,10 +311,10 @@
                 <p class="screenshot-upload-text">Drag & drop images here, or <span class="screenshot-upload-link">click to browse</span></p>
                 <p class="screenshot-upload-hint">You can also paste images from clipboard (Ctrl/Cmd+V)</p>
               </div>
-              <input type="file" id="screenshotFileInput" accept="image/*" multiple style="display: none;">
+              <input type="file" id="screenshotFileInput" aria-label="Upload screenshot images" accept="image/*" multiple style="display: none;">
             </div>
             <div class="form-row" style="margin-top: 0.75rem;">
-              <input type="text" id="capabilityScreenshotInput" class="form-input" placeholder="Or paste image URL here">
+              <input type="text" id="capabilityScreenshotInput" aria-label="Screenshot image address" class="form-input" placeholder="Or paste image URL here">
               <button type="button" class="btn btn-ghost" id="addScreenshotBtn">Add URL</button>
             </div>
             <p class="form-hint">Drag, paste, or enter URLs for product screenshots</p>
@@ -697,7 +697,7 @@
                 </li>
                 <li>Enter the 6-digit code Dashlane now shows, to confirm it saved correctly.
                   <div class="totp-confirm-row">
-                    <input type="text" id="totpConfirm" class="form-input form-input--code" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="123 456">
+                    <input type="text" id="totpConfirm" aria-label="Current 6-digit code" class="form-input form-input--code" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="123 456">
                     <button class="btn btn-primary" id="totpEnableBtn" type="button">Turn on</button>
                     <button class="btn btn-ghost" id="totpCancelBtn" type="button">Cancel</button>
                   </div>
@@ -805,9 +805,9 @@
     </section>
   </main>
 
-  <div class="toast" id="toast"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@simplewebauthn/browser@9.0.1/dist/bundle/index.umd.min.js" integrity="sha384-9+Bm5pUMP2324xMjhRahdomA9HaTxP6JcMhbl3tUAcV2+Jiohq8/T+dGj/rx/MaM" crossorigin="anonymous"></script>
+  <script src="/vendor/simplewebauthn-browser-9.0.1.umd.min.js"></script>
   <script src="/scripts/admin-dashboard.js"></script>
 </body>
 </html>

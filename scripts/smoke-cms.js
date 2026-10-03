@@ -248,7 +248,7 @@ class Client {
   const denied = [
     ['GET', '/api/auth/users'], ['POST', '/api/auth/users'], ['GET', '/api/admin/export'], ['GET', '/api/admin/messages'],
     ['GET', '/api/admin/messages/unread-count'], ['GET', '/api/admin/settings'], ['PUT', '/api/admin/settings'],
-    ['GET', '/api/admin/changelog'], ['PUT', `/api/auth/users/${eRow.id}/role`], ['PUT', `/api/auth/users/${eRow.id}/password`],
+    ['PUT', `/api/auth/users/${eRow.id}/role`], ['PUT', `/api/auth/users/${eRow.id}/password`],
     ['DELETE', `/api/auth/users/${eRow.id}`], ['DELETE', `/api/auth/users/${eRow.id}/passkeys`], ['DELETE', `/api/auth/users/${eRow.id}/totp`]
   ];
   for (const [m, p] of denied) {
@@ -288,6 +288,39 @@ class Client {
     check('concurrent role changes leave at least one admin', ((await admin.req('/api/auth/users')).json.users || (await admin.req('/api/auth/users')).json).some((u) => u.role === 'admin') && results.every((r) => r.status === 200 || r.status === 400));
     for (const id of ids) await admin.req('/api/auth/users/' + id, { method: 'DELETE' });
   }
+
+  console.log('\nReview hardening');
+  // sessions end when a password is reset
+  await admin.req('/api/auth/users', { method: 'POST', body: { username: 'fp-check', password: 'Fp-check-pass-1', role: 'editor' } });
+  const fp = new Client(); await fp.refreshCsrf();
+  const fpIn = await fp.req('/api/auth/login', { method: 'POST', body: { username: 'fp-check', password: 'Fp-check-pass-1' } });
+  await fp.refreshCsrf();
+  check('a new account can sign in', fpIn.status === 200 && (await fp.req('/api/admin/posts')).status === 200);
+  const fpRow = (await admin.req('/api/auth/users')).json.find((u) => u.username === 'fp-check');
+  const fpReset = await admin.req(`/api/auth/users/${fpRow.id}/password`, { method: 'PUT', body: { password: 'Fp-check-pass-2' } });
+  check('admin resets that password', fpReset.status === 200);
+  check('the old session stops working at once', (await fp.req('/api/admin/posts')).status === 401);
+  await admin.req(`/api/auth/users/${fpRow.id}`, { method: 'DELETE' });
+  // usernames are not revealed
+  check('public posts API does not reveal who wrote a post', !/"author"/.test((await anon.req('/api/posts')).text));
+  const pk1 = await anon.req('/api/auth/webauthn/login/start', { method: 'POST', body: { username: 'no-such-user-zz' } });
+  const pk2 = await anon.req('/api/auth/webauthn/login/start', { method: 'POST', body: { username: USER } });
+  check('passkey start answers the same for unknown and real usernames', pk1.status === 400 && pk1.status === pk2.status && pk1.text === pk2.text);
+  // wrong-typed input
+  check('an object as the password is rejected cleanly', (await anon.req('/api/auth/login', { method: 'POST', body: { username: 'x', password: { a: 1 } } })).status === 400);
+  check('an array as the search term does not break the posts API', (await anon.req('/api/posts?search[]=x')).status === 200);
+  // headers
+  const homeHeaders = (await anon.req('/')).headers;
+  check('pages send a Permissions-Policy header', /camera=\(\)/.test(homeHeaders.get('permissions-policy') || ''));
+  check('pages cannot be framed', homeHeaders.get('x-frame-options') === 'DENY');
+  check('scripts are limited to this site', /script-src 'self'(;|$)/.test(homeHeaders.get('content-security-policy') || ''));
+  check('signed-in API responses are not cached', (await admin.req('/api/admin/posts')).headers.get('cache-control') === 'no-store');
+  // retired endpoints and new routes
+  for (const p of ['/api/homepage', '/api/navigation', '/api/changelog']) check(`${p} is gone`, (await anon.req(p)).status === 404);
+  check('sitemap lists the privacy page', /\/privacy<\/loc>/.test((await anon.req('/sitemap.xml')).text));
+  check('security.txt is served', /^Contact: /.test((await anon.req('/.well-known/security.txt')).text));
+  const badUrl = await anon.req('/blog/%E0%A4%A', { headers: { Accept: 'text/html' } });
+  check('a bad page address shows a page, not JSON', badUrl.status === 400 && /<!DOCTYPE html>/i.test(badUrl.text));
 
   console.log('\nBackup');
   const exp = await admin.req('/api/admin/export');

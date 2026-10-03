@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 
 // Simple CSRF token generation and validation
@@ -10,6 +11,9 @@ function generateCsrfToken(req, res, next) {
   res.locals.csrfToken = req.session.csrfToken;
   next();
 }
+
+const sameToken = (a, b) => typeof a === 'string' && typeof b === 'string' && a.length === b.length
+  && crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
 
 function validateCsrfToken(req, res, next) {
   // Skip CSRF for GET, HEAD, OPTIONS
@@ -25,7 +29,7 @@ function validateCsrfToken(req, res, next) {
     : (req.headers['x-csrf-token'] || req.body?.csrfToken);
   const sessionToken = req.session.csrfToken;
 
-  if (!token || !sessionToken || token !== sessionToken) {
+  if (!sameToken(token, sessionToken)) {
     return res.status(403).json({ error: 'Invalid CSRF token' });
   }
 

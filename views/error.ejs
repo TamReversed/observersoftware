@@ -1,0 +1,11 @@
+<%- include('partials/head', { noindex: true }) %>
+<%- include('partials/nav') %>
+<main id="main" class="state">
+  <div>
+    <h1 class="title"><%= heading %></h1>
+    <p><%= text %></p>
+    <a class="cta-primary" href="/">Back to the start <%- include('partials/arrow') %></a>
+  </div>
+</main>
+<%- include('partials/footer') %>
+<%- include('partials/end') %>

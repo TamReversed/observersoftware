@@ -36,7 +36,7 @@
     for (var s = 10; s < N; s += 10) if (!seen[s]) { order.push(s); seen[s] = 1; }
     // Data Saver or a slow connection: fetch every other frame; the blend between neighbours fills the gaps
     var conn = navigator.connection || {};
-    var lean = conn.saveData || /(^|-)(slow-)?2g|3g/.test(conn.effectiveType || '');
+    var lean = mobile || conn.saveData || /(^|-)(slow-)?2g|3g/.test(conn.effectiveType || '');
     for (var k = 0; k < N; k++) if (!seen[k] && (!lean || k % 2 === 0)) order.push(k);
     var next = 0, active = 0;
     function pump() {
