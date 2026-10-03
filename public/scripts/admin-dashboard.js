@@ -1323,6 +1323,7 @@ async function deleteMedia(id, name) {
 
 // Users functions
 async function loadUsers() {
+  loadTotpCard();
   try {
     const res = await fetch('/api/auth/users');
     const users = await res.json();
@@ -1339,11 +1340,12 @@ async function loadUsers() {
         <div class="user-info">
           <div class="user-name">${escapeHtml(user.username)}</div>
           <div class="user-meta">
-            ${user.hasPasskey ? '<span class="user-badge passkey">Passkey</span>' : '<span class="user-badge password">Password</span>'}
+            ${user.hasTotp ? '<span class="user-badge passkey">One-time code</span>' : (user.hasPasskey ? '<span class="user-badge passkey">Passkey</span>' : '<span class="user-badge password">Password</span>')}
           </div>
         </div>
         <div class="user-actions">
           <button class="btn btn-ghost" onclick="resetUserPassword('${user.id}', '${escapeHtml(user.username)}')">Reset Password</button>
+          ${user.hasTotp ? `<button class="btn btn-ghost" onclick="resetUserTotp('${user.id}', '${escapeHtml(user.username)}')">Reset one-time code</button>` : ''}
           ${user.hasPasskey ? `<button class="btn btn-ghost" onclick="revokeUserPasskeys('${user.id}', '${escapeHtml(user.username)}')">Revoke Passkeys</button>` : ''}
           <button class="btn btn-danger" onclick="deleteUser('${user.id}', '${escapeHtml(user.username)}')">Delete</button>
         </div>
@@ -1352,6 +1354,17 @@ async function loadUsers() {
   } catch (e) {
     showToast('Failed to load users', 'error');
   }
+}
+
+async function resetUserTotp(id, username) {
+  if (!confirm(`Turn off one-time codes for ${username}? They will need to set them up again (sign in with a password first).`)) return;
+  try {
+    const res = await authenticatedFetch(`/api/auth/users/${id}/totp`, { method: 'DELETE' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Failed to reset');
+    showToast('One-time code reset');
+    loadUsers();
+  } catch (e) { showToast(e.message, 'error'); }
 }
 
 async function resetUserPassword(id, username) {
@@ -1859,6 +1872,90 @@ document.getElementById('scDiscardBtn')?.addEventListener('click', discardSiteDr
 document.getElementById('scPreviewBtn')?.addEventListener('click', previewSiteContent);
 document.getElementById('scHistoryBtn')?.addEventListener('click', scToggleHistory);
 window.addEventListener('beforeunload', (e) => { if (scDirty) { e.preventDefault(); e.returnValue = ''; } });
+
+// ---------------------------------------------------------------------------
+// One-time code (Dashlane) sign-in: set up, confirm, recovery codes, turn off
+// ---------------------------------------------------------------------------
+const totpEls = {};
+['Card','State','Off','Setup','Recovery','On','Qr','Secret','Confirm','Codes','DisableCode'].forEach((n) => { totpEls[n] = document.getElementById('totp' + n); });
+function totpView(name) {
+  ['Off', 'Setup', 'Recovery', 'On'].forEach((n) => { totpEls[n].hidden = n !== name; });
+}
+let totpRecoveryText = '';
+
+async function loadTotpCard() {
+  if (!totpEls.Card) return;
+  try {
+    const res = await fetch('/api/auth/status', { credentials: 'same-origin' });
+    const data = await res.json();
+    totpEls.State.textContent = data.hasTotp ? 'On. This account signs in with a one-time code from Dashlane.' : 'Off. This account signs in with a password or passkey.';
+    totpView(data.hasTotp ? 'On' : 'Off');
+  } catch (e) { totpEls.State.textContent = 'Could not load.'; }
+}
+
+async function totpPost(url, body) {
+  const res = await authenticatedFetch(url, { method: 'POST', body: body || {} });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Something went wrong');
+  return data;
+}
+
+document.getElementById('totpStartBtn')?.addEventListener('click', async () => {
+  try {
+    const data = await totpPost('/api/auth/totp/setup');
+    // the QR is an SVG made by our own server from the key; show it as an image so it cannot run anything
+    totpEls.Qr.replaceChildren();
+    const img = document.createElement('img');
+    img.alt = '';
+    img.width = 196; img.height = 196;
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(data.qrSvg);
+    totpEls.Qr.appendChild(img);
+    totpEls.Secret.value = data.secret;
+    totpEls.Confirm.value = '';
+    totpView('Setup');
+    totpEls.Confirm.focus();
+  } catch (e) { showToast(e.message, 'error'); }
+});
+
+document.getElementById('totpCopyBtn')?.addEventListener('click', () => {
+  navigator.clipboard.writeText(totpEls.Secret.value.replace(/\s/g, '')).then(() => showToast('Key copied'), () => showToast('Select the key and copy it', 'error'));
+});
+document.getElementById('totpCancelBtn')?.addEventListener('click', () => { totpEls.Qr.replaceChildren(); totpEls.Secret.value = ''; totpView('Off'); });
+
+document.getElementById('totpEnableBtn')?.addEventListener('click', async () => {
+  try {
+    const data = await totpPost('/api/auth/totp/enable', { code: totpEls.Confirm.value });
+    totpRecoveryText = 'Observer admin recovery codes (each works once)\n\n' + data.recoveryCodes.join('\n') + '\n';
+    totpEls.Codes.textContent = data.recoveryCodes.join('\n');
+    totpEls.Qr.replaceChildren(); totpEls.Secret.value = '';
+    totpEls.State.textContent = 'On. Save your recovery codes below, then this account signs in with the one-time code.';
+    totpView('Recovery');
+  } catch (e) { showToast(e.message, 'error'); }
+});
+document.getElementById('totpCopyCodesBtn')?.addEventListener('click', () => {
+  navigator.clipboard.writeText(totpRecoveryText).then(() => showToast('Recovery codes copied'), () => showToast('Select and copy the codes', 'error'));
+});
+document.getElementById('totpDownloadCodesBtn')?.addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([totpRecoveryText], { type: 'text/plain' }));
+  a.download = 'observer-recovery-codes.txt';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
+document.getElementById('totpSavedBtn')?.addEventListener('click', () => {
+  if (!confirm('Have you saved the recovery codes somewhere safe? They cannot be shown again.')) return;
+  totpRecoveryText = ''; totpEls.Codes.textContent = '';
+  loadTotpCard(); loadUsers();
+});
+document.getElementById('totpDisableBtn')?.addEventListener('click', async () => {
+  if (!confirm('Turn off one-time codes? This account will go back to password or passkey sign-in.')) return;
+  try {
+    await totpPost('/api/auth/totp/disable', { code: totpEls.DisableCode.value });
+    totpEls.DisableCode.value = '';
+    showToast('One-time codes turned off');
+    loadTotpCard(); loadUsers();
+  } catch (e) { showToast(e.message, 'error'); }
+});
 
 // Logout
 document.getElementById('logoutBtn')?.addEventListener('click', async () => {

@@ -1348,3 +1348,17 @@ body {
 .sc-history { border: 1px solid var(--color-border); border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; }
 .sc-history h3 { font-size: 0.95rem; margin-bottom: 0.5rem; }
 .sc-history-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 0.6rem 0; border-top: 1px solid var(--color-border); font-size: 0.875rem; }
+
+/* one-time code setup */
+.totp-card { border: 1px solid var(--color-border); border-radius: 8px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: grid; gap: 0.75rem; }
+.totp-card h3 { font-size: 1rem; }
+.totp-steps { padding-left: 1.2rem; display: grid; gap: 1.25rem; }
+.totp-steps li { padding-left: 0.25rem; }
+.totp-qr { margin: 0.75rem 0; width: 200px; height: 200px; background: #fff; padding: 2px; border-radius: 4px; }
+.totp-qr img { display: block; }
+.totp-secret-row, .totp-confirm-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: 0.5rem; }
+.totp-secret-row .form-input { flex: 1 1 260px; font-family: var(--font-mono); letter-spacing: 0.08em; }
+.totp-confirm-row .form-input { flex: 0 1 180px; }
+.form-input--code { font-size: 1.25rem; letter-spacing: 0.25em; text-align: center; font-variant-numeric: tabular-nums; }
+.totp-warn { border-left: 3px solid var(--color-warning); background: rgba(224, 164, 88, 0.1); padding: 0.75rem 1rem; font-size: 0.9rem; }
+.totp-codes { font-family: var(--font-mono); font-size: 1.05rem; line-height: 1.9; letter-spacing: 0.1em; background: var(--color-bg); border: 1px solid var(--color-border); padding: 1rem 1.25rem; width: max-content; max-width: 100%; user-select: all; }

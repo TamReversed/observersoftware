@@ -702,6 +702,56 @@
           </div>
         </div>
         <div class="editor-content">
+          <section class="totp-card" id="totpCard" aria-labelledby="totpTitle">
+            <h3 id="totpTitle">Sign in with one-time codes</h3>
+            <p class="form-hint" id="totpState">Loading...</p>
+
+            <div id="totpOff" hidden>
+              <p class="form-hint">Use the 6-digit code from Dashlane (it changes every 30 seconds) as your only sign-in. No password to type or leak.</p>
+              <button class="btn btn-primary" id="totpStartBtn" type="button">Set up one-time codes</button>
+            </div>
+
+            <div id="totpSetup" hidden>
+              <ol class="totp-steps">
+                <li>In Dashlane, add a <strong>2FA / one-time code</strong> to your Observer entry. Either scan this QR code with Dashlane, or choose to enter the key manually and paste it.
+                  <div class="totp-qr" id="totpQr" role="img" aria-label="QR code for your authenticator"></div>
+                  <label class="form-label" for="totpSecret">Key (for manual entry)</label>
+                  <div class="totp-secret-row">
+                    <input type="text" id="totpSecret" class="form-input" readonly>
+                    <button class="btn btn-ghost btn-sm" id="totpCopyBtn" type="button">Copy</button>
+                  </div>
+                </li>
+                <li>Enter the 6-digit code Dashlane now shows, to confirm it saved correctly.
+                  <div class="totp-confirm-row">
+                    <input type="text" id="totpConfirm" class="form-input form-input--code" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="123 456">
+                    <button class="btn btn-primary" id="totpEnableBtn" type="button">Turn on</button>
+                    <button class="btn btn-ghost" id="totpCancelBtn" type="button">Cancel</button>
+                  </div>
+                </li>
+              </ol>
+            </div>
+
+            <div id="totpRecovery" hidden>
+              <div class="totp-warn" role="alert">
+                <strong>Save these recovery codes now.</strong> They are shown only once. Each works one time if you lose access to Dashlane. Keep them somewhere safe, such as a Dashlane secure note.
+              </div>
+              <pre class="totp-codes" id="totpCodes"></pre>
+              <div class="upload-row">
+                <button class="btn btn-ghost btn-sm" id="totpCopyCodesBtn" type="button">Copy codes</button>
+                <button class="btn btn-ghost btn-sm" id="totpDownloadCodesBtn" type="button">Download .txt</button>
+                <button class="btn btn-primary btn-sm" id="totpSavedBtn" type="button">I have saved them</button>
+              </div>
+            </div>
+
+            <div id="totpOn" hidden>
+              <p class="form-hint">Your password and passkeys no longer work for this account; you sign in with the code. To turn this off, enter a current code (or a recovery code).</p>
+              <div class="totp-confirm-row">
+                <input type="text" id="totpDisableCode" class="form-input form-input--code" autocomplete="off" maxlength="11" placeholder="Code" aria-label="Current code or recovery code">
+                <button class="btn btn-danger" id="totpDisableBtn" type="button">Turn off</button>
+              </div>
+            </div>
+          </section>
+
           <div class="users-list" id="usersListPanel">
             <div class="empty-state">Loading users...</div>
           </div>
