@@ -34,7 +34,10 @@
     var order = [0, N - 1], seen = { 0: 1 }; // index 0 is loaded separately
     seen[N - 1] = 1;
     for (var s = 10; s < N; s += 10) if (!seen[s]) { order.push(s); seen[s] = 1; }
-    for (var k = 0; k < N; k++) if (!seen[k]) order.push(k);
+    // Data Saver or a slow connection: fetch every other frame; the blend between neighbours fills the gaps
+    var conn = navigator.connection || {};
+    var lean = conn.saveData || /(^|-)(slow-)?2g|3g/.test(conn.effectiveType || '');
+    for (var k = 0; k < N; k++) if (!seen[k] && (!lean || k % 2 === 0)) order.push(k);
     var next = 0, active = 0;
     function pump() {
       while (active < 4 && next < order.length) {
@@ -72,14 +75,25 @@
       for (var d = 1; d < N; d++) { var f = frames[i - d] || frames[i + d]; if (f) return f; }
       return null;
     }
+    function after(i) { // next loaded frame, so a gap (lean mode) still glides
+      for (var j = i + 1; j < N && j <= i + 3; j++) if (frames[j]) return { img: frames[j], at: j };
+      return null;
+    }
 
-    // pos is fractional: draw the frame before it, then the frame after it at partial opacity,
+    // pos is fractional: draw the frame before it, then the next loaded frame at partial opacity,
     // so slow scrolling glides between frames instead of stepping
     function draw(pos, fade) {
       var i = Math.floor(pos), a = pos - i;
-      var img = nearest(i);
+      var base = frames[i] ? i : -1;
+      if (base < 0) { for (var d = 1; d < N; d++) { if (frames[i - d]) { base = i - d; break; } } }
+      var img = base >= 0 ? frames[base] : nearest(i);
       if (img) cover(img, 1);
-      if (a > 0.03 && i + 1 < N) { var nx = frames[i + 1]; if (nx) cover(nx, a); }
+      var nx = after(base >= 0 ? base : i);
+      if (img && nx) {
+        var span = nx.at - (base >= 0 ? base : i);
+        var t = Math.min(1, Math.max(0, (pos - (base >= 0 ? base : i)) / span));
+        if (t > 0.03) cover(nx.img, t);
+      }
       if (art && fade > 0) cover(art, fade);
     }
 

@@ -95,3 +95,10 @@ The film is cut by `scripts/build-film-frames.py`, not sampled at a fixed rate:
 - The coral line only appears at 12.5 s, so it gets its own stretch of scroll and the exit fade begins after it.
 - Timings (`holdFrom`, `chapters`, `outroStart`) live in `manifest.json` next to the frames, so the page script always matches how the frames were cut.
 - The page blends neighbouring frames while scrolling, so slow scrolls glide instead of stepping.
+
+## Image and film resolution
+
+- Opening image: 4K upscale of the approved art (Higgsfield image upscale, 2 credits), shipped at 2880 px desktop / 1440 px mobile.
+- Film: the 1080p Seedance render was upscaled to 3840x2160 with Topaz (11 credits; same 361 frames and 24 fps, so all scroll timing is unchanged). Web frames are cut at 2560 px desktop / 1080 px mobile.
+- Data Saver and 2G/3G visitors fetch every other frame; the page blends neighbouring frames to cover the gaps.
+- Masters live in `refs/raw/` (not committed): `hero-film.mp4` (1080p), `hero-film-4k.mp4`, `assets/hero-art-4k.png`. Rebuild with `scripts/build-film-frames.py refs/raw/hero-film-4k.mp4 220` and `scripts/build-site-assets.py`.
