@@ -6,6 +6,7 @@
 //   editor - content only: posts, work, products, FAQs, testimonials, site content, images
 // An account with no role (created before roles existed) is an admin. Any unrecognised role value is
 // treated as editor (least access), never as admin.
+const crypto = require('crypto');
 const DataService = require('../services/dataService');
 const DbService = require('../services/dbService');
 const config = require('../config');
@@ -19,9 +20,19 @@ function roleOf(user) {
 }
 
 // The account behind this request's session, or null (signed out, or the account was deleted)
+// Changes whenever the account's password or one-time-code setup changes, which ends every older session
+function authFingerprint(user) {
+  return crypto.createHash('sha256')
+    .update('fp1|' + (user.password || '') + '|' + (user.totpEnabled ? String(user.totpSecret || '') : ''))
+    .digest('hex').slice(0, 32);
+}
+
 async function sessionUser(req) {
   if (!req.session || !req.session.userId) return null;
-  return (await usersService.findById(req.session.userId)) || null;
+  const user = await usersService.findById(req.session.userId);
+  if (!user) return null;
+  if (req.session.authFp !== authFingerprint(user)) return null; // sign-in details changed since this session began
+  return user;
 }
 
 function deny(req, res) {
@@ -52,4 +63,4 @@ async function requireAdmin(req, res, next) {
   } catch (error) { next(error); }
 }
 
-module.exports = { requireAuth, requireAdmin, roleOf, sessionUser };
+module.exports = { requireAuth, requireAdmin, roleOf, sessionUser, authFingerprint };

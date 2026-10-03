@@ -164,10 +164,12 @@ const validateWork = [
 // Login validation
 const validateLogin = [
   body('username')
+    .isString().withMessage('Username is required').bail()
     .trim()
     .notEmpty().withMessage('Username is required')
     .isLength({ min: 1, max: 50 }).withMessage('Username must be between 1 and 50 characters'),
   body('password')
+    .isString().withMessage('Password is required').bail()
     .notEmpty().withMessage('Password is required')
     .isLength({ min: 1, max: 200 }).withMessage('Password must be between 1 and 200 characters'),
   handleValidationErrors

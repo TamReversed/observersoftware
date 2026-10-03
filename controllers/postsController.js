@@ -62,9 +62,10 @@ function getRelatedPosts(currentPost, allPosts) {
 
 async function getPosts(req, res, next) {
   try {
-    const { search, category, page = 1, limit = 8 } = req.query;
-    const pageNum = parseInt(page, 10);
-    const limitNum = parseInt(limit, 10);
+    const search = typeof req.query.search === 'string' ? req.query.search.slice(0, 100) : '';
+    const category = typeof req.query.category === 'string' ? req.query.category : '';
+    const pageNum = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limitNum = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 8));
 
     let posts = await postsService.findAll(p => p.published);
     posts.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
@@ -79,8 +80,8 @@ async function getPosts(req, res, next) {
       const searchLower = search.toLowerCase();
       posts = posts.filter(p =>
         p.title.toLowerCase().includes(searchLower) ||
-        p.excerpt.toLowerCase().includes(searchLower) ||
-        p.content.toLowerCase().includes(searchLower)
+        (p.excerpt || '').toLowerCase().includes(searchLower) ||
+        (p.content || '').toLowerCase().includes(searchLower)
       );
     }
 
@@ -95,6 +96,7 @@ async function getPosts(req, res, next) {
       ...p,
       readTime: calculateReadTime(p.content),
       categoryName: CATEGORIES.find(c => c.slug === p.category)?.name || p.category,
+      author: undefined,
       content: undefined // Don't send full content in list
     }));
 
@@ -137,6 +139,7 @@ async function getPostBySlug(req, res, next) {
 
     res.json({
       ...post,
+      author: undefined,
       readTime: calculateReadTime(post.content),
       categoryName: CATEGORIES.find(c => c.slug === post.category)?.name || post.category,
       htmlContent: renderMarkdown(post.content),

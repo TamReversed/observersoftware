@@ -12,9 +12,6 @@ const messagesRoutes = require('./messages');
 // New admin panel routes
 const settingsRoutes = require('./settings');
 const categoriesRoutes = require('./categories');
-const changelogRoutes = require('./changelog');
-const homepageRoutes = require('./homepage');
-const navigationRoutes = require('./navigation');
 const testimonialsRoutes = require('./testimonials');
 const faqsRoutes = require('./faqs');
 const siteContentRoutes = require('./siteContent');
@@ -33,9 +30,6 @@ router.use('/api', messagesRoutes);
 // Mount new routes
 router.use('/api', settingsRoutes);
 router.use('/api', categoriesRoutes);
-router.use('/api', changelogRoutes);
-router.use('/api', homepageRoutes);
-router.use('/api', navigationRoutes);
 router.use('/api', testimonialsRoutes);
 router.use('/api', faqsRoutes);
 router.use('/api', siteContentRoutes);

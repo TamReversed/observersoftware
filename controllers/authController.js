@@ -3,7 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 const DataService = require('../services/dataService');
 const DbService = require('../services/dbService');
 const config = require('../config');
-const { roleOf } = require('../middleware/auth');
+const { roleOf, sessionUser, authFingerprint } = require('../middleware/auth');
 const webauthnService = require('../services/webauthnService');
 
 // Use database if available, otherwise fall back to JSON files
@@ -15,16 +15,24 @@ const usersService = config.database.useDatabase
 const failedLogins = new Map();
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
+const USER_MAX_FAILED = 20; // across all addresses, per username
+
+// Compared against when the username does not exist, so the response takes as long as a real check
+const DUMMY_HASH = bcrypt.hashSync('observer-no-such-account', 12);
 
 function lockoutKey(req, username) {
   return `${req.ip}|${String(username || '').toLowerCase()}`;
 }
 
-function isAccountLocked(key) {
+function userKey(username) {
+  return `user|${String(username || '').toLowerCase()}`;
+}
+
+function isAccountLocked(key, max = MAX_FAILED_ATTEMPTS) {
   const record = failedLogins.get(key);
   if (!record) return false;
 
-  if (record.attempts >= MAX_FAILED_ATTEMPTS) {
+  if (record.attempts >= max) {
     const timeSinceLockout = Date.now() - record.lastAttempt;
     if (timeSinceLockout < LOCKOUT_DURATION) {
       return true;
@@ -48,7 +56,8 @@ function recordFailedLogin(key) {
       if (v.lastAttempt < cutoff) failedLogins.delete(k);
     }
   }
-  const record = failedLogins.get(key) || { attempts: 0, lastAttempt: 0 };
+  let record = failedLogins.get(key) || { attempts: 0, lastAttempt: 0 };
+  if (Date.now() - record.lastAttempt > LOCKOUT_DURATION) record = { attempts: 0, lastAttempt: 0 }; // old failures no longer count
   record.attempts++;
   record.lastAttempt = Date.now();
   failedLogins.set(key, record);
@@ -64,6 +73,7 @@ function establishSession(req, user, cb) {
     if (err) return cb(err);
     req.session.userId = user.id;
     req.session.username = user.username;
+    req.session.authFp = authFingerprint(user);
     req.session.csrfToken = uuidv4();
     req.session.save(cb);
   });
@@ -78,25 +88,22 @@ async function login(req, res, next) {
     }
 
     const key = lockoutKey(req, username);
+    const ukey = userKey(username);
 
     // Check for account lockout
-    if (isAccountLocked(key)) {
+    if (isAccountLocked(key) || isAccountLocked(ukey, USER_MAX_FAILED)) {
       return res.status(429).json({
-        error: `Too many wrong passwords for this account. Try again in ${lockMinutesLeft(key)} minute${lockMinutesLeft(key) === 1 ? '' : 's'}.`
+        error: `Too many wrong passwords for this account. Try again in ${lockMinutesLeft(isAccountLocked(key) ? key : ukey)} minute${lockMinutesLeft(isAccountLocked(key) ? key : ukey) === 1 ? '' : 's'}.`
       });
     }
 
     const users = await usersService.findAll();
     const user = users.find(u => u.username === username);
 
-    if (!user) {
+    const valid = await bcrypt.compare(password, user ? user.password : DUMMY_HASH);
+    if (!user || !valid) {
       recordFailedLogin(key);
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
-    const valid = await bcrypt.compare(password, user.password);
-    if (!valid) {
-      recordFailedLogin(key);
+      recordFailedLogin(ukey);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
@@ -104,11 +111,13 @@ async function login(req, res, next) {
     // password, so a correct password is never confirmed to someone who is guessing.
     if (user.totpEnabled) {
       recordFailedLogin(key);
+      recordFailedLogin(ukey);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     // Successful login - clear failed attempts
     clearFailedLogins(key);
+    clearFailedLogins(ukey);
 
     establishSession(req, user, (err) => {
       if (err) return next(err);
@@ -126,18 +135,16 @@ function logout(req, res) {
 
 async function getStatus(req, res, next) {
   try {
-    if (req.session && req.session.userId) {
-      const user = await usersService.findById(req.session.userId);
-      if (user) {
-        return res.json({
-          authenticated: true,
-          id: user.id,
-          username: user.username,
-          role: roleOf(user),
-          hasPasskey: !!(user.webauthnCredentials && user.webauthnCredentials.length > 0),
-          hasTotp: !!user.totpEnabled
-        });
-      }
+    const user = await sessionUser(req);
+    if (user) {
+      return res.json({
+        authenticated: true,
+        id: user.id,
+        username: user.username,
+        role: roleOf(user),
+        hasPasskey: !!(user.webauthnCredentials && user.webauthnCredentials.length > 0),
+        hasTotp: !!user.totpEnabled
+      });
     }
     res.json({ authenticated: false });
   } catch (error) { next(error); }
@@ -170,14 +177,14 @@ async function startWebAuthnRegistration(req, res, next) {
     const sessionAuthenticated = !!(req.session && req.session.userId);
 
     if (sessionAuthenticated) {
-      user = await usersService.findById(req.session.userId);
+      user = await sessionUser(req);
       if (!user) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
     } else {
       const { username, password } = req.body;
 
-      if (!username || !password) {
+      if (typeof username !== 'string' || typeof password !== 'string' || !username || !password) {
         return res.status(400).json({ error: 'Username and password are required' });
       }
 
@@ -190,7 +197,8 @@ async function startWebAuthnRegistration(req, res, next) {
 
       const users = await usersService.findAll();
       user = users.find(u => u.username === username);
-      const valid = user ? await bcrypt.compare(password, user.password) : false;
+      const matches = await bcrypt.compare(password, user ? user.password : DUMMY_HASH);
+      const valid = !!user && matches;
 
       if (!valid || user.totpEnabled) {
         recordFailedLogin(key);
@@ -328,19 +336,16 @@ async function startWebAuthnLogin(req, res, next) {
   try {
     const { username } = req.body;
 
-    if (!username) {
+    if (typeof username !== 'string' || !username) {
       return res.status(400).json({ error: 'Username is required' });
     }
 
     const users = await usersService.findAll();
     const user = users.find(u => u.username === username);
 
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
-    if (user.totpEnabled || !user.webauthnCredentials || user.webauthnCredentials.length === 0) {
-      return res.status(400).json({ error: 'No passkey registered for this user' });
+    // One identical answer for "no such account", "no passkey" and "uses one-time codes"
+    if (!user || user.totpEnabled || !user.webauthnCredentials || user.webauthnCredentials.length === 0) {
+      return res.status(400).json({ error: 'Passkey sign-in is not available for this account.' });
     }
 
     // Validate credentials
@@ -556,7 +561,7 @@ async function resetPassword(req, res, next) {
     const { id } = req.params;
     const { password } = req.body;
 
-    if (!password) {
+    if (typeof password !== 'string' || !password) {
       return res.status(400).json({ error: 'Password is required' });
     }
 
@@ -571,6 +576,8 @@ async function resetPassword(req, res, next) {
 
     const hashedPassword = await bcrypt.hash(password, 12);
     await usersService.updateById(id, { password: hashedPassword });
+    // An admin changing their own password stays signed in on this session only
+    if (id === req.session.userId) req.session.authFp = authFingerprint(await usersService.findById(id));
     res.json({ success: true });
   } catch (error) {
     next(error);
