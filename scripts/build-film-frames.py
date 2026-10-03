@@ -29,8 +29,8 @@ MAIN_SHARE = 0.82          # share of output frames spent before the coral line 
 HOLD_FROM = 0.90           # scroll fraction where the film holds its last frame while the page takes over
 CHAPTERS = [0, 0.22, 0.46, 0.68]  # scroll fractions where headlines 1-4 begin (tuned to the film content)
 FLOOR = 1.0                # minimum "visual weight" per source step, so slow parts still get frames
-DESKTOP_W, DESKTOP_Q = 1600, 70
-MOBILE_W, MOBILE_Q = 640, 62
+DESKTOP_W, DESKTOP_Q = 1920, 72  # the film is 1080p, so 1920 is its native width
+MOBILE_W, MOBILE_Q = 864, 66     # 4:5 centre crop of a 1080p frame is 864 px wide natively
 
 
 def neutralise(im):
