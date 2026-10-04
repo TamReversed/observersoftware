@@ -37,7 +37,7 @@
     var FADE_END = 0.2; // fraction of the scroll over which the hero image fades out
     var BACK = 2, AHEAD = 4; // decoded window around the current frame
     var url = function (i) { return tpl.replace('{n}', String(i + 1).padStart(m.pad || 3, '0')) + (m.v ? '?v=' + m.v : ''); };
-    var fetchBlob = function (u) { return fetch(u).then(function (r) { if (!r.ok) throw new Error(String(r.status)); return r.blob(); }); };
+    var fetchBlob = function (u, low) { return fetch(u, low ? { priority: 'low' } : undefined).then(function (r) { if (!r.ok) throw new Error(String(r.status)); return r.blob(); }); };
 
     // decode at the size the canvas needs (never larger than the file), off the main thread
     function decode(blob, wantW) {
@@ -59,7 +59,7 @@
       while (active < 4 && next < order.length) {
         (function (i) {
           active++;
-          fetchBlob(url(i)).then(function (b) { blobs[i] = b; dirty = true; }).catch(function () {}).then(function () { active--; pump(); });
+          fetchBlob(url(i), true).then(function (b) { blobs[i] = b; dirty = true; }).catch(function () {}).then(function () { active--; pump(); });
         })(order[next++]);
       }
     }
@@ -191,8 +191,13 @@
     }).catch(function () { root.classList.add('film--static'); });
     fetchBlob(small ? root.dataset.artMobile : root.dataset.art).then(function (b) { artBlob = b; makeArt(); }).catch(function () { ready(); }); // no art: the film simply starts at its first frame
     next = 0;
-    var start = function () { (window.requestIdleCallback || function (f) { setTimeout(f, 400); })(pump, { timeout: 2500 }); };
-    if (document.readyState === 'complete') start(); else window.addEventListener('load', start);
+    // The other frames wait until the page has painted (2 s after load) or the visitor starts scrolling,
+    // and download at low priority, so they never compete with the fonts, stylesheet and headline.
+    var started = false;
+    var start = function () { if (started) return; started = true; window.removeEventListener('scroll', start); pump(); };
+    var arm = function () { setTimeout(start, 2000); };
+    window.addEventListener('scroll', start, { passive: true });
+    if (document.readyState === 'complete') arm(); else window.addEventListener('load', arm);
     requestAnimationFrame(tick);
   }
 })();
