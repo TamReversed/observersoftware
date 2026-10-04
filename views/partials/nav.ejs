@@ -6,7 +6,7 @@
 <% if (typeof isAdmin !== 'undefined' && isAdmin && !(typeof preview !== 'undefined' && preview)) { %><a class="admin-pill" href="/admin#site-content" rel="nofollow">Edit site</a><% } %>
 <header class="nav<%= (typeof navOver !== 'undefined' && navOver) ? ' nav--over' : '' %>" id="nav">
   <div class="wrap nav__inner">
-    <a class="nav__logo" href="/" aria-label="Observer, home"><img src="/assets/brand/observer-wordmark.svg" alt="Observer" width="117" height="32"></a>
+    <a class="nav__logo" href="/" aria-label="Observer, home"><img src="/assets/brand/observer-wordmark.svg" alt="Observer" width="151" height="32"></a>
     <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="nav-links" aria-label="Menu"><span></span><span></span></button>
     <nav class="nav__links" id="nav-links" aria-label="Primary">
       <% links.forEach(function (l) { %><a href="<%= l[1] %>"<%- here(l[1]) ? ' aria-current="page"' : '' %>><%= l[0] %></a>
