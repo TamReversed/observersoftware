@@ -97,6 +97,33 @@ write(f'{OUT}/observer-wordmark.svg',
       f'<g transform="translate({-mx * ms:.2f} {32 - (my + mh / 2) * ms:.2f}) scale({ms:.4f})">{svg_inner("standard", TEXT, ACCENT)}</g>'
       f'<path fill="{TEXT}" d="{"".join(paths)}"/></svg>\n')
 
+# --- animated wordmark (home page nav): the mark draws itself once. Threads run from the left tip to the right
+# corner, the pupil lights, then the coral line fires. Pure CSS inside the SVG, so it works as an <img>;
+# with reduced motion it is simply the finished logo.
+def animated_wordmark():
+    v = VARIANTS['standard']
+    threads = []
+    for k, (s1, s2) in enumerate(curves(v['n'])):
+        d = 'M%.2f %.2f' % s1[0] + 'C' + ' '.join('%.2f %.2f' % p for p in s1[1:]) + 'C' + ' '.join('%.2f %.2f' % p for p in s2[1:])
+        n = v['n']
+        delay = 0.05 + 0.09 * (k % n) + (0.045 if k >= n else 0)   # upper and lower families interleave
+        threads.append(f'<path class="t" pathLength="1" d="{d}" style="animation-delay:{delay:.2f}s"/>')
+    css = ('.t{fill:none;stroke:' + TEXT + ';stroke-width:' + str(v['stroke']) + ';stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;animation:draw .85s cubic-bezier(.22,1,.36,1) forwards}'
+           '.p{transform-box:fill-box;transform-origin:center;transform:scale(0);opacity:0;animation:light .5s cubic-bezier(.22,1,.36,1) .75s forwards}'
+           '.l{transform-box:fill-box;transform-origin:left center;transform:scaleX(0);opacity:0;animation:fire .45s cubic-bezier(.22,1,.36,1) 1.1s forwards}'
+           '@keyframes draw{to{stroke-dashoffset:0}}'
+           '@keyframes light{60%{transform:scale(1.18);opacity:1}to{transform:scale(1);opacity:1}}'
+           '@keyframes fire{from{opacity:1}to{transform:scaleX(1);opacity:1}}'
+           '@media (prefers-reduced-motion:reduce){.t{animation:none;stroke-dashoffset:0}.p{animation:none;transform:none;opacity:1}.l{animation:none;transform:none;opacity:1}}')
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} 64" fill="none" role="img" aria-label="Observer"><style>{css}</style>'
+            f'<g transform="translate({-mx * ms:.2f} {32 - (my + mh / 2) * ms:.2f}) scale({ms:.4f})">'
+            f'{"".join(threads)}'
+            f'<path class="l" d="M{R[0] - 1} 50H{v["x1"]}" stroke="{ACCENT}" stroke-width="{v["line"]}"/>'
+            f'<circle class="p" cx="{PUPIL[0]}" cy="50" r="{v["pupil"]}" fill="{ACCENT}"/></g>'
+            f'<path fill="{TEXT}" d="{"".join(paths)}"/></svg>\n')
+
+write(f'{OUT}/observer-wordmark-animated.svg', animated_wordmark())
+
 # --- raster icons (PIL, supersampled): the mark centred on a ground tile
 def render(n, frac, kind='standard', ss=8):
     N = n * ss
