@@ -185,7 +185,8 @@
     // first frame and hero image right away (the first frame matches the poster); the rest once the page is loaded and idle
     var isReady = false, pending = 2;
     function ready() { if (isReady) return; if (--pending > 0) return; isReady = true; root.classList.add('film--ready'); dirty = true; }
-    fetchBlob(url(0)).then(function (b) {
+    // low priority: the opening image covers the first frame, and the poster shows the same picture until both are ready
+    fetchBlob(url(0), true).then(function (b) {
       blobs[0] = b;
       return createImageBitmap(b).then(function (probe) { srcW = probe.width; srcH = probe.height; closeBitmap(probe); warmAt = 0; warm(0); });
     }).catch(function () { root.classList.add('film--static'); });
