@@ -356,3 +356,22 @@ body.nav-open { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }
+
+/* print: dark text on white, no navigation or decoration */
+@media print {
+  :root { --ground: #fff; --surface: #fff; --text: #111; --muted: #444; --line: #ccc; --line-strong: #999; }
+  html { color-scheme: light; }
+  body { background: #fff; color: #111; font-size: 11pt; }
+  .nav, .footer, .skip-link, .film__canvas, .film__progress, .film__veil, .film__sr, .practice__plate, .closing__plate, .work-frame, .rail, .search, .cta-primary, .cta-framed, .admin-pill, .preview-bar, .contact__panel { display: none !important; }
+  .film, .film-live .film:not(.film--static) { height: auto !important; }
+  .film-live .film:not(.film--static) .film__stage { position: static; height: auto; display: block; }
+  .film-live .film:not(.film--static) .film__stage::after, .practice::after { display: none; }
+  .film-live .film:not(.film--static) .film__chapters, .film-live .film:not(.film--static) .film__chapter { position: static; transform: none; visibility: visible; opacity: 1; }
+  .film-live .film:not(.film--static) .film__chapter > * { opacity: 1; transform: none; }
+  .film-live .film:not(.film--static) + .practices { margin-top: 0; }
+  .page-head { padding-top: 0; }
+  a { text-decoration: underline; }
+  .prose a[href^='http']::after { content: ' (' attr(href) ')'; font-size: 0.85em; color: #444; }
+  img { break-inside: avoid; }
+  h1, h2, h3 { break-after: avoid; }
+}
