@@ -144,7 +144,7 @@
     });
   }
 
-  // --- logo intro in the home hero (first home view of a visit only). The mark draws itself, its coral line
+  // --- logo intro in the home hero (plays on every load of the home page). The mark draws itself, its coral line
   // fires, and the line hands off to the coral line of the opening image as the image fades in.
   // The inline head script adds html.intro-pending when it should play; anything that goes wrong simply
   // brings the opening image in as normal.
@@ -163,9 +163,8 @@
     debugBox = document.createElement('div');
     debugBox.setAttribute('style', 'position:fixed;left:8px;bottom:8px;z-index:9999;max-width:min(92vw,560px);padding:10px 12px;background:#000;color:#9f9;font:12px/1.5 ui-monospace,Menlo,monospace;border:1px solid #9f9;white-space:pre-wrap');
     document.body.appendChild(debugBox);
-    var seenFlag = null; try { seenFlag = sessionStorage.getItem('observer-intro'); } catch (e) { seenFlag = 'storage blocked'; }
     note('film-live=' + root.classList.contains('film-live') + ' pending=' + root.classList.contains('intro-pending') + ' element=' + !!intro);
-    note('reduced-motion=' + window.matchMedia('(prefers-reduced-motion: reduce)').matches + ' saveData=' + !!(navigator.connection || {}).saveData + ' seen=' + seenFlag + ' hidden=' + document.hidden + ' scrollY=' + Math.round(window.scrollY) + ' ' + window.innerWidth + 'x' + window.innerHeight);
+    note('reduced-motion=' + window.matchMedia('(prefers-reduced-motion: reduce)').matches + ' saveData=' + !!(navigator.connection || {}).saveData + ' hidden=' + document.hidden + ' scrollY=' + Math.round(window.scrollY) + ' ' + window.innerWidth + 'x' + window.innerHeight);
     note(navigator.userAgent.replace(/^Mozilla\/5\.0 /, ''));
   }
   if (intro && film && root.classList.contains('intro-pending')) {
@@ -199,8 +198,6 @@
       clearTimeout(guard);
       window.removeEventListener('scroll', early);
       window.removeEventListener('resize', align);
-      // only a completed intro counts as seen: a skipped or failed one gets another chance on the next load
-      if (!fast) { try { sessionStorage.setItem('observer-intro', '1'); } catch (e) {} }
       film.classList.remove('film--intro-playing');
       film.classList.add('film--intro-handoff');
       root.classList.remove('intro-pending');           // the opening image fades in

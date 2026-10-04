@@ -128,7 +128,7 @@ body.nav-open { overflow: hidden; }
 .film-live .film:not(.film--static) .film__canvas { display: block; opacity: 0; }
 .film-live .film:not(.film--static).film--ready .film__canvas { opacity: 1; }
 .film-live .film:not(.film--static).film--ready .film__poster { opacity: 0; }
-/* logo intro (first home view of a visit): the mark draws itself, its coral line fires to the right, and that
+/* logo intro (every load of the home page): the mark draws itself, its coral line fires to the right, and that
    line becomes the coral line of the opening image as the image fades in. Afterwards the hero is unchanged.
    The video sits over the image with a screen blend, so only its light shows. --intro-dx and --intro-dy (set by the script) put the eye's corner on the image's coral line. */
 .film-live .film:not(.film--static) .film__intro { display: block; position: absolute; top: 0; bottom: 0; left: 0; width: 100%; transform: translate(var(--intro-dx, 12%), var(--intro-dy, 0px)) scale(0.7); transform-origin: 50% 50%; pointer-events: none; mix-blend-mode: screen; filter: contrast(1.32) brightness(0.88); opacity: 0; transition: opacity 0.9s var(--ease); -webkit-mask-image: radial-gradient(ellipse 56% 62% at 50% 50%, #000 58%, transparent 100%); mask-image: radial-gradient(ellipse 56% 62% at 50% 50%, #000 58%, transparent 100%); }
