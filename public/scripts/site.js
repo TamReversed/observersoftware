@@ -144,6 +144,84 @@
     });
   }
 
+  // --- logo intro in the home hero (first home view of a visit only). The mark draws itself, its coral line
+  // fires, and the line hands off to the coral line of the opening image as the image fades in.
+  // The inline head script adds html.intro-pending when it should play; anything that goes wrong simply
+  // brings the opening image in as normal.
+  var intro = document.querySelector('.film__intro');
+  var film = intro && intro.closest('.film');
+  var root = document.documentElement;
+  if (intro && film && root.classList.contains('intro-pending')) {
+    var HANDOFF_AT = 4.85;     // seconds: just after the coral line fires
+    var small = window.matchMedia('(max-width: 760px)').matches;
+    var ART = small ? { x: 0.709, y: 0.4989 } : { x: 0.771, y: 0.4821 }; // where the coral line starts in the opening image
+    var VIDEO = { x: 0.686, y: 0.46 };                                   // the eye's right corner in the video at the hand-off
+    var ended = false, v = null, guard;
+    // line the video's coral line up with the one in the opening image
+    var align = function () {
+      var stage = film.querySelector('.film__stage'), poster = film.querySelector('.film__poster');
+      if (!stage || !poster || !poster.naturalWidth) return;
+      intro.style.setProperty('--intro-dx', '0px');
+      intro.style.setProperty('--intro-dy', '0px');
+      var sr = stage.getBoundingClientRect(), ir = intro.getBoundingClientRect();
+      // both are drawn "cover": scaled to fill, centred, overflow cropped
+      var artScale = Math.max(sr.width / poster.naturalWidth, sr.height / poster.naturalHeight);
+      var artX = sr.width / 2 + (ART.x - 0.5) * poster.naturalWidth * artScale;
+      var artY = sr.height / 2 + (ART.y - 0.5) * poster.naturalHeight * artScale;
+      var vw = Math.max(ir.width, ir.height * 16 / 9), vh = vw * 9 / 16;
+      var videoX = (ir.left - sr.left) + ir.width / 2 + (VIDEO.x - 0.5) * vw;
+      var videoY = (ir.top - sr.top) + ir.height / 2 + (VIDEO.y - 0.5) * vh;
+      intro.style.setProperty('--intro-dx', (artX - videoX).toFixed(1) + 'px');
+      intro.style.setProperty('--intro-dy', (artY - videoY).toFixed(1) + 'px');
+    };
+    var handoff = function (fast) {
+      if (ended) return; ended = true;
+      clearTimeout(guard);
+      window.removeEventListener('scroll', early);
+      window.removeEventListener('resize', align);
+      try { sessionStorage.setItem('observer-intro', '1'); } catch (e) {}
+      film.classList.remove('film--intro-playing');
+      film.classList.add('film--intro-handoff');
+      root.classList.remove('intro-pending');           // the opening image fades in
+      setTimeout(function () { if (v) { v.pause(); } intro.remove(); film.classList.remove('film--intro-handoff'); }, fast ? 900 : 2400);
+    };
+    var early = function () { if (window.scrollY > 40) handoff(true); }; // scrolling starts the film: step aside
+    var play = function () {
+      if (window.scrollY > 40) return handoff(true);
+      v = document.createElement('video');
+      v.muted = true; v.playsInline = true; v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.preload = 'auto';
+      v.src = intro.dataset.mp4;
+      v.addEventListener('playing', function () { clearTimeout(guard); align(); film.classList.add('film--intro-playing'); }, { once: true });
+      v.addEventListener('timeupdate', function () { if (v.currentTime >= HANDOFF_AT) handoff(false); });
+      v.addEventListener('ended', function () { handoff(false); });
+      v.addEventListener('error', function () { handoff(true); });
+      window.addEventListener('scroll', early, { passive: true });
+      window.addEventListener('resize', align);
+      intro.appendChild(v);
+      align();
+      var start = function () {
+        var p = v.play();
+        if (p && p.catch) p.catch(function () {
+          if (ended) return;
+          if (document.hidden) { // opened in a background tab: play when the visitor arrives
+            document.addEventListener('visibilitychange', function again() {
+              if (document.hidden) return;
+              document.removeEventListener('visibilitychange', again);
+              if (!ended) start();
+            });
+          } else handoff(true); // autoplay blocked
+        });
+      };
+      start();
+      // never leave the hero dark: if the video has not started 3 s after load, show the image
+      guard = setTimeout(function () { if (!document.hidden && !film.classList.contains('film--intro-playing')) handoff(true); }, 3000);
+    };
+    if (document.readyState === 'complete') play(); else window.addEventListener('load', play);
+  } else if (intro) {
+    intro.remove();
+    root.classList.remove('intro-pending');
+  }
+
   // --- offline fallback
   if ('serviceWorker' in navigator && location.protocol === 'https:') {
     navigator.serviceWorker.register('/sw.js').catch(function () {});

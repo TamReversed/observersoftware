@@ -27,7 +27,7 @@ validateEnv();
 const app = express();
 
 // Runs inline before first paint (one less blocking request). The CSP allows exactly this script by its hash.
-const FILM_LIVE_INLINE = "if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches) document.documentElement.classList.add('film-live');";
+const FILM_LIVE_INLINE = "(function(){var d=document.documentElement;if(!window.matchMedia('(prefers-reduced-motion: no-preference)').matches)return;d.classList.add('film-live');try{if(location.pathname==='/'&&!sessionStorage.getItem('observer-intro')&&!(navigator.connection||{}).saveData)d.classList.add('intro-pending')}catch(e){}})();";
 const FILM_LIVE_HASH = "'sha256-" + require('crypto').createHash('sha256').update(FILM_LIVE_INLINE).digest('base64') + "'";
 app.locals.filmLiveInline = FILM_LIVE_INLINE;
 
