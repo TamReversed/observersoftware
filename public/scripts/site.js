@@ -169,22 +169,24 @@
     note(navigator.userAgent.replace(/^Mozilla\/5\.0 /, ''));
   }
   if (intro && film && root.classList.contains('intro-pending')) {
-    var HANDOFF_AT = 4.85;     // seconds: just after the coral line fires
+    var HANDOFF_AT = 3.7;      // seconds into the (trimmed) video: just after the coral line fires
     var small = window.matchMedia('(max-width: 760px)').matches;
-    var ART = small ? { x: 0.709, y: 0.4989 } : { x: 0.771, y: 0.4821 }; // where the coral line starts in the opening image
+    // where the coral line starts in the opening image, and that image's pixel size (known up front, so the
+    // intro can be positioned before the image has loaded)
+    var ART = small ? { x: 0.709, y: 0.4989, w: 1440, h: 1800 } : { x: 0.771, y: 0.4821, w: 4096, h: 2323 };
     var VIDEO = { x: 0.686, y: 0.46 };                                   // the eye's right corner in the video at the hand-off
     var ended = false, v = null, guard;
     // line the video's coral line up with the one in the opening image
     var align = function () {
-      var stage = film.querySelector('.film__stage'), poster = film.querySelector('.film__poster');
-      if (!stage || !poster || !poster.naturalWidth) return;
+      var stage = film.querySelector('.film__stage');
+      if (!stage) return;
       intro.style.setProperty('--intro-dx', '0px');
       intro.style.setProperty('--intro-dy', '0px');
       var sr = stage.getBoundingClientRect(), ir = intro.getBoundingClientRect();
       // both are drawn "cover": scaled to fill, centred, overflow cropped
-      var artScale = Math.max(sr.width / poster.naturalWidth, sr.height / poster.naturalHeight);
-      var artX = sr.width / 2 + (ART.x - 0.5) * poster.naturalWidth * artScale;
-      var artY = sr.height / 2 + (ART.y - 0.5) * poster.naturalHeight * artScale;
+      var artScale = Math.max(sr.width / ART.w, sr.height / ART.h);
+      var artX = sr.width / 2 + (ART.x - 0.5) * ART.w * artScale;
+      var artY = sr.height / 2 + (ART.y - 0.5) * ART.h * artScale;
       var vw = Math.max(ir.width, ir.height * 16 / 9), vh = vw * 9 / 16;
       var videoX = (ir.left - sr.left) + ir.width / 2 + (VIDEO.x - 0.5) * vw;
       var videoY = (ir.top - sr.top) + ir.height / 2 + (VIDEO.y - 0.5) * vh;
@@ -209,7 +211,7 @@
       if (window.scrollY > 40) return handoff(true, 'page was already scrolled at load'); // reloaded part-way down the page: skip this time
       v = document.createElement('video');
       v.muted = true; v.playsInline = true; v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.preload = 'auto';
-      v.src = intro.dataset.mp4;
+      v.src = small ? intro.dataset.mp4Small : intro.dataset.mp4;
       v.addEventListener('playing', function () { clearTimeout(guard); align(); film.classList.add('film--intro-playing'); }, { once: true });
       if (debugBox) {
         ['loadstart', 'loadedmetadata', 'canplay', 'playing', 'waiting', 'stalled', 'suspend', 'pause', 'ended'].forEach(function (ev) { v.addEventListener(ev, function () { note('video ' + ev + ' t=' + v.currentTime.toFixed(2) + ' ready=' + v.readyState); }); });
@@ -221,6 +223,24 @@
       }
       v.addEventListener('timeupdate', function () { if (v.currentTime >= HANDOFF_AT) handoff(false); });
       v.addEventListener('ended', function () { handoff(false); });
+      // Browsers pause silent video when the tab or window is hidden, even for a moment, and do not resume it.
+      // Resume whenever the page is visible again, and never sit on a frozen frame: after 3 s without progress
+      // on a visible page, give up and show the image.
+      var resume = function () {
+        if (ended || document.hidden || !v.paused) return;
+        var p = v.play(); if (p && p.catch) p.catch(function () {});
+      };
+      v.addEventListener('pause', function () { if (!ended && !v.ended) setTimeout(resume, 80); });
+      document.addEventListener('visibilitychange', resume);
+      window.addEventListener('focus', resume);
+      var lastT = -1, stuck = 0;
+      var watchdog = setInterval(function () {
+        if (ended) return clearInterval(watchdog);
+        if (document.hidden) { stuck = 0; return; }
+        if (v.currentTime === lastT) { stuck++; resume(); if (stuck >= 6) handoff(true, 'video stopped making progress'); }
+        else stuck = 0;
+        lastT = v.currentTime;
+      }, 500);
       v.addEventListener('error', function () { handoff(true, 'video error ' + (v.error ? v.error.code + ' ' + v.error.message : '')); });
       window.addEventListener('scroll', early, { passive: true });
       window.addEventListener('resize', align);
@@ -241,10 +261,10 @@
         });
       };
       start();
-      // never leave the hero dark: if the video has not started 5 s after load, show the image
-      guard = setTimeout(function () { if (!document.hidden && !film.classList.contains('film--intro-playing')) handoff(true, 'video had not started 5 s after load'); }, 5000);
+      // never leave the hero dark: if the video has not started within 5 s, show the image
+      guard = setTimeout(function () { if (!document.hidden && !film.classList.contains('film--intro-playing')) handoff(true, 'video had not started within 5 s'); }, 5000);
     };
-    if (document.readyState === 'complete') play(); else window.addEventListener('load', play);
+    play(); // straight away: this script runs as soon as the page has been parsed, without waiting for images
   } else if (intro) {
     note('intro not offered on this load (see the flags above)');
     intro.remove();
