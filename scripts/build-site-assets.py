@@ -83,6 +83,9 @@ for prod in ('datadragon', 'tableflow'):
 # --- plates, diagram, state art
 for p in ('plate-haze', 'plate-curve'):
     cover(load(p), 1920, 1080).save(f'{out("plates")}/{p[6:]}.webp', quality=78, method=6)
+# practice panels (Consulting: the tangle, Products: the resolved line), made by scripts in refs/raw/practices
+for name in ('consulting', 'products'):
+    cover(load(f'plate-{name}'), 2400, 1810).save(f'{out("plates")}/{name}.webp', quality=80, method=6)
 cover(load('diagram-engagement'), 2400, 1029).save(f'{out("diagrams")}/engagement.webp', quality=82, method=6)
 for s in ('404', 'offline'):
     cover(load(f'state-{s}'), 1000, 1000).save(f'{out("states")}/{s}.webp', quality=80, method=6)
