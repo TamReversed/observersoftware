@@ -151,6 +151,23 @@
   var intro = document.querySelector('.film__intro');
   var film = intro && intro.closest('.film');
   var root = document.documentElement;
+  // /?intro=debug shows what the intro did and why, in a small box on the page (for diagnosing on a real device)
+  var debugBox = null, t0 = Date.now();
+  var note = function (msg) {
+    if (!debugBox) return;
+    var line = document.createElement('div');
+    line.textContent = ((Date.now() - t0) / 1000).toFixed(1) + 's  ' + msg;
+    debugBox.appendChild(line);
+  };
+  if (/[?&]intro=debug/.test(location.search)) {
+    debugBox = document.createElement('div');
+    debugBox.setAttribute('style', 'position:fixed;left:8px;bottom:8px;z-index:9999;max-width:min(92vw,560px);padding:10px 12px;background:#000;color:#9f9;font:12px/1.5 ui-monospace,Menlo,monospace;border:1px solid #9f9;white-space:pre-wrap');
+    document.body.appendChild(debugBox);
+    var seenFlag = null; try { seenFlag = sessionStorage.getItem('observer-intro'); } catch (e) { seenFlag = 'storage blocked'; }
+    note('film-live=' + root.classList.contains('film-live') + ' pending=' + root.classList.contains('intro-pending') + ' element=' + !!intro);
+    note('reduced-motion=' + window.matchMedia('(prefers-reduced-motion: reduce)').matches + ' saveData=' + !!(navigator.connection || {}).saveData + ' seen=' + seenFlag + ' hidden=' + document.hidden + ' scrollY=' + Math.round(window.scrollY) + ' ' + window.innerWidth + 'x' + window.innerHeight);
+    note(navigator.userAgent.replace(/^Mozilla\/5\.0 /, ''));
+  }
   if (intro && film && root.classList.contains('intro-pending')) {
     var HANDOFF_AT = 4.85;     // seconds: just after the coral line fires
     var small = window.matchMedia('(max-width: 760px)').matches;
@@ -174,8 +191,9 @@
       intro.style.setProperty('--intro-dx', (artX - videoX).toFixed(1) + 'px');
       intro.style.setProperty('--intro-dy', (artY - videoY).toFixed(1) + 'px');
     };
-    var handoff = function (fast) {
+    var handoff = function (fast, why) {
       if (ended) return; ended = true;
+      note('HAND-OFF ' + (fast ? '(skipped: ' + (why || 'unknown') + ')' : '(completed)') + (v ? ' at video t=' + v.currentTime.toFixed(2) : ''));
       clearTimeout(guard);
       window.removeEventListener('scroll', early);
       window.removeEventListener('resize', align);
@@ -186,23 +204,32 @@
       root.classList.remove('intro-pending');           // the opening image fades in
       setTimeout(function () { if (v) { v.pause(); } intro.remove(); film.classList.remove('film--intro-handoff'); }, fast ? 900 : 2400);
     };
-    var early = function () { if (window.scrollY > 40) handoff(true); }; // scrolling starts the film: step aside
+    var early = function () { if (window.scrollY > 40) handoff(true, 'page scrolled'); }; // scrolling starts the film: step aside
     var play = function () {
-      if (window.scrollY > 40) return handoff(true); // reloaded part-way down the page: skip this time
+      if (window.scrollY > 40) return handoff(true, 'page was already scrolled at load'); // reloaded part-way down the page: skip this time
       v = document.createElement('video');
       v.muted = true; v.playsInline = true; v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.preload = 'auto';
       v.src = intro.dataset.mp4;
       v.addEventListener('playing', function () { clearTimeout(guard); align(); film.classList.add('film--intro-playing'); }, { once: true });
+      if (debugBox) {
+        ['loadstart', 'loadedmetadata', 'canplay', 'playing', 'waiting', 'stalled', 'suspend', 'pause', 'ended'].forEach(function (ev) { v.addEventListener(ev, function () { note('video ' + ev + ' t=' + v.currentTime.toFixed(2) + ' ready=' + v.readyState); }); });
+        var ticks = 0, watch = setInterval(function () {
+          var cv = film.querySelector('.film__canvas');
+          note('t=' + v.currentTime.toFixed(2) + ' paused=' + v.paused + ' video=' + v.videoWidth + 'x' + v.videoHeight + ' intro-opacity=' + (intro.isConnected ? getComputedStyle(intro).opacity : 'removed') + ' image-opacity=' + (cv ? getComputedStyle(cv).opacity : '?') + ' box=' + (intro.isConnected ? Math.round(intro.getBoundingClientRect().width) + 'x' + Math.round(intro.getBoundingClientRect().height) : '-'));
+          if (++ticks > 9) clearInterval(watch);
+        }, 1000);
+      }
       v.addEventListener('timeupdate', function () { if (v.currentTime >= HANDOFF_AT) handoff(false); });
       v.addEventListener('ended', function () { handoff(false); });
-      v.addEventListener('error', function () { handoff(true); });
+      v.addEventListener('error', function () { handoff(true, 'video error ' + (v.error ? v.error.code + ' ' + v.error.message : '')); });
       window.addEventListener('scroll', early, { passive: true });
       window.addEventListener('resize', align);
       intro.appendChild(v);
       align();
       var start = function () {
         var p = v.play();
-        if (p && p.catch) p.catch(function () {
+        if (p && p.catch) p.catch(function (err) {
+          note('play() rejected: ' + (err && err.name) + ' ' + (err && err.message));
           if (ended) return;
           if (document.hidden) { // opened in a background tab: play when the visitor arrives
             document.addEventListener('visibilitychange', function again() {
@@ -210,15 +237,16 @@
               document.removeEventListener('visibilitychange', again);
               if (!ended) start();
             });
-          } else handoff(true); // autoplay blocked
+          } else handoff(true, 'autoplay blocked: ' + (err && err.name)); // autoplay blocked
         });
       };
       start();
       // never leave the hero dark: if the video has not started 5 s after load, show the image
-      guard = setTimeout(function () { if (!document.hidden && !film.classList.contains('film--intro-playing')) handoff(true); }, 5000);
+      guard = setTimeout(function () { if (!document.hidden && !film.classList.contains('film--intro-playing')) handoff(true, 'video had not started 5 s after load'); }, 5000);
     };
     if (document.readyState === 'complete') play(); else window.addEventListener('load', play);
   } else if (intro) {
+    note('intro not offered on this load (see the flags above)');
     intro.remove();
     root.classList.remove('intro-pending');
   }
