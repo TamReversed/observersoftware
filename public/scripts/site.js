@@ -179,7 +179,8 @@
       clearTimeout(guard);
       window.removeEventListener('scroll', early);
       window.removeEventListener('resize', align);
-      try { sessionStorage.setItem('observer-intro', '1'); } catch (e) {}
+      // only a completed intro counts as seen: a skipped or failed one gets another chance on the next load
+      if (!fast) { try { sessionStorage.setItem('observer-intro', '1'); } catch (e) {} }
       film.classList.remove('film--intro-playing');
       film.classList.add('film--intro-handoff');
       root.classList.remove('intro-pending');           // the opening image fades in
@@ -187,7 +188,7 @@
     };
     var early = function () { if (window.scrollY > 40) handoff(true); }; // scrolling starts the film: step aside
     var play = function () {
-      if (window.scrollY > 40) return handoff(true);
+      if (window.scrollY > 40) return handoff(true); // reloaded part-way down the page: skip this time
       v = document.createElement('video');
       v.muted = true; v.playsInline = true; v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.preload = 'auto';
       v.src = intro.dataset.mp4;
@@ -213,8 +214,8 @@
         });
       };
       start();
-      // never leave the hero dark: if the video has not started 3 s after load, show the image
-      guard = setTimeout(function () { if (!document.hidden && !film.classList.contains('film--intro-playing')) handoff(true); }, 3000);
+      // never leave the hero dark: if the video has not started 5 s after load, show the image
+      guard = setTimeout(function () { if (!document.hidden && !film.classList.contains('film--intro-playing')) handoff(true); }, 5000);
     };
     if (document.readyState === 'complete') play(); else window.addEventListener('load', play);
   } else if (intro) {
