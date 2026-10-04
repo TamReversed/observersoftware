@@ -26,6 +26,11 @@ validateEnv();
 
 const app = express();
 
+// Runs inline before first paint (one less blocking request). The CSP allows exactly this script by its hash.
+const FILM_LIVE_INLINE = "if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches) document.documentElement.classList.add('film-live');";
+const FILM_LIVE_HASH = "'sha256-" + require('crypto').createHash('sha256').update(FILM_LIVE_INLINE).digest('base64') + "'";
+app.locals.filmLiveInline = FILM_LIVE_INLINE;
+
 // Trust the platform proxy (Railway) so req.ip and secure cookies are correct
 if (config.isProduction) {
   app.set('trust proxy', 1);
@@ -43,7 +48,7 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'"],
+      scriptSrc: ["'self'", FILM_LIVE_HASH],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https:"],
       fontSrc: ["'self'"],
