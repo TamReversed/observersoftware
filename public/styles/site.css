@@ -59,6 +59,12 @@ p, li { text-wrap: pretty; }
 .cta-primary:hover, .cta-primary:focus-visible { background: var(--accent-hover); }
 .cta-primary:hover svg, .cta-primary:focus-visible svg { transform: translateX(4px); }
 .cta-primary:active { transform: translateY(1px); }
+/* signature: the button pulls a line (the resolved-line motif on the one action) */
+.cta-primary { position: relative; }
+.cta-primary::after { content: ''; position: absolute; left: 100%; top: 50%; width: 56px; height: 1px; background: var(--accent); transform: scaleX(0); transform-origin: left; transition: transform var(--dur-2) var(--ease); pointer-events: none; }
+@media (hover: hover) { .cta-primary:hover::after { transform: scaleX(1); } }
+.cta-primary:focus-visible::after { transform: scaleX(1); }
+.cta-primary[aria-busy='true']::after, .cta-primary:disabled::after { transform: scaleX(0); }
 .cta-inline { display: inline-flex; align-items: center; gap: 10px; padding-block: 11px; font-weight: 500; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 6px; text-decoration-color: var(--line-strong); transition: text-decoration-color 0.2s, gap 0.3s var(--ease); }
 .cta-inline:hover, .cta-inline:focus-visible { text-decoration-color: var(--accent); gap: 16px; }
 .cta-framed { display: inline-flex; align-items: center; gap: 12px; padding: 14px 20px; border: 1px solid var(--line-strong); text-decoration: none; font-weight: 500; transition: border-color var(--dur-1) var(--ease), background var(--dur-1) var(--ease); }
