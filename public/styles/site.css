@@ -247,7 +247,14 @@ body.nav-open { overflow: hidden; }
 
 /* closing band */
 .closing { position: relative; overflow: hidden; padding-block: clamp(96px, 14vw, 200px); border-top: 1px solid var(--line); }
-.closing__plate { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.8; }
+.closing__plate { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 70%; opacity: 0.95; }
+/* signature: the line arrives. As the band scrolls in, the horizon draws from left to right. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .closing__plate { animation: closing-draw linear both; animation-timeline: view(); animation-range: entry 15% cover 48%; }
+    @keyframes closing-draw { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+  }
+}
 .closing .wrap { position: relative; display: grid; gap: 40px; justify-items: start; }
 .closing h2 { font-size: clamp(2.25rem, 7.2vw, 6.25rem); line-height: 0.98; letter-spacing: -0.045em; font-weight: 500; max-width: 16ch; }
 

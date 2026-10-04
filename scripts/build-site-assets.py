@@ -86,6 +86,8 @@ for p in ('plate-haze', 'plate-curve'):
 # practice panels (Consulting: the tangle, Products: the resolved line), made by scripts in refs/raw/practices
 for name in ('consulting', 'products'):
     cover(load(f'plate-{name}'), 2400, 1810).save(f'{out("plates")}/{name}.webp', quality=80, method=6)
+# closing band: the resolved line as a level horizon
+cover(load('plate-closing'), 2880, 1612).save(f'{out("plates")}/closing.webp', quality=82, method=6)
 cover(load('diagram-engagement'), 2400, 1029).save(f'{out("diagrams")}/engagement.webp', quality=82, method=6)
 for s in ('404', 'offline'):
     cover(load(f'state-{s}'), 1000, 1000).save(f'{out("states")}/{s}.webp', quality=80, method=6)
