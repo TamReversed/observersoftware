@@ -144,6 +144,53 @@
     });
   }
 
+  // --- logo intro in the home hero: plays once per visit, silently, then leaves a faint trace of the mark.
+  // No video for reduced motion (the film layout is off), Data Saver, or a repeat view in the same session.
+  var intro = document.querySelector('.film__intro');
+  var film = intro && intro.closest('.film');
+  if (intro && film && document.documentElement.classList.contains('film-live')) {
+    var seen = false;
+    try { seen = sessionStorage.getItem('observer-intro') === '1'; } catch (e) {}
+    var saver = (navigator.connection || {}).saveData;
+    var settle = function () { film.classList.remove('film--intro-playing'); film.classList.add('film--intro-done'); };
+    var trace = function () { // the still final frame, barely visible
+      var im = new Image(); im.alt = ''; im.onload = function () { intro.appendChild(im); settle(); }; im.src = intro.dataset.end;
+    };
+    var away = function () { film.classList.toggle('film--intro-away', window.scrollY > window.innerHeight * 0.3); };
+    window.addEventListener('scroll', away, { passive: true });
+    if (seen || saver || window.scrollY > 40) trace();
+    else {
+      var play = function () {
+        var v = document.createElement('video');
+        v.muted = true; v.playsInline = true; v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.preload = 'auto';
+        v.src = intro.dataset.mp4;
+        var done = false;
+        var finish = function () { if (done) return; done = true; window.removeEventListener('scroll', early); settle(); try { sessionStorage.setItem('observer-intro', '1'); } catch (e) {} };
+        var early = function () { if (window.scrollY > 40) { v.pause(); finish(); } }; // scrolling starts the film: step aside
+        v.addEventListener('playing', function () { film.classList.add('film--intro-playing'); }, { once: true });
+        v.addEventListener('ended', finish);
+        v.addEventListener('error', function () { if (!done) { done = true; v.remove(); trace(); } });
+        window.addEventListener('scroll', early, { passive: true });
+        intro.appendChild(v);
+        var start = function () {
+          var p = v.play();
+          if (p && p.catch) p.catch(function () {
+            if (done) return;
+            if (document.hidden) { // opened in a background tab: play when the visitor arrives
+              document.addEventListener('visibilitychange', function again() {
+                if (document.hidden) return;
+                document.removeEventListener('visibilitychange', again);
+                if (!done) start();
+              });
+            } else { done = true; v.remove(); trace(); } // autoplay blocked: show the still trace
+          });
+        };
+        start();
+      };
+      if (document.readyState === 'complete') play(); else window.addEventListener('load', play);
+    }
+  }
+
   // --- offline fallback
   if ('serviceWorker' in navigator && location.protocol === 'https:') {
     navigator.serviceWorker.register('/sw.js').catch(function () {});
