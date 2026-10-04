@@ -357,6 +357,15 @@ body.nav-open { overflow: hidden; }
   *, *::before, *::after { animation: none !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }
 
+/* signature: pages cross-fade instead of cutting; the nav holds still and the page title slides into place */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+  .nav { view-transition-name: site-nav; }
+  .page-head h1 { view-transition-name: page-title; }
+  ::view-transition-old(root), ::view-transition-new(root) { animation-duration: 0.32s; animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); }
+  ::view-transition-group(page-title) { animation-duration: 0.45s; animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); }
+}
+
 /* print: dark text on white, no navigation or decoration */
 @media print {
   :root { --ground: #fff; --surface: #fff; --text: #111; --muted: #444; --line: #ccc; --line-strong: #999; }
