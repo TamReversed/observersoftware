@@ -64,6 +64,12 @@ p, li { text-wrap: pretty; }
 .cta-framed { display: inline-flex; align-items: center; gap: 12px; padding: 14px 20px; border: 1px solid var(--line-strong); text-decoration: none; font-weight: 500; transition: border-color var(--dur-1) var(--ease), background var(--dur-1) var(--ease); }
 .cta-framed:hover, .cta-framed:focus-visible { border-color: var(--text); background: rgba(236, 232, 228, 0.05); }
 button.cta-framed { background: transparent; color: var(--text); cursor: pointer; }
+/* pressed and busy states */
+.cta-framed:active { transform: translateY(1px); background: rgba(236, 232, 228, 0.09); }
+.cta-inline:active, .cta-text:active { opacity: 0.75; }
+.cta-primary[aria-busy='true'], .cta-primary:disabled { opacity: 0.6; cursor: progress; }
+.nav__links a:active { color: var(--text); opacity: 0.75; }
+.worklist__row:active h3 { color: var(--accent); }
 .cta-text { display: inline-block; padding-block: 12px; color: var(--muted); text-decoration: none; font-weight: 500; transition: color var(--dur-1) var(--ease); }
 .cta-text:hover, .cta-text:focus-visible { color: var(--text); }
 
