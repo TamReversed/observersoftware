@@ -68,7 +68,7 @@
           </ul>
           <p style="margin-top: 32px"><a class="cta-inline" href="/work">See the work <%- include('partials/arrow') %></a></p>
         </div>
-        <div class="work-frame" aria-hidden="true"><img id="work-frame-img" src="<%= work[0].image || '/assets/plates/haze.webp' %>" alt="" width="1600" height="1000" loading="lazy"></div>
+        <div class="work-frame" aria-hidden="true"><img id="work-frame-img" src="<%= work[0].image || '/assets/plates/haze.webp' %>" data-fallback="/assets/plates/haze.webp" alt="" width="1600" height="1000" loading="lazy"></div>
       </div>
     </div>
   </section>
@@ -152,7 +152,7 @@
   <% } %>
 
   <section class="closing" aria-labelledby="closing-title">
-    <img class="closing__plate" src="/assets/plates/curve.webp" alt="" loading="lazy" width="1920" height="1080">
+    <img class="closing__plate" src="/assets/plates/closing.webp" alt="" loading="lazy" width="2880" height="1612">
     <div class="wrap">
       <h2 id="closing-title"><%= c.closing.headline %></h2>
       <a class="cta-primary" href="/contact">Start a conversation <%- include('partials/arrow') %></a>

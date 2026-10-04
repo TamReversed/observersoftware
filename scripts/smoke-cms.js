@@ -313,7 +313,7 @@ class Client {
   const homeHeaders = (await anon.req('/')).headers;
   check('pages send a Permissions-Policy header', /camera=\(\)/.test(homeHeaders.get('permissions-policy') || ''));
   check('pages cannot be framed', homeHeaders.get('x-frame-options') === 'DENY');
-  check('scripts are limited to this site', /script-src 'self'(;|$)/.test(homeHeaders.get('content-security-policy') || ''));
+  check('scripts are limited to this site', /script-src 'self'( 'sha256-[A-Za-z0-9+\/=]+')?(;|$)/.test(homeHeaders.get('content-security-policy') || ''));
   check('signed-in API responses are not cached', (await admin.req('/api/admin/posts')).headers.get('cache-control') === 'no-store');
   // retired endpoints and new routes
   for (const p of ['/api/homepage', '/api/navigation', '/api/changelog']) check(`${p} is gone`, (await anon.req(p)).status === 404);

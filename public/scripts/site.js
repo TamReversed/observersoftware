@@ -37,10 +37,18 @@
   var rows = document.querySelectorAll('.worklist__row');
   var frame = document.getElementById('work-frame-img');
   if (rows.length && frame) {
+    var fallback = frame.getAttribute('data-fallback') || '';
+    var swap; // pending cross-fade
     var activate = function (row) {
-      var src = row.getAttribute('data-image');
+      var src = row.getAttribute('data-image') || fallback; // rows without art show a neutral plate, never the previous row's image
       rows.forEach(function (r) { r.classList.toggle('is-active', r === row); });
-      if (src) frame.src = src;
+      if (!src || frame.getAttribute('src') === src) return;
+      clearTimeout(swap);
+      frame.style.opacity = '0';
+      swap = setTimeout(function () {
+        frame.onload = frame.onerror = function () { frame.style.opacity = ''; };
+        frame.src = src;
+      }, 160);
     };
     rows.forEach(function (row) {
       row.addEventListener('mouseenter', function () { activate(row); });
